@@ -1,0 +1,4 @@
+bin/
+src/*.o
+./build/*.*
+*.swp

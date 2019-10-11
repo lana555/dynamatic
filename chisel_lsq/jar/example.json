@@ -1,0 +1,22 @@
+{
+  "specifications"  :[
+  {
+    "name": "fifo",
+	"speculation": "false",
+    "dataWidth": 32,
+    "addrWidth": 32,
+    "fifoDepth": 32,
+    "numLoadPorts": 1,
+    "numStorePorts": 1,
+	"numBBs": 1,
+    "loadOffsets": [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
+    "storeOffsets": [[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
+    "loadPorts": [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
+    "storePorts": [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
+	"numLoads": [1],
+    "numStores": [1],
+	"accessType": "BRAM",
+	"bufferDepth": 0
+  }
+  ]
+}

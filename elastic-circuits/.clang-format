@@ -1,0 +1,12 @@
+BasedOnStyle: LLVM
+
+# Override default LLVM-style indentation (2 spaces)
+IndentWidth:     4
+# Don't indent access modifiers (private/public/protected)
+AccessModifierOffset: -4
+AlignConsecutiveAssignments: true
+IndentCaseLabels: true
+DerivePointerAlignment: false
+PointerAlignment: Left
+ColumnLimit: 100
+AlignTrailingComments: true
