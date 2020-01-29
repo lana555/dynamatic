@@ -1,7 +1,7 @@
-# Dot2VHDL
+# Buffers
 
 
-## Compile the dot2vhdl code from the source repository, where this README lies:
+## Compile the buffers code from the source repository, where this README lies:
 
 ```bash
 mkdir bin
@@ -27,19 +27,18 @@ sudo apt install coinor-cbc
 
 ## Run buffer opt
 
-Usage: buffers buffers period buffer_delay solver infile outfile
-
 ```bash
-bin/buffers buffers 3 0.0 cbc examples/fir_graph.dot examples/_build/fir_graph.dot
-bin/buffers shab period 0.0 cbc set timeout dataflow_in.dot bbgraph_in.dot dataflow_out.dot bbgraph_out.dot 0
+bin/buffers buffers -filename=name -period=period 
 ```
-Here, period indicates target CP (ns), set indicates presence (1) or absence of set optimization, timeout is the MILP timeout (ms).
+
+Here, period indicates target CP (ns).
 
 For example:
 ```bash
-bin/buffers shab 10 0.0 cbc 1 20 examples/example.dot examples/example_bbgraph.dot example_10.dot example_bbgraph.dot 0
+bin/buffers buffers -filename=examples/fir -period=5
 ```
 
-Check out the files generated in `examples`.
-
-
+To see all command options and parameters, run:
+```bash
+bin/buffers buffers -help
+```
