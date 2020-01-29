@@ -20,15 +20,19 @@ test_f: $(BUILDDIR)
 	$(OPT) -die -instcombine -lowerswitch $(BUILDDIR_FILE)/$(name)_mem2reg_constprop_simplifycfg.ll -S -o $(BUILDDIR_FILE)/$(name)_mem2reg_constprop_simplifycfg_die.ll
 
 	cc -c ../FrequencyCounterPass/log_FrequencyCounter.c
-	$(CLANG) -Xclang -load -Xclang ../_build/FrequencyCounterPass/libFrequencyCounterPass.so -c $(BUILDDIR_FILE)/$(name)_mem2reg_constprop_simplifycfg_die.ll
-	cc $(name)_mem2reg_constprop_simplifycfg_die.o log_FrequencyCounter.o
+	$(CLANG) -fPIC -Xclang -load -Xclang ../_build/FrequencyCounterPass/libFrequencyCounterPass.so -c $(BUILDDIR_FILE)/$(name)_mem2reg_constprop_simplifycfg_die.ll
+	cc -fPIC $(name)_mem2reg_constprop_simplifycfg_die.o log_FrequencyCounter.o
 	./a.out
 	rm a.out $(name)_mem2reg_constprop_simplifycfg_die.o log_FrequencyCounter.o
 
 	-$(CLANG) -Xclang -load -Xclang ../_build/FrequencyDataGatherPass/libFrequencyDataGatherPass.so $(BUILDDIR_FILE)/$(name)_mem2reg_constprop_simplifycfg_die.ll -S
 	rm *.s
 
-	-$(OPT) -load ../_build/MemElemInfo/libLLVMMemElemInfo.so -load ../_build/ElasticPass/libElasticPass.so -load ../_build/OptimizeBitwidth/libLLVMOptimizeBitWidth.so -load ../_build/MyCFGPass/libMyCFGPass.so -polly-process-unprofitable -mycfgpass  $(BUILDDIR_FILE)/$(name)_mem2reg_constprop_simplifycfg_die.ll -S
+	#-$(OPT) -load ../_build/MemElemInfo/libLLVMMemElemInfo.so -load ../_build/ElasticPass/libElasticPass.so -load ../_build/OptimizeBitwidth/libLLVMOptimizeBitWidth.so -load ../_build/MyCFGPass/libMyCFGPass.so -polly-process-unprofitable -mycfgpass  $(BUILDDIR_FILE)/$(name)_mem2reg_constprop_simplifycfg_die.ll -S -use-lsq=false -simple-buffers=true
+
+	-$(OPT) -load ../_build/MemElemInfo/libLLVMMemElemInfo.so -load ../_build/ElasticPass/libElasticPass.so -load ../_build/OptimizeBitwidth/libLLVMOptimizeBitWidth.so -load ../_build/MyCFGPass/libMyCFGPass.so -polly-process-unprofitable -mycfgpass  $(BUILDDIR_FILE)/$(name)_mem2reg_constprop_simplifycfg_die.ll -S -use-lsq=false 
+
+	#-$(OPT) -load ../_build/MemElemInfo/libLLVMMemElemInfo.so -load ../_build/ElasticPass/libElasticPass.so -load ../_build/OptimizeBitwidth/libLLVMOptimizeBitWidth.so -load ../_build/MyCFGPass/libMyCFGPass.so -polly-process-unprofitable -mycfgpass  $(BUILDDIR_FILE)/$(name)_mem2reg_constprop_simplifycfg_die.ll -S
 	rm *_freq.txt mapping.txt
 
 	mv print.txt $(BUILDDIR_FILE) || true
@@ -59,9 +63,15 @@ test: $(BUILDDIR)
 	$(OPT) -die -instcombine -lowerswitch $(BUILDDIR_FILE)/$(name)_mem2reg_constprop_simplifycfg.ll -S -o $(BUILDDIR_FILE)/$(name)_mem2reg_constprop_simplifycfg_die.ll
 
 
+	
+#-$(OPT) -load ../_build/MemElemInfo/libLLVMMemElemInfo.so -load ../_build/ElasticPass/libElasticPass.so -load ../_build/OptimizeBitwidth/libLLVMOptimizeBitWidth.so -load ../_build/MyCFGPass/libMyCFGPass.so -polly-process-unprofitable -mycfgpass  $(BUILDDIR_FILE)/$(name)_mem2reg_constprop_simplifycfg_die.ll -S -cfg-outdir=$(BUILDDIR_FILE) -use-lsq=false -simple-buffers=true
+
+#-$(OPT) -load ../_build/MemElemInfo/libLLVMMemElemInfo.so -load ../_build/ElasticPass/libElasticPass.so -load ../_build/OptimizeBitwidth/libLLVMOptimizeBitWidth.so -load ../_build/MyCFGPass/libMyCFGPass.so -polly-process-unprofitable -mycfgpass  $(BUILDDIR_FILE)/$(name)_mem2reg_constprop_simplifycfg_die.ll -S -cfg-outdir=$(BUILDDIR_FILE) -use-lsq=false -simple-buffers=true
+
 	-$(OPT) -load ../_build/MemElemInfo/libLLVMMemElemInfo.so -load ../_build/ElasticPass/libElasticPass.so -load ../_build/OptimizeBitwidth/libLLVMOptimizeBitWidth.so -load ../_build/MyCFGPass/libMyCFGPass.so -polly-process-unprofitable -mycfgpass  $(BUILDDIR_FILE)/$(name)_mem2reg_constprop_simplifycfg_die.ll -S -cfg-outdir=$(BUILDDIR_FILE)
 
-	mv print.txt $(BUILDDIR_FILE) || true
+
+	#mv print.txt $(BUILDDIR_FILE) || true
 	#mv *_graph.dot $(BUILDDIR_FILE)
 	
 graph: test

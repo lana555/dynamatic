@@ -18,7 +18,7 @@
 #include "dot2vhdl.h"
 #include "dot_parser.h"
 #include "vhdl_writer.h"
-#include "vivado_if.h"
+#include "eda_if.h"
 #include "lsq_generator.h"
 #include "reports.h"
 #include "checks.h"
@@ -120,7 +120,9 @@ int main( int argc, char* argv[] )
         
         if ( report_area_mode )
         {
-            report_area ();
+            report_instances ();
+            return 0;
+            //report_area ();
         }
         else
         {
@@ -131,12 +133,14 @@ int main( int argc, char* argv[] )
     }
     
     
-    vhdl_writer.write_tb_wrapper ( top_level_filename );
+    //vhdl_writer.write_tb_wrapper ( top_level_filename );
     
-    write_vivado_script ( );
 
     lsq_generate_configuration ( top_level_filename );
     lsq_generate ( top_level_filename );
+
+    write_vivado_script ( top_level_filename );
+    write_modelsim_script ( top_level_filename );
     
     cout << endl;
     cout << "Done" ;

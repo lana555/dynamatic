@@ -643,72 +643,128 @@ int main_help()
     cerr << "  circuit:       unit test to read and write a circuit." << endl;
 }
 
+#include <regex>
+
+struct user_input {
+    string graph_name;
+    string solver;
+    double period;
+    double delay;
+    double first;
+    int timeout;
+    bool set;
+};
+
+void clear_input(user_input& input) {
+    input.graph_name = "dataflow";
+    input.set = true;
+    input.first = false;
+    input.delay = 0.0;
+    input.period = 5;
+    input.timeout = 1000;
+    input.solver = "cbc";
+}
+
+void print_input(const user_input& input) {
+    cout << "****************************************" << endl;
+    cout << "dataflow graph name: " << input.graph_name << endl;
+    cout << "milp solver: " << input.solver << endl;
+    cout << "delay: " << input.delay << ", period: " << input.period << endl;
+    cout << "timeout: " << input.timeout << endl;
+    cout << "set optimization: " << (input.set ? "true" : "false") << endl;
+    cout << "first MG optimization: " << (input.first ? "true" : "false") << endl;
+    cout << "****************************************" << endl;
+}
+void parse_user_input(const vecParams& params, user_input& input) {
+    clear_input(input);
+    regex period_regex("(-period=)(.*)");
+    regex delay_regex("(-delay=)(.*)");
+    regex name_regex("(-filename=)(.*)");
+    regex timeout_regex("(-timeout=)(.*)");
+    regex set_regex("(-set=)(.*)");
+    regex solver_regex("(-solver=)(.*)");
+    regex first_regex("(-first=)(.*)");
+    for (auto param: params) {
+        if (regex_match(param, period_regex)) {
+            input.period = atof(param.substr(param.find("=") + 1).c_str());
+        } else if (regex_match(param, delay_regex)) {
+            input.delay = atof(param.substr(param.find("=") + 1).c_str());
+        } else if (regex_match(param, name_regex)) {
+            input.graph_name = param.substr(param.find("=") + 1);
+        } else if (regex_match(param, set_regex)) {
+            string tmp = param.substr(param.find("=") + 1);
+            input.set = (tmp == "false") ? false : true;
+        } else if (regex_match(param, timeout_regex)) {
+            input.timeout = atoi(param.substr(param.find("=") + 1).c_str());
+        } else if (regex_match(param, solver_regex)) {
+            input.solver = param.substr(param.find("=") + 1);
+        } else if (regex_match(param, first_regex)) {
+            string tmp = param.substr(param.find("=") + 1);
+            input.first = (tmp == "false") ? false : true;
+        } else {
+            cout << param << " is invalid argument" << endl;
+            assert(false);
+        }
+    }
+}
+
+void show_help_shab() {
+    cout << "-filename: <filename>_graph.dot and <filename>_bbgraph.dot should contain DFC and CFG respectively" << endl;
+    cout << "\toptimized output will be writen to <filename>_graph_buf.dot and <filename>_bbgraph_buf.dot" << endl;
+    cout << "\tdefault value is \"dataflow\"" << endl;
+    cout << "-period: the clock period" << endl;
+    cout << "\tdefault value is 3" << endl;
+    cout << "-delay: the units' delay" << endl;
+    cout << "\tdefault value is 0.0" << endl;
+    cout << "-solver: the milp solver" << endl;
+    cout << "\tdefault value is cbc" << endl;
+    cout << "-timeout: the milp timeout. If -1, no limit will be applied" << endl;
+    cout << "\tdefault value is -1" << endl;
+    cout << "-set: whether set optimization should be applied or not" << endl;
+    cout << "\tdefault value is false" << endl;
+    cout << "-first: whether the milp should only consider the throughput for the first MG or not" << endl;
+    cout << "\tdefault value is false" << endl;
+}
 int main_shab(const vecParams& params){
-
-
-    if (params.size() != 9 && params.size() != 10) {
-        cerr << "Usage: " + exec + ' ' + command + " period buffer_delay solver infile outfile" << endl;
+    if (params.size() == 1 && params[0] == "-help") {
+        show_help_shab();
         return 1;
     }
 
+    user_input input{};
+    parse_user_input(params, input);
+    print_input(input);
 
-    if (params.size() == 9) {
-        DFnetlist DF(params[4], params[5]);
+    DFnetlist DF(input.graph_name + ".dot", input.graph_name + "_bbgraph.dot");
+    //DF.cleanElasticBuffers();
 
-        if (DF.hasError()) {
-            cerr << DF.getError() << endl;
-            return 1;
-        }
-        double period = atof(params[0].c_str());
-        double delay = atof(params[1].c_str());
-        cout << "Adding elastic buffers with period=" << period << " and buffer_delay=" << delay << endl;
-        cout << endl;
-        DF.setMilpSolver(params[2]);
-
-        bool stat;
-        if (stoi(params[3]))
-            stat = DF.addElasticBuffersBB_sc(period, delay, true, 1, -1, stoi(params[8]));
-        else
-            stat = DF.addElasticBuffersBB(period, delay, true, 1, -1, stoi(params[8]));
-
-        if (stat) {
-            DF.instantiateElasticBuffers();
-        }
-        DF.writeDot(params[6]);
-        DF.writeDotBB(params[7]);
-
-    } else {
-        DFnetlist DF(params[5], params[6]);
-        if (DF.hasError()) {
-            cerr << DF.getError() << endl;
-            return 1;
-        }
-        double period = atof(params[0].c_str());
-        double delay = atof(params[1].c_str());
-        cout << "Adding elastic buffers with period=" << period << " and buffer_delay=" << delay << endl;
-        cout << endl;
-        DF.setMilpSolver(params[2]);
-
-        bool stat;
-        if (stoi(params[3]))
-            stat = DF.addElasticBuffersBB_sc(period, delay, true, 1, stoi(params[4]), stoi(params[9]));
-        else
-            stat = DF.addElasticBuffersBB(period, delay, true, 1, stoi(params[4]), stoi(params[9]));
-
-        if (stat) {
-            DF.instantiateElasticBuffers();
-        }
-        DF.writeDot(params[7]);
-        DF.writeDotBB(params[8]);
+    if (DF.hasError()) {
+        cerr << DF.getError() << endl;
+        return 1;
     }
 
+    cout << "Adding elastic buffers with period=" << input.period << " and buffer_delay=" << input.delay << endl;
+    cout << endl;
+    DF.setMilpSolver(input.solver);
+
+    bool stat;
+    if (input.set) {
+        stat = DF.addElasticBuffersBB_sc(input.period, input.delay, true, 1, input.timeout, input.first);
+    } else {
+        stat = DF.addElasticBuffersBB(input.period, input.delay, true, 1, input.timeout, input.first);
+    }
+    if (stat) {
+        DF.instantiateElasticBuffers();
+    }
+    DF.writeDot(input.graph_name + "_graph_buf.dot");
+    DF.writeDotBB(input.graph_name + "_bbgraph_buf.dot");
     return 0;
 }
 
 int main_test(const vecParams& params){
     DFnetlist DF(params[0], params[1]);
 //    DF.computeSCC(false);
-  //  DF.printBlockSCCs();
+    //  DF.printBlockSCCs();
 }
 
 int main(int argc, char *argv[])
@@ -727,11 +783,11 @@ int main(int argc, char *argv[])
     vecParams params;
     for (int i = 2; i < argc; ++i) params.push_back(argv[i]);
 
-    if (command == "buffers") return main_buffers(params);
-    if (command == "shab") return main_shab(params);
+    if (command == "buffers_old") return main_buffers(params);
+    if (command == "buffers") return main_shab(params);
     if (command == "test") return main_test(params);
 
-#if 0    
+#if 0
     if (command == "dataflow") return main_dataflow(params);
     if (command == "dflib") return main_dflib(params);
     if (command == "syncprod") return main_syncprod(params);

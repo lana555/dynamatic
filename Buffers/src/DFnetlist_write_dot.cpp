@@ -8,20 +8,20 @@ using namespace Dataflow;
 using namespace std;
 
 static map<BlockType,string> blockShapes = {
-    {ELASTIC_BUFFER,"shape=box, style=filled"},
-    {FORK, "shape=triangle, style=filled, fillcolor=white"},
-    {BRANCH, "shape=trapezium, style=filled, fillcolor=white"},
-    {MERGE, "shape=invhouse, style=filled, fillcolor=white"},
-    {MUX, "shape=invhouse, style=filled, fillcolor=white"},
-    {CNTRL_MG, "shape=invhouse, style=filled, fillcolor=gold"},
-    {SELECT, "shape=invtrapezium, style=filled, fillcolor=white"},
-    {OPERATOR, "shape=oval, style=filled, fillcolor=white"},
+    {ELASTIC_BUFFER," shape=box, style=filled, fillcolor=darkolivegreen3, height = 0.4"},
+    {FORK, " shape=oval"},
+    {BRANCH, " shape=oval"},
+    {MERGE, " shape=oval"},
+    {MUX, " shape=oval"},
+    {CNTRL_MG, " shape=oval"},
+    {SELECT, " shape=oval"},
+    {OPERATOR, " shape=oval"},
     //{CONSTANT, "shape=circle, label=\"\", fixedsize=true, width=0.2, style=filled, fillcolor=white"},
-    {CONSTANT, "shape=doublecircle, style=filled, fillcolor=white"},
-    {FUNC_ENTRY, "shape=Mdiamond, style=filled, fillcolor=cyan"},
-    {FUNC_EXIT, "shape=Msquare, style=filled, fillcolor=gold"},
-    {SINK, "shape=Mdiamond, style=filled, fillcolor=cyan"},
-    {SOURCE, "shape=Msquare, style=filled, fillcolor=gold"}
+    {CONSTANT, " shape=oval"},
+    {FUNC_ENTRY, " shape=oval"},
+    {FUNC_EXIT, " shape=oval"},
+    {SINK, " shape=oval"},
+    {SOURCE, " shape=oval"}
 };
 
 static map<PortType,string> channelDstAttr = {
@@ -128,12 +128,28 @@ bool DFnetlist_Impl::writeDot(std::ostream& of)
         of << "  }" << endl;
     }*/
 
+for (bbID i = 0; i <= BBG.numBasicBlocks(); i++) {
+	if (i>0) {
+    	   of <<  "subgraph cluster_" + to_string(i) + " {\n";
+    	   of << "color = \"darkgreen\"\n";
+		   of << "label = \"block"+ to_string(i) +"\"\n";
+    	}
+
     ForAllBlocks(b) {
-        //if (b_inBBs.count(b) == 0) 
+    	bbID bb_src = getBasicBlock(b);
+    	
+	    
+        if (bb_src == i) 
             writeBlockDot(of, b);
+        
     }
+    if (i>0)
+    	  of << "}\n";
+}
 
     of << endl << "  // Channels" << endl;
+
+
     ForAllChannels(c) writeChannelDot(of, c);
 
     of << "}" << endl;
@@ -366,7 +382,7 @@ void DFnetlist_Impl::writeBlockDot(ostream& s, blockID b)
 
     if (B.type == ELASTIC_BUFFER) {
         s << ", slots=" << B.slots << ", transparent=" << (B.transparent ? "true" : "false");
-        s << ", fillcolor=" << (B.transparent ? "gray" : "black, fontcolor=white");
+        //s << ", fillcolor=" << (B.transparent ? "gray" : "black, fontcolor=white");
         s << ", label=\"" << getBlockName(b) << " [" << B.slots;
         if (B.transparent) s << 't';
         s << "]\"";
@@ -397,7 +413,7 @@ void DFnetlist_Impl::writeBlockDot(ostream& s, blockID b)
     s << ", " << blockShapes[getBlockType(b)];
 
     // Special color for control blocks
-    if (B.type != ELASTIC_BUFFER and num_control > num_noncontrol) s << ", color=green, fillcolor=greenyellow";
+   // if (B.type != ELASTIC_BUFFER and num_control > num_noncontrol) s << ", color=green, fillcolor=greenyellow";
 
     s << "];" << endl;
 }
@@ -414,18 +430,27 @@ void DFnetlist_Impl::writeChannelDot(ostream& s, channelID id)
 
     // Data, boolean, control
 
+
+    blockID b_src = getSrcBlock(id);
+    blockID b_dst = getDstBlock(id);
+
+    bbID bb_src = getBasicBlock(b_src);
+    bbID bb_dst = getBasicBlock(b_dst);
+
     string color;
-    if (isBooleanPort(src)) color = "blue";
-    else if (isControlPort(src)) color = "green";
-    else color = "black";
+    if (isBooleanPort(src)) color = "magenta";
+    else if (isControlPort(src)) color = "gold3";
+    else if (bb_src == bb_dst )
+    	color = "red";
+    else if (getBlockType(b_src) == BRANCH)
+    	color = "blue";
+    else 
+        color = "darkgreen";
     s << ", color=" << color;
 
     // Is is a back-edge inside a basic block (branch->merge)? Do not constrain
-    blockID b_src = getSrcBlock(id);
-    blockID b_dst = getDstBlock(id);
+
     if (getBlockType(b_src) == BRANCH or getBlockType(b_dst) == MERGE) {
-        bbID bb_src = getBasicBlock(b_src);
-        bbID bb_dst = getBasicBlock(b_dst);
         // If the same BB
         if (bb_src == bb_dst and bb_src >= 0) s << ", constraint=false";
     }
@@ -440,7 +465,7 @@ void DFnetlist_Impl::writeChannelDot(ostream& s, channelID id)
         else s << "false";
     }
 
-    if (isBackEdge(id)) s << ", style=dashed";
+    if (isBackEdge(id)) s << ", style=dashed, minlen = 3";
 
     s << "];" << endl;
 }

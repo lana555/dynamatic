@@ -108,13 +108,14 @@ entity read_data_signals is
         sel       : in  std_logic_vector(ARBITER_SIZE - 1 downto 0);
         read_data : in  std_logic_vector(DATA_WIDTH - 1 downto 0);
         out_data  : out data_array(ARBITER_SIZE - 1 downto 0)(DATA_WIDTH - 1 downto 0);
-        valid     : out std_logic_vector(ARBITER_SIZE - 1 downto 0)
-        --  nReady    : in  std_logic_vector(ARBITER_SIZE - 1 downto 0)
+        valid     : out std_logic_vector(ARBITER_SIZE - 1 downto 0);
+        nReady    : in  std_logic_vector(ARBITER_SIZE - 1 downto 0)
     );
 end entity;
 
 architecture arch of read_data_signals is
     signal sel_prev : std_logic_vector(ARBITER_SIZE - 1 downto 0);
+    signal out_reg: data_array(ARBITER_SIZE - 1 downto 0)(DATA_WIDTH - 1 downto 0);
 begin
 
     process(clk, rst) is
@@ -126,24 +127,45 @@ begin
             end loop;
         elsif (rising_edge(clk)) then
             for I in 0 to ARBITER_SIZE - 1 loop
-                valid(I)    <= sel(I);  --or not nReady(I); -- just sel(I) ??
                 sel_prev(I) <= sel(I);
+                if (sel(I) = '1') then 
+                    valid(I)    <= '1';  --or not nReady(I); -- just sel(I) ??
+                    --sel_prev(I) <= '1';
+                else 
+                    if (nReady(I) = '1') then
+                        valid(I)  <= '0';
+                        ---sel_prev(I) <= '0';
+                    end if;
+                end if;
             end loop;
         end if;
     end process;
 
-    process(read_data, sel_prev) is
+    process(clk, rst) is
+    begin
+        if (rising_edge(clk)) then
+         for I in 0 to ARBITER_SIZE - 1 loop
+                if (sel_prev(I) = '1') then
+                    out_reg(I) <= read_data;
+                end if;
+         end loop;
+         end if;
+    end process;
+
+    process(read_data, sel_prev, out_reg) is
     begin
         for I in 0 to ARBITER_SIZE - 1 loop
             if (sel_prev(I) = '1') then
                 out_data(I) <= read_data;
             else
-                out_data(I) <= (others => 'Z');
+                out_data(I) <= out_reg(I);
             end if;
         end loop;
     end process;
 
 end architecture;
+
+
 
 --------------------------------------------------------------------------------
 
@@ -224,8 +246,8 @@ begin
             sel       => priorityOut,
             read_data => data_from_memory,
             out_data  => data_out,
-            valid     => valid
-            --nReady    => nReady
+            valid     => valid,
+            nReady    => nReady
         );
 
     process(priorityOut) is
@@ -715,6 +737,7 @@ end entity;
 architecture arch of MemCont is
 signal counter1 : std_logic_vector(31 downto 0);
 signal valid_WR: std_logic_vector(STORE_COUNT - 1 downto 0);
+constant zero: std_logic_vector(BB_COUNT - 1 downto 0) := (others=>'0');
 
 begin
  io_wrDataPorts_ready<= io_wrAddrPorts_ready;
@@ -768,7 +791,7 @@ begin
               
             elsif rising_edge(CLK) then
                 -- increment counter by number of stores in BB
-                if (io_bbpValids(0) = '1')   then
+                if (io_bbpValids(BB_COUNT -1 downto 0)  /= zero)   then
                      counter:= std_logic_vector(unsigned(counter) + unsigned(io_bb_stCountArray(0)));
                 end if;
 
@@ -784,7 +807,7 @@ begin
 
         -- check if there are any outstanding store requests
         -- if not, program can terminate
-        io_Empty_Valid <= '1' when (counter1 =  (31 downto 0 => '0') )  else '0'; 
+        io_Empty_Valid <= '1' when (counter1 =  (31 downto 0 => '0') and (io_bbpValids(BB_COUNT -1 downto 0)  = zero))  else '0'; 
 
         io_bbReadyToPrevs <= (others => '1'); -- always ready to increment counter;
 

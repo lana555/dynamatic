@@ -634,6 +634,15 @@ std::string getNodeDotOutputs(ENode* enode) {
                     to_string(CONTROL_SIZE) + "*e ";
             name += "\"";
             break;
+        case End_:
+            name += ", out = \"out1:";
+
+            if (enode->CntrlPreds->size() > 0)
+                name += to_string(DATA_SIZE);
+            else 
+                name += to_string(CONTROL_SIZE);
+            name += "\"";
+            break;
         default:
             break;
     }
@@ -663,7 +672,11 @@ std::string getNodeDotParams(ENode* enode) {
             break;
         case Inst_:
             name += ", delay=" + getFloatValue(get_component_delay(enode->Name, DATA_SIZE));
-            name += ", latency=" + to_string(get_component_latency(enode->Name, DATA_SIZE));
+            
+            if (isLSQport(enode))
+                name += ", latency=" + to_string(get_component_latency(("lsq_" + enode->Name), DATA_SIZE));
+            else
+                name += ", latency=" + to_string(get_component_latency((enode->Name), DATA_SIZE));
             name += ", II=1";
             break;
         case Phi_:

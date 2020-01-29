@@ -1112,7 +1112,7 @@ public:
     bool addElasticBuffersBB_sc(double Period = 0, double BufferDelay = 0, bool MaxThroughput = false, double coverage = 0, int timeout = -1, bool first_MG = false);
 
     void addBorderBuffers();
-    void removeBuffersFromMC_LSQ();
+    void findMCLSQ_load_channels();
     /**
      * @brief Creates buffers for all those channels annotated with buffers.
      * The information in the channels is deleted.

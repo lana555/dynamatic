@@ -292,14 +292,14 @@ int getLSQDepth(ENode* memnode) {
         d = (d < st_count) ? st_count : d;
     }
 
-    int power = 1;
+    int power = 16;
 
     // round up to power of two
     while (power < d)
         power *= 2;
 
     // increase size for performance (not optimal!)
-    power *= 2;
+    // power *= 2;
 
     return power;
 }

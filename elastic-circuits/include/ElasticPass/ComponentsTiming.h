@@ -7,6 +7,8 @@
 #define SEXT_NAME "sext"
 #define LOAD_NAME "load"
 #define STORE_NAME "store"
+#define LSQ_LOAD_NAME "lsq_load"
+#define LSQ_STORE_NAME "lsq_store"
 #define MERGE_NAME "phi"
 #define GETPTR_NAME "getelementptr"
 #define FADD_NAME "fadd"
@@ -28,6 +30,8 @@ enum {
     SEXT_INDX,
     LOAD_INDX,
     STORE_INDX,
+    LSQ_LOAD_INDX,
+    LSQ_STORE_INDX,
     MERGE_INDX,
     GETPTR_INDX,
     FADD_INDX,
@@ -54,8 +58,9 @@ enum {
 
 static const std::string components_name[] = {
     ICMP_NAME,  ADD_NAME,   SUB_NAME,    MUL_NAME,  SEXT_NAME, LOAD_NAME,
-    STORE_NAME, MERGE_NAME, GETPTR_NAME, FADD_NAME, FSUB_NAME, FMUL_NAME,
-    UDIV_NAME,  SDIV_NAME,  FDIV_NAME,   FCMP_NAME, PHIC_NAME, ZDC_NAME};
+    STORE_NAME, LSQ_LOAD_NAME, LSQ_STORE_NAME, MERGE_NAME, GETPTR_NAME, 
+    FADD_NAME, FSUB_NAME, FMUL_NAME, UDIV_NAME,  SDIV_NAME,  
+    FDIV_NAME,   FCMP_NAME, PHIC_NAME, ZDC_NAME};
 
 static const float datapath_delay[CMP_MAX + 1][10] = {
     {0.784, 0.966, 1.485, 1.342, 1.410, 1.530, 1.770}, // ICMP
@@ -65,6 +70,8 @@ static const float datapath_delay[CMP_MAX + 1][10] = {
     {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // SEXT
     {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // load
     {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // store
+    {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // lsq_load
+    {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // lsq_store
     {0.366, 0.366, 0.366, 0.366, 0.366, 0.366, 0.366}, // merge
     {2.966, 2.966, 2.966, 2.966, 2.966, 2.966, 2.966}, // get_pointer
     {0.966, 0.966, 0.966, 0.966, 0.966, 0.966, 0.966}, // fadd
@@ -86,6 +93,8 @@ static const int datapath_latency[CMP_MAX + 1][10] = {
     {0, 0, 0, 0, 0, 0, 0},        // SEXT
     {2, 2, 2, 2, 2, 2, 2},        // load
     {0, 0, 0, 0, 0, 0, 0},        // store
+    {5, 5, 5, 5, 5, 5, 5},        // lsq_load
+    {0, 0, 0, 0, 0, 0, 0},        // lsq_store
     {0, 0, 0, 0, 0, 0, 0},        // merge
     {0, 0, 0, 0, 0, 0, 0},        // get_pointer
     {10, 10, 10, 10, 10, 10, 10}, // fadd

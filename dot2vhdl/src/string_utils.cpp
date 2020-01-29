@@ -61,6 +61,22 @@ string string_clean ( string string_input )
 
 }
 
+
+
+
+string stripExtension( string string_input, string extension )
+{
+    int dot = string_input.rfind(extension);
+    if (dot != std::string::npos)
+    {
+        string_input.resize(dot);
+    }
+    
+    return string_input;
+}
+
+
+
 int stoi_p ( string str )
 {
     int x = 0;
@@ -162,7 +178,7 @@ string string_constant ( unsigned long int value, int size )
                 ss << std::bitset<16>( value );
                 break;                
             default:
-                if ( value > 0xFFFFFFFF )
+                if ( ( value > 0xFFFFFFFF ) && ( size > 32 ) )
                 {
                     ss << std::bitset<64>( value );
                 }
@@ -201,6 +217,18 @@ string string_constant ( unsigned long int value, int size )
      return str_cst;
 }
 
+void eraseAllSubStr(std::string & mainStr, const std::string & toErase)
+{
+	size_t pos = std::string::npos;
+ 
+	// Search for the substring in string in a loop untill nothing is found
+	while ((pos  = mainStr.find(toErase) )!= std::string::npos)
+	{
+		// If found then erase it from string
+		mainStr.erase(pos, toErase.length());
+	}
+}
+
 string clean_entity ( string filename )
 {
     vector<string> v;
@@ -221,6 +249,13 @@ string clean_entity ( string filename )
     {
         return_string = filename;
     }
+    
+    
+    eraseAllSubStr ( return_string , "_elaborated" );
+    eraseAllSubStr ( return_string , "_optimized" );
     return return_string;
 }
+
+
+
 

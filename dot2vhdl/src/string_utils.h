@@ -25,5 +25,6 @@ string string_clean ( string string_input );
 int stoi_p ( string str );
 string string_constant ( unsigned long int value , int size );
 string clean_entity ( string filename );
+string stripExtension( string string_input, string extension );
 
 #endif

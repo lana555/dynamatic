@@ -287,9 +287,9 @@ void CircuitGenerator::fixBuildDagEnodes() {
                         if (enode_0->Instr->getOperand(i) ==
                             enode_1->Instr) { // if the phi is connected to that enode
                             // Lana 18.10.2018. Make sure there are no double edges between phis
-                            if (!contains(enode_0->CntrlPreds, enode_1))
+                            //if (!contains(enode_0->CntrlPreds, enode_1))
                                 enode_0->CntrlPreds->push_back(enode_1); // add connection
-                            if (!contains(enode_1->CntrlSuccs, enode_0))
+                            //if (!contains(enode_1->CntrlSuccs, enode_0))
                                 enode_1->CntrlSuccs->push_back(enode_0); // add connection
                         }
                     }
@@ -945,6 +945,7 @@ void CircuitGenerator::setBBIds() {
         if (!found)
             enode->bbId = 0;
     }
+
 }
 
 void CircuitGenerator::setFreqs(const std::string& function_name) {

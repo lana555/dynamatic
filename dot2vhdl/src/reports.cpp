@@ -18,7 +18,7 @@
 #include "dot2vhdl.h"
 #include "dot_parser.h"
 #include "vhdl_writer.h"
-#include "vivado_if.h"
+#include "eda_if.h"
 #include "lsq_generator.h"
 
 

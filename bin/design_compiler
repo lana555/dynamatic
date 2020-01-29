@@ -1,0 +1,12 @@
+
+
+echo $1
+sed 's/:0/:32/g' $1.dot > .tmp1
+sed 's/:1/:32/g' .tmp1 > $1_dc.dot
+dot2vhdl $1_dc
+mv $1_dc.vhd .tmp2
+sed 's/0 downto 0/31 downto 0/g' .tmp2 >$1_dc.vhd
+
+rm .tmp1 .tmp2 $1_dc.dot
+ 
+

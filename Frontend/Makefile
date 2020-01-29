@@ -1,5 +1,5 @@
 # 
-# Makefile : dot2vhdl
+# Makefile : DHLS Shell
 # 
 # Description: 
 # 
@@ -33,12 +33,13 @@ PERL		= perl
 CHECK		= sparse
 DOXYGEN		= doxygen
 
-APP = dot2vhdl
+APP = dhls
+ANALYZE = analyze
+ELABORATE = elaborate
 
 SRCDIR=./src
 OBJDIR=./src
 BINDIR=./bin
-DOCSDIR=./docs
 
 #CC=g++
 #CFLAGS=-O3 -Wall
@@ -48,48 +49,41 @@ DOCSDIR=./docs
 #DEFINE2=-D_USE_TCP
 DEFINES=${DEFINE1} ${DEFINE2} ${DEFINE3}
 
-CFLAGS=-O3 -g -Wall -static -fpermissive $(DEFINES) 
+CFLAGS=-O3 -g -Wall -fpermissive $(DEFINES) 
 
 #LFLAGS=-lpthread -lm
 LFLAGS=
 #-static
+IDIR=$(SWIFTLIB)
 
+all: $(BINDIR)/$(APP) $(BINDIR)/$(ANALYZE) $(BINDIR)/$(ELABORATE)
 
-
-$(BINDIR)/$(APP) :: $(SRCDIR)/table_printer.o $(SRCDIR)/dot_parser.o  $(SRCDIR)/vhdl_writer.o $(SRCDIR)/lsq_generator.o $(SRCDIR)/checks.o $(SRCDIR)/eda_if.o $(SRCDIR)/reports.o \
-			$(SRCDIR)/string_utils.o $(SRCDIR)/sys_utils.o \
-			$(SRCDIR)/$(APP).o
+$(BINDIR)/$(APP) :: $(SRCDIR)/parser.o $(SRCDIR)/$(APP).o
 	$(CC) $(CFLAGS) $? -o $@ $(LDIR) $(LFLAGS)
 
-$(SRCDIR)/table_printer.o :: $(SRCDIR)/table_printer.cpp
+$(BINDIR)/$(ANALYZE) :: $(SRCDIR)/analyze.o $(SRCDIR)/$(ANALYZE).o
+	$(CC) $(CFLAGS) $? -o $@ $(LDIR) $(LFLAGS)
+
+$(SRCDIR)/analyze.o :: $(SRCDIR)/analyze.cpp
 	$(CC) $(CFLAGS) -c $? -o $@ -I $(IDIR) -I $(SRCDIR)
 
-$(SRCDIR)/dot_parser.o :: $(SRCDIR)/dot_parser.cpp
+$(BINDIR)/$(ELABORATE) :: $(SRCDIR)/elaborate.o $(SRCDIR)/$(ELABORATE).o
+	$(CC) $(CFLAGS) $? -o $@ $(LDIR) $(LFLAGS)
+
+$(SRCDIR)/elaborate.o :: $(SRCDIR)/elaborate.cpp
 	$(CC) $(CFLAGS) -c $? -o $@ -I $(IDIR) -I $(SRCDIR)
 
-$(SRCDIR)/vhdl_writer.o :: $(SRCDIR)/vhdl_writer.cpp
-	$(CC) $(CFLAGS) -c $? -o $@ -I $(IDIR) -I $(SRCDIR)
-
-$(SRCDIR)/lsq_generator.o :: $(SRCDIR)/lsq_generator.cpp
-	$(CC) $(CFLAGS) -c $? -o $@ -I $(IDIR) -I $(SRCDIR)
-
-$(SRCDIR)/eda_if.o :: $(SRCDIR)/eda_if.cpp
-	$(CC) $(CFLAGS) -c $? -o $@ -I $(IDIR) -I $(SRCDIR)
-
-$(SRCDIR)/checks.o :: $(SRCDIR)/checks.cpp
-	$(CC) $(CFLAGS) -c $? -o $@ -I $(IDIR) -I $(SRCDIR)
-
-$(SRCDIR)/reports.o :: $(SRCDIR)/reports.cpp
-	$(CC) $(CFLAGS) -c $? -o $@ -I $(IDIR) -I $(SRCDIR)
-
-$(SRCDIR)/string_utils.o :: $(SRCDIR)/string_utils.cpp
-	$(CC) $(CFLAGS) -c $? -o $@ -I $(IDIR) -I $(SRCDIR)
-
-$(SRCDIR)/sys_utils.o :: $(SRCDIR)/sys_utils.cpp
+$(SRCDIR)/parser.o :: $(SRCDIR)/cmd_parser.cpp
 	$(CC) $(CFLAGS) -c $? -o $@ -I $(IDIR) -I $(SRCDIR)
 
 $(SRCDIR)/$(APP).o :: $(SRCDIR)/$(APP).cpp
 	$(CC) $(CFLAGS) -c $? -o $@ -I $(IDIR) -I $(SRCDIR)
+
+docs :: 
+	$(CD) $(DOCSDIR) && \
+	$(DOXYGEN) $(SWIFT_API_DOXY) && \
+	$(DOXYGEN) $(SWIFT_STRUCTURE_DOXY) &&\
+	$(DOXYGEN) $(SWIFT_SAMPLE_DOXY)
 
 clean ::
 	rm -rf $(BINDIR)/* $(OBJDIR)/*.o

@@ -59,7 +59,7 @@ void DFnetlist_Impl::createMilpVarsEB(Milp_Model& milp, milpVarsEB& vars, bool m
     vars.time_elastic = vector<int>(vecPortsSize(), -1);
 
     ForAllChannels(c) {
-        if (channelIsCovered(c, false, true, true)) continue;
+        if (channelIsCovered(c, false, true, false)) continue;
 
         const string& src = getBlockName(getSrcBlock(c));
         const string& dst = getBlockName(getDstBlock(c));
@@ -128,7 +128,7 @@ void DFnetlist_Impl::createMilpVarsEB_sc(Milp_Model &milp, milpVarsEB &vars, boo
     /// CHANNELS IN MG  ///
     ///////////////////////
     for (channelID c: MG_disjoint[mg].getChannels()) {
-        if (channelIsCovered(c, false, true, true)) continue;
+        if (channelIsCovered(c, false, true, false)) continue;
 
         const string& src = getBlockName(getSrcBlock(c));
         const string& dst = getBlockName(getDstBlock(c));
@@ -232,7 +232,7 @@ void DFnetlist_Impl::createMilpVars_remaining(Milp_Model &milp, milpVarsEB &vars
     vars.time_elastic = vector<int>(vecPortsSize(), -1);
 
     ForAllChannels(c) {
-        if (channelIsCovered(c, true, true, true))
+        if (channelIsCovered(c, true, true, false))
             continue;
 
         const string& src = getBlockName(getSrcBlock(c));
@@ -371,20 +371,18 @@ bool DFnetlist_Impl::addElasticBuffers(double Period, double BufferDelay, bool M
 }
 
 bool DFnetlist_Impl::addElasticBuffersBB(double Period, double BufferDelay, bool MaxThroughput, double coverage, int timeout, bool first_MG) {
+
+    cleanElasticBuffers();
+
     cout << "======================" << endl;
     cout << "ADDING ELASTIC BUFFERS" << endl;
     cout << "======================" << endl;
 
     Milp_Model milp;
-
-    //setUnitDelays();
-
     if (not milp.init(getMilpSolver())) {
         setError(milp.getError());
         return false;
     }
-
-    hideElasticBuffers();
 
     if (MaxThroughput) {
         assert (coverage >= 0.0 and coverage <= 1.0);
@@ -393,64 +391,53 @@ bool DFnetlist_Impl::addElasticBuffersBB(double Period, double BufferDelay, bool
     }
 
     // Lana 05/07/19 If nothing to optimize, exit
-    if (coverage == 0)
+    if (coverage == 0) {
         return false;
+    }
 
-//    addBorderBuffers();
-//    removeBuffersFromMC_LSQ();
+    findMCLSQ_load_channels();
 
     cout << "===========================" << endl;
     cout << "Initiating MILP for buffers" << endl;
     cout << "===========================" << endl;
 
-    // Create the variables
     milpVarsEB milpVars;
-    cout << "creating milp vars..." << endl;
     createMilpVarsEB(milp, milpVars, MaxThroughput, first_MG);
-
-    cout << "setting path constraints..." << endl;
     if (not createPathConstraints(milp, milpVars, Period, BufferDelay)) return false;
-
-    cout << "setting elasticity constraints..." << endl;
     if (not createElasticityConstraints(milp, milpVars)) return false;
 
-    // Cost function for buffers: 0.01 * buffers + 0.001 * slots
-    double buf_cost = -0.000001, slot_cost = -0.0000001;
-    cout << "adding channel cost terms..." << endl;
-    ForAllChannels(c) {
-        if (channelIsCovered(c, false, true, true)) continue;
-        milp.newCostTerm(buf_cost, milpVars.has_buffer[c]);
-        milp.newCostTerm(slot_cost, milpVars.buffer_slots[c]);
-    }
-
+    double highest_coef = 1.0, order_buf = 0.0001, order_slot = 0.00001;
     if (MaxThroughput) {
-        cout << "setting throughput constraints..." << endl;
         createThroughputConstraints(milp, milpVars, first_MG);
 
         computeChannelFrequencies();
         double total_freq = 0;
         ForAllChannels(c) total_freq += getChannelFrequency(c);
 
-        cout << "adding throughput cost terms..." << endl;
-        for (int i = 0; i < MG.size(); i++) {
+        int optimize_num = first_MG ? 1 : MG.size();
+        double mg_highest_coef = 0.0;
+        for (int i = 0; i < optimize_num; i++) {
             double coef = MG[i].numChannels() * MGfreq[i] / total_freq;
             milp.newCostTerm(coef, milpVars.th_MG[i]);
-            if (first_MG) break;
+            mg_highest_coef = mg_highest_coef > coef ? mg_highest_coef : coef;
         }
-        milp.setMaximize();
+        highest_coef = mg_highest_coef;
+    }
+
+    ForAllChannels(c) {
+        milp.newCostTerm(-1 * order_buf * highest_coef, milpVars.has_buffer[c]);
+        milp.newCostTerm(-1 * order_slot * highest_coef, milpVars.buffer_slots[c]);
     }
 
     milp.setMaximize();
-    cout << "Solving MILP for elastic buffers" << endl;
 
+    cout << "Solving MILP for elastic buffers" << endl;
     long long start_time, end_time;
     uint32_t elapsed_time;
-
     start_time = get_timestamp();
     if (timeout > 0) milp.solve(timeout);
     else milp.solve();
     end_time = get_timestamp();
-
     elapsed_time = ( uint32_t ) ( end_time - start_time ) ;
     printf ("Milp time: [ms] %d \n\r", elapsed_time);
 
@@ -460,10 +447,20 @@ bool DFnetlist_Impl::addElasticBuffersBB(double Period, double BufferDelay, bool
         return false;
     }
 
+    if (MaxThroughput) {
+        int optimize_num = first_MG ? 1 : MG.size();
+        for (int i = 0; i < optimize_num; i++) {
+            cout << "************************" << endl;
+            cout << "*** Throughput for MG " << i << ": ";
+            cout << fixed << setprecision(2) << milp[milpVars.th_MG[i]] << " ***" << endl;
+            cout << "************************" << endl;
+        }
+    }
+
     // Add channels
     vector<channelID> buffers;
     ForAllChannels(c) {
-        if (channelIsCovered(c, false, true, true)) continue;
+        if (channelIsCovered(c, false, false, true)) continue;
         if (milp[milpVars.has_buffer[c]]) {
             buffers.push_back(c);
         }
@@ -477,26 +474,15 @@ bool DFnetlist_Impl::addElasticBuffersBB(double Period, double BufferDelay, bool
         setChannelBufferSize(c, slots);
 
         printChannelInfo(c, slots, transparent);
-        total_slot_count += slots;
     }
-    cout << "-----------------" << endl;
-    cout << "Inserted " << buffers.size() << " buffers with a total of " << total_slot_count << " number of slots" << endl;
-    cout << "-----------------" << endl;
-
-    if (MaxThroughput) {
-        for (int i = 0; i < MG.size(); i++) {
-            cout << "\n*** Throughput achieved in sub MG " << i << ": " <<
-                 fixed << setprecision(2) << milp[milpVars.th_MG[i]] << " ***\n" << endl;
-            if (first_MG) break;
-        }
-    }
-
-    //dumpMilpSolution(milp, milpVars);
 
     return true;
 }
 
 bool DFnetlist_Impl::addElasticBuffersBB_sc(double Period, double BufferDelay, bool MaxThroughput, double coverage, int timeout, bool first_MG) {
+
+    cleanElasticBuffers();
+
     cout << "======================" << endl;
     cout << "ADDING ELASTIC BUFFERS" << endl;
     cout << "======================" << endl;
@@ -508,8 +494,6 @@ bool DFnetlist_Impl::addElasticBuffersBB_sc(double Period, double BufferDelay, b
         return false;
     }
 
-    hideElasticBuffers();
-
     if (MaxThroughput) {
         assert (coverage >= 0.0 and coverage <= 1.0);
         cout << "Extracting marked graphs" << endl;
@@ -517,17 +501,19 @@ bool DFnetlist_Impl::addElasticBuffersBB_sc(double Period, double BufferDelay, b
     }
 
     // Lana 05/07/19 If nothing to optimize, exit
-    if (coverage == 0)
+    if (coverage == 0) {
         return false;
+    }
 
-    addBorderBuffers();
-//    removeBuffersFromMC_LSQ();
+    findMCLSQ_load_channels();
+    //addBorderBuffers();
+
     calculateDisjointCFDFCs();
     makeMGsfromCFDFCs();
 
     auto milpVars_sc = vector<milpVarsEB>(MG_disjoint.size(), milpVarsEB());
     long long total_time = 0;
-    double buf_cost = -0.000001, slot_cost = -0.0000001;
+    double order_buf = 0.0001, order_slot = 0.00001;
 
     if (MaxThroughput) computeChannelFrequencies();
 
@@ -536,25 +522,13 @@ bool DFnetlist_Impl::addElasticBuffersBB_sc(double Period, double BufferDelay, b
         cout << "Initiating MILP for MG number " << i << endl;
         cout << "-------------------------------" << endl;
 
-        cout << "Creating MILP variables..." << endl;
         createMilpVarsEB_sc(milp, milpVars_sc[i], MaxThroughput, i, first_MG);
-
-        cout << "Setting path constraints..." << endl;
         if (not createPathConstraints_sc(milp, milpVars_sc[i], Period, BufferDelay, i)) return false;
-
-        cout << "Setting elasticity constraints..." << endl;
         if (not createElasticityConstraints_sc(milp, milpVars_sc[i], i)) return false;
 
-        cout << "Adding cost terms for channels..." << endl;
-        for (channelID c: MG_disjoint[i].getChannels()) {
-            if (channelIsCovered(c, false, true, true)) continue;
 
-            milp.newCostTerm(buf_cost, milpVars_sc[i].has_buffer[c]);
-            milp.newCostTerm(slot_cost, milpVars_sc[i].buffer_slots[c]);
-        }
-
+        double highest_coef = 1.0;
         if (MaxThroughput) {
-            cout << "Setting throughput constraints..." << endl;
             createThroughputConstraints_sc(milp, milpVars_sc[i], i, first_MG);
 
             double total_freq = 0;
@@ -562,14 +536,21 @@ bool DFnetlist_Impl::addElasticBuffersBB_sc(double Period, double BufferDelay, b
                 total_freq += getChannelFrequency(c);
             }
 
-            cout << "Adding cost terms for sub-MG throughput..." << endl;
+            double mg_highest_coef = 0.0;
             for (auto sub_mg: components[i]) {
-                cout << " adding cost term for sub_mg " << sub_mg << endl;
                 double coef = MG[sub_mg].numChannels() * MGfreq[sub_mg] / total_freq;
                 milp.newCostTerm(coef, milpVars_sc[i].th_MG[sub_mg]);
+                mg_highest_coef = mg_highest_coef > coef ? mg_highest_coef : coef;
                 if (first_MG) break;
             }
-            milp.setMaximize();
+            highest_coef = mg_highest_coef;
+        }
+
+        for (channelID c: MG_disjoint[i].getChannels()) {
+            if (channelIsCovered(c, false, true, false)) continue;
+
+            milp.newCostTerm(-1 * order_buf * highest_coef, milpVars_sc[i].has_buffer[c]);
+            milp.newCostTerm(-1 * order_slot * highest_coef, milpVars_sc[i].buffer_slots[c]);
         }
 
         milp.setMaximize();
@@ -578,12 +559,10 @@ bool DFnetlist_Impl::addElasticBuffersBB_sc(double Period, double BufferDelay, b
 
         long long start_time, end_time;
         uint32_t elapsed_time;
-
         start_time = get_timestamp();
         if (timeout > 0) milp.solve(timeout);
         else milp.solve();
         end_time = get_timestamp();
-
         elapsed_time = ( uint32_t ) ( end_time - start_time ) ;
         printf ("Milp time for MG %d: [ms] %d \n\n\r", i, elapsed_time);
         total_time += elapsed_time;
@@ -594,16 +573,25 @@ bool DFnetlist_Impl::addElasticBuffersBB_sc(double Period, double BufferDelay, b
             return false;
         }
 
+        if (MaxThroughput) {
+            for (auto sub_mg: components[i]) {
+                cout << "************************" << endl;
+                cout << "*** Throughput for MG " << sub_mg << " in disjoint MG " << i << ": ";
+                cout << fixed << setprecision(2) << milp[milpVars_sc[i].th_MG[sub_mg]] << " ***" << endl;
+                cout << "************************" << endl;
+                if (first_MG) break;
+            }
+        }
+
         // Add channels
         vector<channelID> buffers;
         for (channelID c: MG_disjoint[i].getChannels()) {
-
+            if (channelIsCovered(c, false, true, true)) continue;
             if (milp[milpVars_sc[i].buffer_slots[c]] > 0.5) {
                 buffers.push_back(c);
             }
         }
 
-        int total_slot_count = 0;
         for (channelID c: buffers) {
             int slots = milp[milpVars_sc[i].buffer_slots[c]] + 0.5; // Automatically truncated
             bool transparent = milp.isFalse(milpVars_sc[i].buffer_flop[c]);
@@ -611,12 +599,7 @@ bool DFnetlist_Impl::addElasticBuffersBB_sc(double Period, double BufferDelay, b
             setChannelBufferSize(c, slots);
 
             printChannelInfo(c, slots, transparent);
-            total_slot_count += slots;
         }
-
-        cout << "-----------------" << endl;
-        cout << "Inserted " << buffers.size() << " buffers with a total of " << total_slot_count << " number of slots" << endl;
-        cout << "-----------------" << endl;
 
         if (MaxThroughput) {
             for (auto sub_mg: components[i]) {
@@ -625,9 +608,6 @@ bool DFnetlist_Impl::addElasticBuffersBB_sc(double Period, double BufferDelay, b
                 if (first_MG) break;
             }
         }
-
-        dumpMilpSolution(milp, milpVars_sc[i]);
-
         if (not milp.init(getMilpSolver())) {
             setError(milp.getError());
             return false;
@@ -645,18 +625,12 @@ bool DFnetlist_Impl::addElasticBuffersBB_sc(double Period, double BufferDelay, b
 
     milpVarsEB remaining;
 
-    cout << "Creating MILP variables..." << endl;
     createMilpVars_remaining(milp, remaining);
-
-    cout << "Setting path constraints..." << endl;
     createPathConstraints_remaining(milp, remaining, Period, BufferDelay);
-
-    cout << "Setting elasticity constraints..." << endl;
     createElasticityConstraints_remaining(milp, remaining);
 
-    cout << "Adding cost terms for channels..." << endl;
     ForAllChannels(c) {
-        if (channelIsCovered(c, true, true, true))
+        if (channelIsCovered(c, true, true, false))
             continue;
         milp.newCostTerm(1, remaining.buffer_flop[c]);
     }
@@ -666,12 +640,10 @@ bool DFnetlist_Impl::addElasticBuffersBB_sc(double Period, double BufferDelay, b
 
     long long start_time, end_time;
     uint32_t elapsed_time;
-
     start_time = get_timestamp();
     if (timeout > 0) milp.solve(timeout);
     else milp.solve();
     end_time = get_timestamp();
-
     elapsed_time = ( uint32_t ) ( end_time - start_time ) ;
     printf ("Milp time for remaining channels: [ms] %d \n\n\r", elapsed_time);
     total_time += elapsed_time;
@@ -702,7 +674,6 @@ bool DFnetlist_Impl::addElasticBuffersBB_sc(double Period, double BufferDelay, b
     cout << "***************************" << endl;
     printf ("Total MILP time: [ms] %d\n\r", total_time);
     cout << "***************************" << endl;
-
     return true;
 }
 
@@ -727,7 +698,7 @@ bool DFnetlist_Impl::createPathConstraints(Milp_Model& milp, milpVarsEB& Vars, d
             milp.newRow( {{1,v2}}, '<', Period);
 
             // v2 >= v1 - 2*period*R
-            if (channelIsCovered(c, false, true, true))
+            if (channelIsCovered(c, false, true, false))
                 milp.newRow({{-1, v1}, {1, v2}}, '>', -2 * Period * !isChannelTransparent(c));
             else
                 milp.newRow ({{-1,v1}, {1,v2}, {2 * Period, R}}, '>', 0);
@@ -999,7 +970,7 @@ bool DFnetlist_Impl::createPathConstraints_remaining(Milp_Model &milp, milpVarsE
             milp.newRow( {{1,v2}}, '<', Period);
 
             // v2 >= v1 - 2*period*R
-            if (channelIsCovered(c, true, true, true))
+            if (channelIsCovered(c, true, true, false))
                 milp.newRow({{-1, v1}, {1, v2}}, '>', -2 * Period * !isChannelTransparent(c));
             else
                 milp.newRow ( {{-1,v1}, {1,v2}, {2*Period, R}}, '>', 0);
@@ -1079,7 +1050,7 @@ bool DFnetlist_Impl::createElasticityConstraints(Milp_Model& milp, milpVarsEB& V
         int hasbuf = Vars.has_buffer[c];
         int hasflop = Vars.buffer_flop[c];
 
-        if (channelIsCovered(c, false, true, true)) {
+        if (channelIsCovered(c, false, true, false)) {
             milp.newRow ( {{-1,v1}, {1,v2}}, '>', -1 * big_constant * !isChannelTransparent(c));
         }
         else {
@@ -1203,7 +1174,7 @@ bool DFnetlist_Impl::createElasticityConstraints_remaining(Milp_Model &milp, mil
         int v1 = Vars.time_elastic[getSrcPort(c)];
         int v2 = Vars.time_elastic[getDstPort(c)];
 
-        if (channelIsCovered(c, true, true, true))
+        if (channelIsCovered(c, true, true, false))
             milp.newRow ( {{-1,v1}, {1,v2}}, '>', -1 * big_constant * !isChannelTransparent(c));
         else
             milp.newRow ( {{-1,v1}, {1,v2}, {big_constant, Vars.buffer_flop[c]}}, '>', 0);
@@ -1239,7 +1210,7 @@ bool DFnetlist_Impl::createThroughputConstraints(Milp_Model& milp, milpVarsEB& V
             int Slots = Vars.buffer_slots[c];    // Slots in the channel
             int hasFlop = Vars.buffer_flop[c];   // Is there a flop?
 
-            if (channelIsCovered(c, false, true, true)) cout << "something is wrong" << endl;
+            if (channelIsCovered(c, false, true, false)) cout << "something is wrong" << endl;
 
             // Variables for retiming tokens and bubbles through blocks
             int ret_src_tok = Vars.out_retime_tokens[mg][getSrcBlock(c)];
@@ -1283,9 +1254,9 @@ bool DFnetlist_Impl::createThroughputConstraints_sc(Milp_Model &milp, milpVarsEB
     for (auto sub_mg: components[mg]) {
         int th_mg = Vars.th_MG[sub_mg]; // Throughput of the marked graph.
         for (channelID c: MG[sub_mg].getChannels()) {
-            cout << "  Channel ";
-            if (isBackEdge(c)) cout << "(backedge) ";
-                cout << getChannelName(c) << " MG " << sub_mg << endl;
+    //        cout << "  Channel ";
+    //        if (isBackEdge(c)) cout << "(backedge) ";
+     //           cout << getChannelName(c) << " MG " << sub_mg << endl;
 
 
             int th_tok = Vars.th_tokens[sub_mg][c];  // throughput of the channel (tokens)
@@ -1342,14 +1313,20 @@ blockID DFnetlist_Impl::insertBuffer(channelID c, int slots, bool transparent)
     portID src = getSrcPort(c);
     portID dst = getDstPort(c);
     bool back = isBackEdge(c);
+    blockID b_src = getSrcBlock(c);
+    bbID bb_src = getBasicBlock(b_src);
+
     removeChannel(c);
 
 //    cout << "> Inserting buffer on channel " << getPortName(src)
 //         << " -> " << getPortName(dst) << endl;
+    
+
     int width = getPortWidth(src);
     blockID eb = createBlock(ELASTIC_BUFFER);
     setBufferSize(eb, slots);
     setBufferTransparency(eb, transparent);
+    setBasicBlock(eb, bb_src);
     portID in_buf = createPort(eb, true, "in1", width);
     portID out_buf = createPort(eb, false, "out1", width);
     //cout << "> Buffer created with ports "
@@ -1364,6 +1341,7 @@ channelID DFnetlist_Impl::removeBuffer(blockID buf)
 {
     assert(getBlockType(buf) == ELASTIC_BUFFER);
 
+    cout << "SHAB: removing buffer " << getBlockName(buf) << endl;
     // Get the ports at the other side of the channels
     portID in_port = getSrcPort(getConnectedChannel(getInPort(buf)));
     portID out_port = getDstPort(getConnectedChannel(getOutPort(buf)));
@@ -1466,17 +1444,32 @@ void DFnetlist_Impl::addBorderBuffers(){
     cout << endl;
 }
 
-void DFnetlist_Impl::removeBuffersFromMC_LSQ() {
+
+void DFnetlist_Impl::findMCLSQ_load_channels() {
+    cout << "determining buffer from/to MC_LSQ units to/from loads." << endl;
     ForAllChannels(c) {
         BlockType src_type = getBlockType(getSrcBlock(c));
         BlockType dst_type = getBlockType(getDstBlock(c));
+        string src_op = getOperation(getSrcBlock(c));
+        string dst_op = getOperation(getDstBlock(c));
+        bool src_lsq = false, dst_lsq = false, src_load = false, dst_load = false;
+        if (src_type == MC || src_type == LSQ) src_lsq = true;
+        if (dst_type == MC || dst_type == LSQ) dst_lsq = true;
+        if (src_op == "lsq_load_op" || src_op == "mc_load_op") src_load = true;
+        if (dst_op == "lsq_load_op" || dst_op == "mc_load_op") dst_load = true;
 
-        if (src_type == LSQ || src_type == MC || dst_type == LSQ || dst_type == MC) {
-            setChannelTransparency(c, 1);
-            setChannelBufferSize(c, 0);
+/*
+        cout << getChannelName(c) << endl;
+        cout << "\tsource type is " << src_type;
+        cout << "destination type is " << dst_type;
+        cout << "src_lsq: " << src_lsq << ", src_load: " << src_load;
+        cout << "dst_lsq: " << dst_lsq << ", dst_load: " << dst_load << endl;
+*/
+
+        assert(!(src_lsq && src_load) && !(dst_lsq && dst_load));
+        if ((src_lsq && dst_load) || (src_load && dst_lsq)) {
+           // cout << "\tis from/to load to/from MC LSQ" << endl;
             channels_in_MC_LSQ.insert(c);
-            blocks_in_MC_LSQ.insert(getSrcBlock(c));
-            blocks_in_MC_LSQ.insert(getDstBlock(c));
         }
     }
 }
@@ -1484,11 +1477,13 @@ void DFnetlist_Impl::removeBuffersFromMC_LSQ() {
 void DFnetlist_Impl::hideElasticBuffers()
 {
     vecBlocks bls;
+    //cout << "making bls " << endl;
     ForAllBlocks(b) {
         if (getBlockType(b) == ELASTIC_BUFFER) bls.push_back(b);
     }
 
     for (blockID b: bls) {
+        //cout << "removing block " << getBlockName(b) << endl;
         int slots = getBufferSize(b);
         bool transp = isBufferTransparent(b);
         channelID c = removeBuffer(b);
@@ -1499,8 +1494,10 @@ void DFnetlist_Impl::hideElasticBuffers()
 
 void DFnetlist_Impl::cleanElasticBuffers()
 {
+    //cout << "cleaning buffers" << endl;
     hideElasticBuffers();
     ForAllChannels(c) {
+        //cout << "prev=> buf-size: " << getChannelBufferSize(c) << ", trans: " << isChannelTransparent(c) << endl;
         setChannelBufferSize(c, 0);
         setChannelTransparency(c, true);
     }

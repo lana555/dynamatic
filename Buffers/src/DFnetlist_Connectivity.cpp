@@ -174,16 +174,31 @@ void DFnetlist_Impl::eraseNonSCC()
 
 void DFnetlist_Impl::calculateBackEdges()
 {
+    ForAllChannels(c) {
+
+        blockID bb = getSrcBlock(c);
+        bbID src = getBasicBlock(getSrcBlock(c));
+        bbID dst = getBasicBlock(getDstBlock(c));
+        // BB ids are given in DFS order from entry
+        // If branch goes to its own BB or a BB with a smaller id
+        // it is a back edge
+        // TODO: determine back edges at CFG level and then apply to CDFG
+        if ((getBlockType(bb) == BRANCH) && src >= dst)
+            setBackEdge(c, true);
+        else
+            setBackEdge(c, false); 
+    }
+
     // Forward traversal starting from entry nodes.
-    DFS();
+    // DFS();
 
     // Check for back edges
-    ForAllChannels(c) {
-        int src = getDFSorder(getSrcBlock(c));
-        int dst = getDFSorder(getDstBlock(c));
-        if (src < 0 or dst < 0) setBackEdge(c, false);
-        else setBackEdge(c, src > dst);
-    }
+    //ForAllChannels(c) {
+    //    int src = getDFSorder(getSrcBlock(c));
+    //    int dst = getDFSorder(getDstBlock(c));
+    //    if (src < 0 or dst < 0) setBackEdge(c, false);
+    //    else setBackEdge(c, src > dst);
+    //}
 }
 
 void DFnetlist_Impl::printBlockSCCs() {

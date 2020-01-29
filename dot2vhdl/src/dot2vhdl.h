@@ -19,13 +19,14 @@ using namespace std;
 
 #define INIT_STRING	"\n\r\n\r\
 ******************************************************************\n\r\
-******Dynamic High-Level Synthesis Compiler - EPFL-LAP 2018 ******\n\r\
+******Dynamic High-Level Synthesis Compiler **********************\n\r\
+******Andrea Guerrieri - Lana Josipovic - EPFL-LAP 2019 **********\n\r\
 ******Dot to VHDL Generator***************************************\n\r\
 ******************************************************************\n\r\
 ";
 //#define VERSION_STRING	"******Version 0.1 - Build 0.1 ************************************\n\r******************************************************************\n\r\n\r"
 
-#define VERSION_STRING "0.20"
+#define VERSION_STRING "0.21"
 
 #define BUG_STRING	"\n\r\n\r\
 ***********************************************************************\n\r\

@@ -35,6 +35,9 @@ static cl::opt<bool> opt_useLSQ("use-lsq", cl::desc("Emit LSQs where applicable"
 static cl::opt<std::string> opt_cfgOutdir("cfg-outdir", cl::desc("Output directory of MyCFGPass"),
                                           cl::Hidden, cl::init("."), cl::Optional);
 
+static cl::opt<bool> opt_buffers("simple-buffers", cl::desc("Naive buffer placement"), cl::Hidden,
+                                cl::init(false), cl::Optional);
+
 struct timeval start, end;
 
 std::string fname;
@@ -98,6 +101,8 @@ public:
 
             circuitGen->addPhi();
 
+            printDotDFG(enode_dag, bbnode_dag, opt_cfgOutdir + "/" + fname + "_graph.dot", done);
+
             circuitGen->phiSanityCheck(enode_dag);
 
             circuitGen->addFork();
@@ -121,7 +126,8 @@ public:
             // circuitGen->setSizes();
 
             set_clock();
-            // circuitGen->addBuffersSimple();
+            if (opt_buffers)
+              circuitGen->addBuffersSimple();
 
             printf("Time elapsed: %.4gs.\n", elapsed_time());
             fflush(stdout);

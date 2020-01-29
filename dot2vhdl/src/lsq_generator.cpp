@@ -123,9 +123,29 @@ int get_lsq_addresswidth ()
 }
 
 
-int get_lsq_fifo_depth ()
+int get_lsq_fifo_depth ( int lsq_indx )
 {
-    return LSQ_FIFODEPTH_DEFAULT; //default???
+    int fifodepth;
+    
+    for (int i = 0; i < components_in_netlist; i++) 
+    {
+        
+        if ( nodes[i].type.find("LSQ") != std::string::npos )
+        {
+            if ( lsq_indx == nodes[i].lsq_indx )
+            {
+                fifodepth = nodes[i].fifodepth;
+                break;
+            }
+        }
+
+        
+    }
+    
+    return fifodepth;
+
+    
+    //return LSQ_FIFODEPTH_DEFAULT; //default???
 }
 
 int get_lsq_loadPorts ( int lsq_indx )
@@ -205,6 +225,7 @@ string get_numLoads( int lsq_indx )
                 replace( numLoads.begin(), numLoads.end(), '{', '[' );
                 replace( numLoads.begin(), numLoads.end(), '}', ']' );
                 replace( numLoads.begin(), numLoads.end(), ';', ',' );
+                replace( numLoads.begin(), numLoads.end(), '"', ' ' );
                 break;
             }
         }
@@ -238,6 +259,8 @@ string get_numStores( int lsq_indx )
                 replace( numStores.begin(), numStores.end(), '{', '[' );
                 replace( numStores.begin(), numStores.end(), '}', ']' );
                 replace( numStores.begin(), numStores.end(), ';', ',' );
+                replace( numStores.begin(), numStores.end(), '"', ' ' );
+
                 break;
             }
         }
@@ -272,6 +295,7 @@ string get_loadOffset( int lsq_indx )
                 replace( loadOffset.begin(), loadOffset.end(), '{', '[' );
                 replace( loadOffset.begin(), loadOffset.end(), '}', ']' );
                 replace( loadOffset.begin(), loadOffset.end(), ';', ',' );
+                replace( loadOffset.begin(), loadOffset.end(), '"', ' ' );
                 break;
             }
         }
@@ -305,6 +329,7 @@ string get_storeOffset( int lsq_indx )
                 replace( storeOffset.begin(), storeOffset.end(), '{', '[' );
                 replace( storeOffset.begin(), storeOffset.end(), '}', ']' );
                 replace( storeOffset.begin(), storeOffset.end(), ';', ',' );
+                replace( storeOffset.begin(), storeOffset.end(), '"', ' ' );
 
                 break;
             }
@@ -339,6 +364,7 @@ string get_loadPorts( int lsq_indx )
                 replace( loadPorts.begin(), loadPorts.end(), '{', '[' );
                 replace( loadPorts.begin(), loadPorts.end(), '}', ']' );
                 replace( loadPorts.begin(), loadPorts.end(), ';', ',' );
+                replace( loadPorts.begin(), loadPorts.end(), '"', ' ' );
 
                 break;
             }
@@ -373,6 +399,8 @@ string get_storePorts( int lsq_indx )
                 replace( storePorts.begin(), storePorts.end(), '{', '[' );
                 replace( storePorts.begin(), storePorts.end(), '}', ']' );
                 replace( storePorts.begin(), storePorts.end(), ';', ',' );
+                replace( storePorts.begin(), storePorts.end(), '"', ' ' );
+
                 break;
             }
         }
@@ -560,7 +588,7 @@ void lsq_set_configuration ( int lsq_indx )
     lsq_conf[lsq_indx].name = get_lsq_name ( lsq_indx );
     lsq_conf[lsq_indx].dataWidth = get_lsq_datawidth ();//     "dataWidth": 32,
     lsq_conf[lsq_indx].addressWidth = get_lsq_addresswidth ();//     "addressWidth": 10,
-    lsq_conf[lsq_indx].fifoDepth = get_lsq_fifo_depth ();    //     "fifoDepth": 4,
+    lsq_conf[lsq_indx].fifoDepth = get_lsq_fifo_depth ( lsq_indx );    //     "fifoDepth": 4,
     lsq_conf[lsq_indx].loadPorts = get_lsq_loadPorts( lsq_indx ); //     "loadPorts": 1,
     lsq_conf[lsq_indx].storePorts = get_lsq_storePorts( lsq_indx ); //     "storePorts": 1,
 
@@ -755,6 +783,8 @@ void lsq_write_configuration_file ( string top_level_filename, int lsq_indx )
     lsq_configuration_file << "\"loadPorts\": " << get_loadPorts( lsq_indx ) << "," << endl;
     lsq_configuration_file << "\"storePorts\": " << get_storePorts( lsq_indx ) << "," << endl;
     
+    lsq_configuration_file << "\"bufferDepth\": 0 "<< endl;
+
     
     
     //lsq_configuration_file << "}" << endl;
@@ -816,7 +846,11 @@ void lsq_generate ( string top_level_filename )
         cout << "Generating LSQ " << lsq_indx << " component..." << endl;
 
         //sprintf ( cmd, "java -jar -Xmx7G lsq.jar --target-dir %s --spec-file %s.json", top_level_filename.c_str(), top_level_filename.c_str() );
-        sprintf ( cmd, "java -jar -Xmx7G lsq.jar --target-dir . --spec-file %s_lsq%d_configuration.json",  top_level_filename.c_str(), lsq_indx );
+        //sprintf ( cmd, "java -jar -Xmx7G lsq.jar --target-dir . --spec-file %s_lsq%d_configuration.json",  top_level_filename.c_str(), lsq_indx );
+        //sprintf ( cmd, "java -jar -Xmx7G /home/dynamatic/Dynamatic/bin/lsq.jar --target-dir . --spec-file %s_lsq%d_configuration.json",  top_level_filename.c_str(), lsq_indx );
+        
+        sprintf ( cmd, "lsq_generate %s_lsq%d_configuration.json",  top_level_filename.c_str(), lsq_indx );
+        
     
         cout << cmd << endl;
 

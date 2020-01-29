@@ -35,7 +35,8 @@ enum node_type {
     Fifoi_    = 18, // instruction buffer
     Sink_   = 19,
     Source_ = 20,
-    MC_     = 21
+    MC_     = 21, 
+    dummy_ =22
 };
 
 class BBNode; 

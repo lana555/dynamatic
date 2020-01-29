@@ -679,8 +679,8 @@ void parse_components ( string v_0, string v_1 )
             {
                 nodes[components_in_netlist].bbcount = get_component_bbcount (parameters[indx] );
                 
-                cout << nodes[components_in_netlist].name << " bbcount " << nodes[components_in_netlist].bbcount << endl;
-                cout << nodes[components_in_netlist].name << " inputs.size " << nodes[components_in_netlist].inputs.size << endl;
+                //cout << nodes[components_in_netlist].name << " bbcount " << nodes[components_in_netlist].bbcount << endl;
+                //cout << nodes[components_in_netlist].name << " inputs.size " << nodes[components_in_netlist].inputs.size << endl;
                 
                 if ( nodes[components_in_netlist].bbcount == 0 )
                 {
@@ -688,6 +688,8 @@ void parse_components ( string v_0, string v_1 )
                     nodes[components_in_netlist].inputs.size += 1;
                     nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].type = "c";
                     nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].bit_size = 32;
+                    nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].info_type = "fake"; //Andrea 20200128 Try to force 0 to inputs.
+
                 }
                 
                 cout << nodes[components_in_netlist].name << " inputs.size " << nodes[components_in_netlist].inputs.size << endl;
@@ -742,17 +744,22 @@ void parse_components ( string v_0, string v_1 )
             if ( parameter.find("portId") != std::string::npos )
             {
                 nodes[components_in_netlist].portId = get_component_portId ( parameters[indx] );
-                cout << "component id "<< components_in_netlist << " portId " << nodes[components_in_netlist].portId << endl;
+                //cout << "component id "<< components_in_netlist << " portId " << nodes[components_in_netlist].portId << endl;
             }
             if ( parameter.find("offset") != std::string::npos )
             {
                 nodes[components_in_netlist].offset = get_component_offset ( parameters[indx] );
             }
 
+            if ( parameter.find("fifoDepth") != std::string::npos )
+            {
+                nodes[components_in_netlist].fifodepth = get_component_bbcount (parameters[indx] );
+            }
+
             if ( parameter.find("numLoads") != std::string::npos )
             {
                 nodes[components_in_netlist].numLoads = get_component_numloads ( parameters[indx] );
-                cout << "numLoads" << nodes[components_in_netlist].numLoads << endl;
+                //cout << "numLoads" << nodes[components_in_netlist].numLoads << endl;
             }
             if ( parameter.find("numStores") != std::string::npos )
             {
@@ -772,7 +779,9 @@ void parse_components ( string v_0, string v_1 )
             }
             if ( parameter.find("storePorts") != std::string::npos )
             {
-                nodes[components_in_netlist].storePorts = get_component_numstores( parameters[indx] );
+                //nodes[components_in_netlist].storePorts = get_component_numstores( parameters[indx] );
+                nodes[components_in_netlist].storePorts = stripExtension( get_component_numstores( parameters[indx] ), "];" );
+                
             }
         }
 //                 if ( nodes[components_in_netlist].type == "Entry" )

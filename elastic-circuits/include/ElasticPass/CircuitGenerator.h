@@ -78,14 +78,14 @@ public:
 
     // Implementation in `AddPhi.cpp`
     void addPhi();
-    void makePhiDag(std::vector<BBNode*>* path, ENode* li);
-    ENode* find_phi(BBNode* bbnode, ENode* li);
-    void addPhiLoops(std::vector<BBNode*>* path, ENode* li);
-    void findAllPaths(BBNode* to, BBNode* from, std::vector<BBNode*>* visited,
-                      std::vector<std::vector<BBNode*>*>* paths, BBNode* currNode);
-    void printPath(std::vector<BBNode*>* path, FILE* f);
-    void printPaths(std::vector<std::vector<BBNode*>*>* paths, FILE* f);
-    void fixLLVMPhiLiveOuts();
+    //void makePhiDag(std::vector<BBNode*>* path, ENode* li);
+    //ENode* find_phi(BBNode* bbnode, ENode* li);
+    //void addPhiLoops(std::vector<BBNode*>* path, ENode* li);
+    //void findAllPaths(BBNode* to, BBNode* from, std::vector<BBNode*>* visited,
+     //                 std::vector<std::vector<BBNode*>*>* paths, BBNode* currNode);
+    //void printPath(std::vector<BBNode*>* path, FILE* f);
+    //void printPaths(std::vector<std::vector<BBNode*>*>* paths, FILE* f);
+   // void fixLLVMPhiLiveOuts();
     void setPhiLiveOuts();
 
     // Implementation in `Bitwidth.cpp`

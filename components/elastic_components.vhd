@@ -650,6 +650,78 @@ begin
     end process;
 end arch;
 
+
+library IEEE;
+USE IEEE.STD_LOGIC_1164.ALL;
+USE IEEE.NUMERIC_STD.ALL;
+ use work.customTypes.all;
+entity start_node_new is
+
+  Generic (
+    INPUT_COUNT:integer; OUTPUT_COUNT:integer; DATA_SIZE_IN:integer; DATA_SIZE_OUT:integer
+  );
+ 
+  Port ( 
+    clk, rst : in std_logic;  
+    dataInArray : in data_array (0 downto 0)(DATA_SIZE_IN-1 downto 0);
+    dataOutArray : out data_array (0 downto 0)(DATA_SIZE_OUT-1 downto 0);
+    readyArray : out std_logic_vector(0 downto 0);
+    validArray : out std_logic_vector(0 downto 0);
+    nReadyArray : in std_logic_vector(0 downto 0);
+    pValidArray : in std_logic_vector(0 downto 0)
+  );
+end start_node_new;
+
+
+
+architecture arch of start_node_new is 
+
+signal set: STD_LOGIC;
+signal start_internal:std_logic;
+signal startBuff_readyArray : STD_LOGIC_VECTOR(0 downto 0);
+signal startBuff_validArray : STD_LOGIC_VECTOR(0 downto 0);
+signal startBuff_dataOutArray: data_array(0 downto 0)(DATA_SIZE_IN-1 downto 0);
+
+begin
+ 
+  --process(clk, rst)
+  ----  begin
+
+  --      if (rst=  '1')  then
+  --      start_internal <= '0';
+  --          set <= '0';
+
+   --     elsif rising_edge(clk) then
+   --         if (pValidArray(0) = '1' and set = '0') then
+   --             start_internal<= '1';
+   --             set <= '1';
+   --         else 
+   --             start_internal <= '0';
+   --         end if;
+   --     end if;
+        
+      
+   -- end process;
+
+startBuff: entity work.elasticBuffer(arch) generic map (1, 1, DATA_SIZE_IN, DATA_SIZE_IN)
+port map (
+--inputs
+    clk => clk,  --clk
+    rst => rst,  --rst
+    dataInArray(0) => dataInArray(0),  ----dataInArray
+    pValidArray(0) => pValidArray(0),   --pValidArray
+    nReadyArray(0) => nReadyArray(0),  --nReadyArray
+--outputs
+    dataOutArray => startBuff_dataOutArray,    ----dataOutArray
+    readyArray => startBuff_readyArray,  --readyArray
+    validArray => startBuff_validArray   --validArray
+);
+
+validArray(0) <= startBuff_validArray(0);
+dataOutArray(0) <= startBuff_dataOutArray(0);
+readyArray(0) <= startBuff_readyArray(0);
+
+end arch;
 --------------------------------------------------------------  new_start
 ---------------------------------------------------------------------
 
@@ -785,13 +857,14 @@ validArray(0) <= '1';
 
 end arch;
 
+
 --------------------------------------------------------------  fifo
 --------------------------------------------------------------------
 library IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
 USE IEEE.NUMERIC_STD.ALL;
  use work.customTypes.all;
-entity elasticFifo is
+entity elasticFifoInner is
 
   Generic (
     INPUT_COUNT:integer; OUTPUT_COUNT:integer; DATA_SIZE_IN:integer; DATA_SIZE_OUT:integer; FIFO_DEPTH : integer
@@ -806,9 +879,9 @@ entity elasticFifo is
     nReadyArray : in std_logic_vector(0 downto 0);
     pValidArray : in std_logic_vector(0 downto 0)
   );
-end elasticFifo;
+end elasticFifoInner;
  
-architecture arch of elasticFifo is
+architecture arch of elasticFifoInner is
 
     signal ReadEn   : std_logic := '0';
     signal WriteEn  : std_logic := '0';
@@ -975,6 +1048,73 @@ EmptyUpdate_proc : process (CLK)
 end process;
 end architecture;
 
+
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+USE work.customTypes.all;
+
+entity elasticFifo is
+
+  Generic (
+    INPUT_COUNT:integer; OUTPUT_COUNT:integer; DATA_SIZE_IN:integer; DATA_SIZE_OUT:integer; FIFO_DEPTH : integer
+  );
+ 
+port(
+    clk, rst : in std_logic;  
+    dataInArray : in data_array (0 downto 0)(DATA_SIZE_IN-1 downto 0);
+    dataOutArray : out data_array (0 downto 0)(DATA_SIZE_OUT-1 downto 0);
+    ReadyArray : out std_logic_vector(0 downto 0);
+    ValidArray : out std_logic_vector(0 downto 0);
+    nReadyArray : in std_logic_vector(0 downto 0);
+    pValidArray : in std_logic_vector(0 downto 0));
+end elasticFifo;
+------------------------------------------------------------------------ 
+-- elastic buffer 
+------------------------------------------------------------------------ 
+architecture arch of elasticFifo is
+    
+    signal tehb1_valid, tehb1_ready : STD_LOGIC;
+    signal oehb1_valid, oehb1_ready : STD_LOGIC;
+    signal tehb1_dataOut, oehb1_dataOut : std_logic_vector(DATA_SIZE_IN-1 downto 0);
+
+    
+begin
+
+tehb1: entity work.TEHB(arch) generic map (1, 1, DATA_SIZE_IN, DATA_SIZE_IN)
+        port map (
+        --inputspValidArray
+            clk => clk, 
+            rst => rst, 
+            pValidArray(0)  => pValidArray(0), -- real or speculatef condition (determined by merge1)
+            nReadyArray(0) => oehb1_ready,    
+            validArray(0) => tehb1_valid, 
+        --outputs
+            readyArray(0) => tehb1_ready,   
+            dataInArray(0) => dataInArray(0),
+            dataOutArray(0) => tehb1_dataOut
+        );
+
+oehb1: entity work.elasticFifoInner(arch) generic map (1, 1, DATA_SIZE_IN, DATA_SIZE_IN, FIFO_DEPTH)
+        port map (
+        --inputspValidArray
+            clk => clk, 
+            rst => rst, 
+            pValidArray(0)  => tehb1_valid, -- real or speculatef condition (determined by merge1)
+            nReadyArray(0) => nReadyArray(0),    
+            validArray(0) => oehb1_valid, 
+        --outputs
+            readyArray(0) => oehb1_ready,   
+            dataInArray(0) =>tehb1_dataOut,
+            dataOutArray(0) => oehb1_dataOut
+        );
+
+dataOutArray(0) <= oehb1_dataOut;
+ValidArray(0) <= oehb1_valid;
+ReadyArray(0) <= tehb1_ready;
+    
+end arch;
 --------------------------------------------------------------  read port
 -------------------------------------------------------------------------
 library IEEE;
@@ -1237,10 +1377,16 @@ end mux;
 
 architecture arch of mux is
 
+signal tehb_data_in  : std_logic_vector(DATA_SIZE_IN - 1 downto 0);
+signal tehb_pvalid : std_logic;
+signal tehb_ready : std_logic;
+
 begin
     process(dataInArray, pValidArray, nReadyArray, condition)
         variable tmp_data_out  : unsigned(DATA_SIZE_IN - 1 downto 0);
         variable tmp_valid_out : std_logic;
+
+        
     begin
         tmp_data_out  := unsigned(dataInArray(0));
         tmp_valid_out := '0';
@@ -1251,22 +1397,37 @@ begin
                 tmp_valid_out := '1';
             end if;
             -- set the readyOutArray
-            if ((unsigned(condition(0)) = to_unsigned(I,condition(0)'length) and pValidArray(0) = '1' and nReadyArray(0) = '1' and pValidArray(I+1) = '1') or pValidArray(I+1) = '0') then
+            if ((unsigned(condition(0)) = to_unsigned(I,condition(0)'length) and pValidArray(0) = '1' and tehb_ready = '1' and pValidArray(I+1) = '1') or pValidArray(I+1) = '0') then
                 readyArray(I+1) <= '1';
             else
                 readyArray(I+1) <= '0';
             end if;
         end loop;
         -- set the condtionReady
-        if (pValidArray(0) = '0' or (tmp_valid_out = '1' and nReadyArray(0) = '1')) then
+        if (pValidArray(0) = '0' or (tmp_valid_out = '1' and tehb_ready = '1')) then
             readyArray(0) <= '1';
         else
             readyArray(0) <= '0';
         end if;
         --Assign dataout and validout
-        dataOutArray(0) <= std_logic_vector(resize(tmp_data_out,DATA_SIZE_OUT));
-        validArray(0)     <= tmp_valid_out;
+        tehb_data_in <= std_logic_vector(resize(tmp_data_out,DATA_SIZE_OUT));
+        tehb_pvalid     <= tmp_valid_out;
     end process;
+
+
+    tehb1: entity work.TEHB(arch) generic map (1, 1, DATA_SIZE_IN, DATA_SIZE_IN)
+        port map (
+        --inputspValidArray
+            clk => clk, 
+            rst => rst, 
+            pValidArray(0)  => tehb_pvalid, 
+            nReadyArray(0) => nReadyArray(0),    
+            validArray(0) => validArray(0), 
+        --outputs
+            readyArray(0) => tehb_ready,   
+            dataInArray(0) => tehb_data_in,
+            dataOutArray(0) => dataOutArray(0)
+        );
 end arch;
 
 
@@ -1393,14 +1554,14 @@ architecture arch of lsq_load_op is
 
 begin
 
-	dataOutArray(1) <= dataInArray(0); -- address request goes to LSQ
-	validArray(1) <= pValidArray(0);
-	readyArray(0) <= nReadyArray(1);
+	dataOutArray(1) <= dataInArray(1); -- address request goes to LSQ
+	validArray(1) <= pValidArray(1);
+	readyArray(1) <= nReadyArray(1);
 
 
-	dataOutArray(0) <= dataInArray(1); -- data from LSQ to load output
-	validArray(0) <= pValidArray(1);
-	readyArray(1) <= nReadyArray(0);
+	dataOutArray(0) <= dataInArray(0); -- data from LSQ to load output
+	validArray(0) <= pValidArray(0);
+	readyArray(0) <= nReadyArray(0);
 
         
 end architecture;
