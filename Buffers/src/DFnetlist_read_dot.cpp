@@ -522,6 +522,29 @@ static bool readLSQParams(DFnetlist_Impl& DF, blockID id, Agnode_t* v)
     return true;
 }
 
+// Lana 04/10/19 read LSQ params for json
+static bool readGetPtrConst(DFnetlist_Impl& DF, blockID id, Agnode_t* v)
+{
+    string block_name = DF.getBlockName(id);
+
+    if (DF.getBlockType(id) == OPERATOR) {
+
+        const char* attr = agget(v, (char *) "constants");
+        if (attr != nullptr and strlen(attr) > 0) {
+            int t = getPositiveInteger(attr);
+            if (t < 0) {
+                DF.setError("Block " + block_name + ": wrong value for GetPtr constants.");
+                return false;
+            }
+
+             DF.setGetPtrConst(id, t);
+        }
+
+    }
+
+    return true;
+}
+
 static bool readValue(DFnetlist_Impl& DF, blockID id, Agnode_t* v)
 {
     string block_name = DF.getBlockName(id);
@@ -733,6 +756,9 @@ bool DFnetlist_Impl::readDataflowDot(FILE *f)
         if (not readFuncName(*this, id, v)) return false;
 
         if (not readLSQParams(*this, id, v)) return false;
+
+        // Reading getelementptr array dimensions
+        if (not readGetPtrConst(*this, id, v)) return false;
 
         // SHAB: to support naive buffer placement
         if (not readBufferAttributes(*this, id, v)) return false;

@@ -186,6 +186,14 @@ bool get_component_mem_address (  string parameters )
 
 }
 
+int get_component_constants ( string parameters )
+{
+    parameters = string_clean( parameters );
+        
+    string type = get_value ( parameters );
+    return stoi_p( type );
+}
+
 
 string get_input_type ( string in )
 {
@@ -753,7 +761,7 @@ void parse_components ( string v_0, string v_1 )
 
             if ( parameter.find("fifoDepth") != std::string::npos )
             {
-                nodes[components_in_netlist].fifodepth = get_component_bbcount (parameters[indx] );
+                nodes[components_in_netlist].fifodepth = get_component_bbcount ( parameters[indx] );
             }
 
             if ( parameter.find("numLoads") != std::string::npos )
@@ -783,6 +791,12 @@ void parse_components ( string v_0, string v_1 )
                 nodes[components_in_netlist].storePorts = stripExtension( get_component_numstores( parameters[indx] ), "];" );
                 
             }
+            if ( parameter.find("constants") != std::string::npos )
+            {
+                nodes[components_in_netlist].constants = get_component_constants ( parameters[indx] );
+            }
+
+            
         }
 //                 if ( nodes[components_in_netlist].type == "Entry" )
 //                 {

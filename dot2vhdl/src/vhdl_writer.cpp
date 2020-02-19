@@ -144,8 +144,8 @@ void write_signals (  )
         else
         {
                 netlist << endl;
-                netlist << "\t" << SIGNAL_STRING<< nodes[i].name << "_clk: std_logic;"<< endl;
-                netlist << "\t" << SIGNAL_STRING<< nodes[i].name << "_rst: std_logic;" << endl;
+                netlist << "\t" << SIGNAL_STRING<< nodes[i].name << "_clk : std_logic;"<< endl;
+                netlist << "\t" << SIGNAL_STRING<< nodes[i].name << "_rst : std_logic;" << endl;
                 
                 for ( indx = 0; indx < nodes[i].inputs.size; indx++ )
                 {
@@ -915,7 +915,13 @@ string get_generic ( int node_id )
 //             generic += COMMA;
 //             generic += to_string(nodes[node_id].outputs.output[0].bit_size);
 //         }
-
+        
+        if ( nodes[node_id].component_operator.find("getelementptr_op") != std::string::npos )
+        {
+            generic += COMMA;
+            generic += to_string(nodes[node_id].constants);
+        }
+        
     }    
 
     if ( nodes[node_id].type.find("Entry") != std::string::npos )
@@ -950,7 +956,8 @@ string get_generic ( int node_id )
         generic += to_string(size_max);
 #endif
 
-        generic += to_string(nodes[node_id].inputs.input[nodes[node_id].inputs.size].bit_size);
+        //generic += to_string(nodes[node_id].inputs.input[nodes[node_id].inputs.size].bit_size);
+        generic += to_string(nodes[node_id].inputs.input[nodes[node_id].inputs.size-1].bit_size);
         
         generic += COMMA;
         generic += to_string(nodes[node_id].outputs.output[0].bit_size);

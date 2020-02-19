@@ -709,21 +709,28 @@ void CircuitGenerator::removeRedundantBeforeElastic(std::vector<BBNode*>* bbnode
             std::vector<ENode*> nodeList;
             for (auto& succ : *enode->CntrlSuccs) {
                 if (succ->type == Inst_) {
+                	bool add_const = false;
                     if (succ->Instr->getOpcode() == Instruction::Store) {
-                        if (succ->Instr->getOperand(1) == dyn_cast<Value>(enode->A)) {
+                        if (succ->Instr->getOperand(1) == dyn_cast<Value>(enode->A)) 
+                        	add_const = true;                    
+                    }
+                    if (succ->Instr->getOpcode() == Instruction::Load) {
+                        if (succ->Instr->getOperand(0) == dyn_cast<Value>(enode->A)) 
+                        	add_const = true;
+                    }
 
-                            succ->CntrlPreds->erase(std::remove(succ->CntrlPreds->begin(),
+                    if (add_const) {
+                    	succ->CntrlPreds->erase(std::remove(succ->CntrlPreds->begin(),
                                                                 succ->CntrlPreds->end(), enode),
                                                     succ->CntrlPreds->end());
 
-                            ENode* cstNode = new ENode(Cst_, std::to_string(0).c_str(), succ->BB);
+                        ENode* cstNode = new ENode(Cst_, std::to_string(0).c_str(), succ->BB);
 
-                            cstNode->id = cst_id++;
-                            succ->CntrlPreds->push_back(cstNode);
-                            cstNode->CntrlSuccs->push_back(succ);
-                            enode_dag->push_back(cstNode);
-                            nodeList.push_back(succ);
-                        }
+                        cstNode->id = cst_id++;
+                        succ->CntrlPreds->push_back(cstNode);
+                        cstNode->CntrlSuccs->push_back(succ);
+                        enode_dag->push_back(cstNode);
+                        nodeList.push_back(succ);
                     }
                 }
             }
@@ -1041,7 +1048,9 @@ void CircuitGenerator::addControl() {
 
                     if (enode->CntrlSuccs->front()->type == Inst_) {
                         if (enode->CntrlSuccs->front()->Instr->getOpcode() ==
-                            Instruction::GetElementPtr) {
+                            Instruction::GetElementPtr ||
+                            enode->CntrlSuccs->front()->Instr->getOpcode() ==
+                            Instruction::Load ) {
                             forkC_node->JustCntrlSuccs->push_back(enode);
                             enode->JustCntrlPreds->push_back(forkC_node);
                         }

@@ -335,6 +335,10 @@ void DFnetlist_Impl::writeBlockDot(ostream& s, blockID b)
         if (B.II > 1) s << ", II=" << B.II;
     }
 
+
+    if (B.type == OPERATOR and (B.operation == "getelementptr_op")) {
+        s << ", constants=" << getGetPtrConst(b);
+    }
     // Lana 02/07/19
     if (B.type == OPERATOR and (B.operation == "mc_load_op" 
         || B.operation == "mc_store_op" 

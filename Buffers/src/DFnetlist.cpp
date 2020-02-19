@@ -522,6 +522,14 @@ const string& DFnetlist_Impl::getStorePorts(blockID id) const
     return blocks[id].storePorts;
 }
 
+// Getelementptr array dimensions
+void DFnetlist_Impl::setGetPtrConst(blockID id, int c)
+{
+    assert(validBlock(id));
+    blocks[id].getptrc = c;
+
+}
+
 //---------------------------
 
 long long DFnetlist_Impl::getValue(blockID id)
@@ -564,6 +572,13 @@ blockID DFnetlist_Impl::getBlockFromPort(portID p) const
 {
     assert(validPort(p));
     return ports[p].block;
+}
+
+// Getelementptr array dimensions
+int DFnetlist_Impl::getGetPtrConst(blockID id) const
+{
+    assert(validBlock(id));
+    return blocks[id].getptrc;
 }
 
 // Generates a fresh port name for a given block name. isInput indicates whether the port

@@ -261,7 +261,7 @@ begin
 
     readyArray(0) <= not validArray(0) or nReadyArray(0);
     reg_en <= readyArray(0) and pValidArray(0);
-	dataOutArray(0) <= data_reg;
+    dataOutArray(0) <= data_reg;
 
 end arch;
 
@@ -342,7 +342,7 @@ use ieee.numeric_std.all;
 entity end_node is 
     generic(
         INPUTS        : integer;
-        MEM_INPUTS	  : integer;
+        MEM_INPUTS    : integer;
         OUTPUTS        : integer;
         DATA_SIZE_IN  : integer;
         DATA_SIZE_OUT : integer
@@ -391,7 +391,7 @@ begin
 
     -- check if all mem controllers are done (and of all valids from memory)
     mem_and: entity work.andN(vanilla) generic map (MEM_INPUTS)
-   			port map (eValidArray, mem_valid);
+            port map (eValidArray, mem_valid);
 
     -- join for return data and memory--we exit only in case the first process gets
     -- a single valid and if the AND of all memories is set
@@ -927,20 +927,20 @@ begin
     fifo_proc : process (CLK)
    
      begin        
-	    if rising_edge(CLK) then
-	      if RST = '1' then
-	       
-	      else
-	        
-	        if (WriteEn = '1' ) then
-	            -- Write Data to Memory
-	            Memory(Tail) <= dataInArray(0);
-	            
-	        end if;
-	        
-	      end if;
-	    end if;
-  	end process;
+        if rising_edge(CLK) then
+          if RST = '1' then
+           
+          else
+            
+            if (WriteEn = '1' ) then
+                -- Write Data to Memory
+                Memory(Tail) <= dataInArray(0);
+                
+            end if;
+            
+          end if;
+        end if;
+    end process;
 
 
  
@@ -948,22 +948,22 @@ begin
 -- process for updating tail
 TailUpdate_proc : process (CLK)
    
-	  begin
-		if rising_edge(CLK) then
-		  
-		    if RST = '1' then
-		       Tail <= 0;
-		    else
-		  
-		        if (WriteEn = '1') then
+      begin
+        if rising_edge(CLK) then
+          
+            if RST = '1' then
+               Tail <= 0;
+            else
+          
+                if (WriteEn = '1') then
 
-		            Tail  <= (Tail + 1) mod FIFO_DEPTH;
-		                      
-		        end if;
-		       
-		    end if;
-		end if;
-	end process; 
+                    Tail  <= (Tail + 1) mod FIFO_DEPTH;
+                              
+                end if;
+               
+            end if;
+        end if;
+    end process; 
 
 -------------------------------------------
 -- process for updating head
@@ -1173,26 +1173,26 @@ buff_n0: entity work.elasticBuffer(arch) generic map (1, 1, ADDRESS_SIZE, ADDRES
 
 read_address <= read_address_internal(0);
 
-	process(clk, rst) is
+    process(clk, rst) is
 
-	    begin
+        begin
 
-	        if (rst = '1') then
+            if (rst = '1') then
 
-	            validArray(0)  <= '0';
-	              
-	        elsif (rising_edge(clk)) then
-	            if (enable_internal= '1') then
-	                validArray(0)   <= '1';
-	                        
-	            else
-	                if (nReadyArray(0) = '1') then
-	                    validArray(0)  <= '0';
-	                end if;
-	            end if;
-	                           
-	        end if;
-	end process; 
+                validArray(0)  <= '0';
+                  
+            elsif (rising_edge(clk)) then
+                if (enable_internal= '1') then
+                    validArray(0)   <= '1';
+                            
+                else
+                    if (nReadyArray(0) = '1') then
+                        validArray(0)  <= '0';
+                    end if;
+                end if;
+                               
+            end if;
+    end process; 
 
 end architecture;
 
@@ -1382,7 +1382,7 @@ signal tehb_pvalid : std_logic;
 signal tehb_ready : std_logic;
 
 begin
-    process(dataInArray, pValidArray, nReadyArray, condition)
+    process(dataInArray, pValidArray, nReadyArray, condition, tehb_ready)
         variable tmp_data_out  : unsigned(DATA_SIZE_IN - 1 downto 0);
         variable tmp_valid_out : std_logic;
 
@@ -1474,7 +1474,7 @@ port map (
     dataInArray (0) => "1",
     dataInArray (1) => "1",
     nReadyArray(0) => oehb1_ready,--outputs
-	dataOutArray => phi_C1_dataOutArray,
+    dataOutArray => phi_C1_dataOutArray,
     readyArray => phi_C1_readyArray,    --readyArray
     validArray => phi_C1_validArray --validArray
 );
@@ -1512,7 +1512,7 @@ port map (
     dataInArray (0) => "1",
     nReadyArray => nReadyArray, --nReadyArray
 --outputs
-	dataOutArray => fork_C1_dataOutArray,
+    dataOutArray => fork_C1_dataOutArray,
     readyArray => fork_C1_readyArray,   --readyArray
     validArray => fork_C1_validArray    --validArray
 );
@@ -1554,14 +1554,14 @@ architecture arch of lsq_load_op is
 
 begin
 
-	dataOutArray(1) <= dataInArray(1); -- address request goes to LSQ
-	validArray(1) <= pValidArray(1);
-	readyArray(1) <= nReadyArray(1);
+    dataOutArray(1) <= dataInArray(1); -- address request goes to LSQ
+    validArray(1) <= pValidArray(1);
+    readyArray(1) <= nReadyArray(1);
 
 
-	dataOutArray(0) <= dataInArray(0); -- data from LSQ to load output
-	validArray(0) <= pValidArray(0);
-	readyArray(0) <= nReadyArray(0);
+    dataOutArray(0) <= dataInArray(0); -- data from LSQ to load output
+    validArray(0) <= pValidArray(0);
+    readyArray(0) <= nReadyArray(0);
 
         
 end architecture;
@@ -1600,13 +1600,13 @@ architecture arch of lsq_store_op is
 
 begin
 
-	dataOutArray(0) <= dataInArray(0); -- data to LSQ
-	validArray(0) <= pValidArray(0);
-	readyArray(0) <= nReadyArray(0);
+    dataOutArray(0) <= dataInArray(0); -- data to LSQ
+    validArray(0) <= pValidArray(0);
+    readyArray(0) <= nReadyArray(0);
 
-	dataOutArray(1) <= input_addr; -- address to LSQ
-	validArray(1) <= pValidArray(1);
-	readyArray(1) <= nReadyArray(1);
+    dataOutArray(1) <= input_addr; -- address to LSQ
+    validArray(1) <= pValidArray(1);
+    readyArray(1) <= nReadyArray(1);
 
 
         

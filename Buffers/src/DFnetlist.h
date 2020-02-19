@@ -641,6 +641,10 @@ public:
 
     const std::string& getStorePorts(blockID id) const;
 
+    void setGetPtrConst(blockID id, int c);
+
+    int getGetPtrConst(blockID id) const;
+
     /**
      * @brief Defines the value of a constant block.
      * @param id Identifier of the block.
@@ -1233,6 +1237,7 @@ private:
         std::string storeOffsets;
         std::string loadPorts;
         std::string storePorts;
+        int getptrc; // Lana: constant for getelementpointer dimensions
     };
 
     struct Port {

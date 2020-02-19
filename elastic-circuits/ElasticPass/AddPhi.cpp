@@ -31,7 +31,7 @@ void CircuitGenerator::setPhiLiveOuts() {
     }
 }
 
-typedef DenseMap<BasicBlock*, std::vector<ENode *>> bbOps;
+typedef std::map<BasicBlock*, std::vector<ENode *>> bbOps;
 
 bbOps getBBUses(std::vector<BBNode*>* bbnode_dag, std::vector<ENode*>* enode_dag) {
     // Get instructions used in bb but originating from another bb

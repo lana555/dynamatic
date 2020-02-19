@@ -362,12 +362,12 @@ Generic (
 );
 port(
   clk, rst : in std_logic; 
-  dataInArray : in data_array (1 downto 0)(DATA_SIZE_IN-1 downto 0); 
+  dataInArray : in data_array (0 downto 0)(DATA_SIZE_IN-1 downto 0); 
   dataOutArray : out data_array (0 downto 0)(DATA_SIZE_OUT-1 downto 0);      
-  pValidArray : in std_logic_vector(1 downto 0);
+  pValidArray : in std_logic_vector(0 downto 0);
   nReadyArray : in std_logic_vector(0 downto 0);
   validArray : out std_logic_vector(0 downto 0);
-  readyArray : out std_logic_vector(1 downto 0));
+  readyArray : out std_logic_vector(0 downto 0));
 end entity;
 
 architecture arch of sext_op is
@@ -376,18 +376,11 @@ architecture arch of sext_op is
 
 begin 
 
-    join_write_temp:   entity work.join(arch) generic map(2)
-            port map( 
-                pValidArray,  --pValidArray
-                nReadyArray(0),     --nready                    
-                join_valid,         --valid          
-                readyArray);   --readyarray 
-
-    dataOutArray(0) <= std_logic_vector(IEEE.numeric_std.resize(signed(dataInArray(0)),signed(dataInArray(1))));
-    validArray(0) <= join_valid;
+    dataOutArray(0)<= std_logic_vector(IEEE.numeric_std.resize(signed(dataInArray(0)),DATA_SIZE_OUT));
+    validArray <= pValidArray;
+    readyArray(0) <= not pValidArray(0) or (pValidArray(0) and nReadyArray(0));
 
 end architecture;
-
 
 -----------------------------------------------------------------------
 -- zext, version 0.0
@@ -607,6 +600,8 @@ entity select_op is
 Generic (
  INPUTS : integer ; OUTPUTS : integer; DATA_SIZE_IN: integer; DATA_SIZE_OUT: integer
 );
+-- llvm select: operand(0) is condition, operand(1) is true, operand(2) is false
+-- here, dataInArray(0) is true, dataInArray(1) is false operand
 port (
     clk, rst :      in std_logic;
     dataInArray :   in data_array (1 downto 0)(DATA_SIZE_IN - 1 downto 0);
@@ -629,7 +624,7 @@ architecture arch of select_op is
 
     begin
       
-      ee <= pValidArray(0) and ((condition(0)(0) and pValidArray(2)) or (not condition(0)(0) and pValidArray(1))); --condition and one input
+      ee <= pValidArray(0) and ((not condition(0)(0) and pValidArray(2)) or (condition(0)(0) and pValidArray(1))); --condition and one input
       validInternal <= ee and not antitokenStop; -- propagate ee if not stopped by antitoken
 
       g0 <= not pValidArray(1) and validInternal and nReadyArray(0);
@@ -640,7 +635,7 @@ architecture arch of select_op is
       readyArray(2) <= (not pValidArray(2)) or (validInternal and nReadyArray(0)) or kill1; --normal join or antitoken
       readyArray(0) <= (not pValidArray(0)) or (validInternal and nReadyArray(0)); --like normal join
 
-      dataOutArray(0) <= dataInArray(1) when (condition(0)(0) = '1') else dataInArray(0);
+      dataOutArray(0) <= dataInArray(1) when (condition(0)(0) = '0') else dataInArray(0);
 
       Antitokens: entity work.antitokens
         port map ( clk, rst, 
@@ -1075,61 +1070,30 @@ end architecture;
 
 ----------------------------------------------------------------------- 
 -- getelementptr, version 0.0
--- for now, only wrapper! need to fix for multi-dimensional arrays
 -----------------------------------------------------------------------
 
 Library IEEE;
 use IEEE.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.customTypes.all;
-
-entity getelementptr_op_generic is
-Generic (
-  INPUTS: integer; OUTPUTS: integer; DATA_SIZE_IN: integer; DATA_SIZE_OUT: integer
-);
-port(
-  clk, rst : in std_logic; 
-  dataInArray : in data_array (INPUTS - 1 downto 0)(DATA_SIZE_IN-1 downto 0); 
-  dataOutArray : out data_array (0 downto 0)(DATA_SIZE_OUT-1 downto 0);      
-  pValidArray : in std_logic_vector(1 downto 0);
-  nReadyArray : in std_logic_vector(0 downto 0);
-  validArray : out std_logic_vector(0 downto 0);
-  readyArray : out std_logic_vector(1 downto 0));
-end entity;
-
-architecture arch of getelementptr_op_generic is
-
-    signal join_valid : STD_LOGIC;
-
-begin 
-
-    join_write_temp:   entity work.join(arch) generic map(INPUTS)
-            port map( pValidArray,  --pValidArray
-                      nReadyArray(0),     --nready                    
-                      join_valid,         --valid          
-                      readyArray);   --readyarray 
-
-    dataOutArray(0) <= dataInArray(0);
-    validArray(0) <= join_valid;
-
-end architecture;
-
-
-Library IEEE;
-use IEEE.std_logic_1164.all;
-use ieee.numeric_std.all;
-use work.customTypes.all;
 entity getelementptr_op is
-Generic ( INPUT_SIZE: integer; INPUT_SIZE1 : Integer; OUTPUT_SIZE: Integer; DATA_SIZE : Integer);
+Generic ( INPUTS: integer; OUTPUTS : Integer; INPUT_SIZE: Integer; OUTPUT_SIZE : Integer; CONST_SIZE : Integer);
+
+    -- component inputs: i, j, k,... dimx, dimy, dimz
+    -- inputs: total number of inputs
+    -- outputs: total number of outputs
+    -- input/output size: bitwidths
+    -- const_size: number of dimensions (dimx, ..)
+
 port(
   clk : IN STD_LOGIC;
   rst : IN STD_LOGIC;
-  pValidArray : IN std_logic_vector(1 downto 0);
+  pValidArray : IN std_logic_vector(INPUTS - 1 downto 0);
   nReadyArray : IN STD_LOGIC_VECTOR(0 downto 0);
   validArray : OUT STD_LOGIC_VECTOR(0 downto 0);
-  readyArray : OUT std_logic_vector(1 downto 0);
-  dataInArray: IN data_array(INPUT_SIZE-1 downto 0)(31 DOWNTO 0);
-  dataOutArray : OUT data_array(0 downto 0)(31 DOWNTO 0));
+  readyArray : OUT std_logic_vector(INPUTS -1 downto 0);
+  dataInArray: IN data_array(INPUTS-1 downto 0)(INPUT_SIZE - 1 DOWNTO 0);
+  dataOutArray : OUT data_array(0 downto 0)(OUTPUT_SIZE - 1 DOWNTO 0));
 end entity;
 
 
@@ -1137,29 +1101,41 @@ architecture arch of  getelementptr_op is
 
     signal join_valid : STD_LOGIC;
 
-    signal tmp_6_fu_144_p2 : STD_LOGIC_VECTOR (9 downto 0);
-    signal p_shl_cast_fu_128_p1 : STD_LOGIC_VECTOR (10 downto 0);
-    signal p_shl1_cast_fu_140_p1 : STD_LOGIC_VECTOR (10 downto 0);
-    signal tmp_2_fu_120_p3 : STD_LOGIC_VECTOR (9 downto 0);
-    signal tmp_5_fu_132_p3 : STD_LOGIC_VECTOR (5 downto 0);
 
 begin 
 
-    join_write_temp:   entity work.join(arch) generic map(2)
-            port map( pValidArray,  --pValidArray
+    -- join only for variable inputs
+    join_write_temp:   entity work.join(arch) generic map(INPUTS - CONST_SIZE)
+            port map( pValidArray(INPUTS - CONST_SIZE - 1 downto 0),  --pValidArray
                 nReadyArray(0),     --nready                    
                       join_valid,         --valid          
-                readyArray);   --readyarray 
+                readyArray(INPUTS - CONST_SIZE - 1 downto 0));   --readyarray 
 
-    --dataOutArray(0) <= std_logic_vector(IEEE.numeric_std.resize(unsigned(dataInArray(0)),OUTPUT_SIZE));
+    readyArray (INPUTS -1 downto INPUTS - CONST_SIZE) <=  (others => '1');
+
     validArray(0) <= join_valid;
 
-tmp_2_fu_120_p3 <= (dataInArray(1)(4 downto 0) & "00000");
-tmp_5_fu_132_p3 <= (dataInArray(1)(4 downto 0) & '0');
+    -- convert index [i][j][k] or array[dimX][dimY][dimZ] into index [i * dimY*dimZ + j * dimZ + k] 
+    process(dataInArray)
+        variable tmp_data_out  : unsigned(INPUT_SIZE - 1 downto 0);
+        variable tmp_const  : integer;
+        variable tmp_mul  : integer;
 
-tmp_6_fu_144_p2 <= std_logic_vector(unsigned(tmp_2_fu_120_p3) - unsigned(tmp_5_fu_132_p3));
+    begin
+        tmp_data_out  := (others => '0');
 
-dataOutArray(0) <= "000000000000000000000" & std_logic_vector(unsigned(tmp_6_fu_144_p2) + unsigned(dataInArray(0)(10 downto 0)));
+        for I in 0 to INPUTS - CONST_SIZE - 1 loop
+          tmp_const  := 1;
+          for J in INPUTS - CONST_SIZE + I to INPUTS - 1 loop
+              tmp_const  := tmp_const * to_integer(unsigned(dataInArray(J)));
+          end loop;
+          tmp_mul := to_integer(unsigned(dataInArray(I))) * tmp_const; 
+          tmp_data_out  := tmp_data_out + to_unsigned(tmp_mul, 32);
+        end loop;
+    dataOutArray(0)  <= std_logic_vector(resize(tmp_data_out, OUTPUT_SIZE));
+
+    end process;
+
 end architecture;
 
 

@@ -89,6 +89,7 @@ typedef struct node
     string  loadPorts;
     string  storePorts;
     int  fifodepth;
+    int constants;
 } NODE_T;
 
 

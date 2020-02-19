@@ -99,6 +99,8 @@ public:
 
             circuitGen->removeRedundantBeforeElastic(bbnode_dag, enode_dag);
 
+            circuitGen->setGetelementPtrConsts(enode_dag);
+
             circuitGen->addPhi();
 
             printDotDFG(enode_dag, bbnode_dag, opt_cfgOutdir + "/" + fname + "_graph.dot", done);

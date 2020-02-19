@@ -220,6 +220,8 @@ int getInPortSize(ENode* enode, int index) {
     } else if (enode->type == Inst_) {
         if (enode->Instr->getOpcode() == Instruction::Select && index == 0)
             return COND_SIZE;
+        else if (enode->Instr->getOpcode() == Instruction::GetElementPtr)
+            return DATA_SIZE;
         else
             return (enode->JustCntrlPreds->size() > 0) ? CONTROL_SIZE : DATA_SIZE;
     } else if (enode->type == Fork_) {
@@ -253,6 +255,8 @@ int getOutPortSize(ENode* enode, int index) {
         if (enode->Instr->getOpcode() == Instruction::ICmp ||
             enode->Instr->getOpcode() == Instruction::FCmp)
             return COND_SIZE;
+        else if (enode->Instr->getOpcode() == Instruction::GetElementPtr)
+            return DATA_SIZE;
         else
             return (enode->JustCntrlPreds->size() > 0) ? CONTROL_SIZE : DATA_SIZE;
     } else if (enode->type == Source_) {
@@ -671,12 +675,15 @@ std::string getNodeDotParams(ENode* enode) {
             name += ", value = \"0x1\"";
             break;
         case Inst_:
+            if (enode->Instr->getOpcode() == Instruction::GetElementPtr)
+                 name += ", constants=" + to_string(enode->JustCntrlPreds->size());
             name += ", delay=" + getFloatValue(get_component_delay(enode->Name, DATA_SIZE));
             
             if (isLSQport(enode))
                 name += ", latency=" + to_string(get_component_latency(("lsq_" + enode->Name), DATA_SIZE));
             else
                 name += ", latency=" + to_string(get_component_latency((enode->Name), DATA_SIZE));
+            
             name += ", II=1";
             break;
         case Phi_:
@@ -1100,6 +1107,10 @@ std::string printDataflowEdges(std::vector<ENode*>* enode_dag, std::vector<BBNod
                             str += ", from = \"out" + to_string(enode_index) + "\"";
 
                         int toInd = (enode->type == Fork_ || enode->type == Branch_) ? 2 : 1;
+                        if (enode->type == Cst_ && enode_csucc->type == Inst_) {
+                            assert (enode_csucc->Instr->getOpcode() == Instruction::GetElementPtr);
+                            toInd = indexOf(enode_csucc->JustCntrlPreds, enode) + enode_csucc->CntrlPreds->size() + 1;
+                        }
                         str += ", to = \"in" + to_string(toInd) + "\"";
                         str += "];\n";
                     }
