@@ -72,7 +72,8 @@ void write_modelsim_script ( string top_level_filename )
     
     outFile.open (modelsim_script_filename);
 
-    outFile << "vcom -2008 /home/dynamatic/Dynamatic/etc/dynamatic/components/elastic_components.vhd" << endl;
+    outFile << "vcom -2008 /home/dynamatic/Dynamatic/etc/dynamatic/components/elastic_components.vhd" << endl;  
+    outFile << "vcom -2008 /home/dynamatic/Dynamatic/etc/dynamatic/components/delay_buffer.vhd" << endl;
     outFile << "vcom -2008 /home/dynamatic/Dynamatic/etc/dynamatic/components/arithmetic_units.vhd" << endl;
     outFile << "vcom -2008 /home/dynamatic/Dynamatic/etc/dynamatic/components/MemCont.vhd" << endl;
     
@@ -82,10 +83,12 @@ void write_modelsim_script ( string top_level_filename )
         {
             if (nodes[i].type == "LSQ" )
             {
-                outFile << "vlog hdl/" << nodes[i].name << ".v" << endl ;
+                //outFile << "vlog hdl/" << nodes[i].name << ".v" << endl ;
             }
         }
-        outFile << "vcom -2008 hdl/" << clean_entity ( output_filename[indx] )  << ".vhd" << endl;
+        //outFile << "vcom -2008 hdl/" << clean_entity ( output_filename[indx] )  << ".vhd" << endl;
+        
+        //outFile << "vcom -2008 hdl/" << top_level_filename << ".vhd" << endl;
     }
     
     outFile.close();

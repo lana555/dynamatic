@@ -235,7 +235,7 @@ string clean_entity ( string filename )
     string return_string;
     string_split( filename, '/', v);
     
-    cout << "size: "<< v.size();
+    //cout << "size: "<< v.size();
     
     if ( v.size() > 0 )
     {

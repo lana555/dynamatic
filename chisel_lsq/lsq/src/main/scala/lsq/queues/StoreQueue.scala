@@ -8,7 +8,7 @@ import lsq.util._
 import scala.math.{max, min}
 
 class StoreQueue(config: LsqConfigs) extends Module {
-  override def desiredName: String = "STORE_QUEUE"
+  override def desiredName: String = "STORE_QUEUE_" + config.name
 
   val io = IO(new Bundle {
     // From group allocator

@@ -1,0 +1,6 @@
+#!/bin/sh
+#Dynamatic startup wrapper
+#Author: Andrea Guerrieri andrea.guerrieri@epfl.ch
+#Version:0.0
+
+java -jar -Xmx7G $DHLS_INSTALL_DIR/etc/dynamatic/chisel_lsq/jar/lsq.jar --target-dir . --spec-file $1

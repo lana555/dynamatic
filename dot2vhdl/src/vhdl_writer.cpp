@@ -37,6 +37,8 @@ string entity_name[] = {
     ENTITY_TEHB,
     ENTITY_OEHB,
     ENTITY_FIFO,
+    ENTITY_NFIFO,
+    ENTITY_TFIFO,
     ENTITY_FORK,
     ENTITY_ICMP,
     ENTITY_CONSTANT,
@@ -64,6 +66,8 @@ string component_types[] = {
     COMPONENT_TEHB,
     COMPONENT_OEHB,
     COMPONENT_FIFO,
+    COMPONENT_NFIFO,
+    COMPONENT_TFIFO,
     COMPONENT_FORK,
     COMPONENT_ICMP,
     COMPONENT_CONSTANT_,
@@ -339,6 +343,28 @@ void write_signals (  )
             netlist << "\t" << signal << endl;
             
         }
+        
+        //LSQ-MC Modifications
+        if ( nodes[i].type.find("LSQ") != std::string::npos )
+        {
+
+            netlist << "\t" << SIGNAL_STRING << nodes[i].name << "_address0 : std_logic_vector (31 downto 0);" << endl;
+            netlist << "\t" << SIGNAL_STRING << nodes[i].name << "_ce0 : std_logic;" << endl;
+            netlist << "\t" << SIGNAL_STRING << nodes[i].name << "_we0 : std_logic;" << endl;
+            netlist << "\t" << SIGNAL_STRING << nodes[i].name << "_dout0 : std_logic_vector (31 downto 0);" << endl;
+            netlist << "\t" << SIGNAL_STRING << nodes[i].name << "_din0 : std_logic_vector (31 downto 0);" << endl;
+            
+            netlist << "\t" << SIGNAL_STRING << nodes[i].name << "_address1 : std_logic_vector (31 downto 0);" << endl;
+            netlist << "\t" << SIGNAL_STRING << nodes[i].name << "_ce1 : std_logic;" << endl;
+            netlist << "\t" << SIGNAL_STRING << nodes[i].name << "_we1 : std_logic;" << endl;
+            netlist << "\t" << SIGNAL_STRING << nodes[i].name << "_dout1 : std_logic_vector (31 downto 0);" << endl;
+            netlist << "\t" << SIGNAL_STRING << nodes[i].name << "_din1 : std_logic_vector (31 downto 0);" << endl;
+            
+            netlist << "\t" << SIGNAL_STRING << nodes[i].name << "_load_ready : std_logic;" << endl;
+            netlist << "\t" << SIGNAL_STRING << nodes[i].name << "_store_ready : std_logic;" << endl;
+
+            
+        }
 
     }
 
@@ -366,7 +392,7 @@ void write_connections (  int indx )
             
             
             
-            if ( nodes[i].type == "MC" || nodes[i].type == "LSQ" )
+            if ( nodes[i].type == "MC" )
             {
                     signal_1 = nodes[i].memory;
                     signal_1 += UNDERSCORE;
@@ -389,8 +415,295 @@ void write_connections (  int indx )
                     
                     netlist << "\t"  << signal_1  << " <= " << signal_2 << SEMICOLOUMN << endl;                
             }
-            
+
+                    //LSQ-MC Modifications
+            if ( nodes[i].type == "LSQ" )
+            {
+                bool mc_lsq = false; 
+
+                for ( int indx = 0; indx < nodes[i].inputs.size; indx++ )
+                {
+                    cout << nodes[i].name << " input " << indx << " type " << nodes[i].inputs.input[indx].type << endl;  
+                    if ( nodes[i].inputs.input[indx].type == "x" )
+                    {
+                        // if x port exists, lsq is connected to mc and not to memory directly
+                        mc_lsq = true;
+
+                        // - for the port x0d: 
+                        // LSQ_x_din1 <= LSQ_x_dataInArray_4;
+                        // LSQ_x_readyArray_4 <= '1';
+
+                        signal_1 = nodes[i].name;
+                        signal_1 += UNDERSCORE;
+                        signal_1 += "din1";
+                
+                        signal_2 = nodes[i].name;
+                        signal_2 += UNDERSCORE;
+                        signal_2 += DATAIN_ARRAY;
+                        signal_2 += UNDERSCORE;
+                        signal_2 += to_string( indx );
                     
+                        netlist << "\t"  << signal_1  << " <= " << signal_2 << SEMICOLOUMN << endl;     
+                        
+                        signal_1 = nodes[i].name;
+                        signal_1 += UNDERSCORE;
+                        signal_1 += READY_ARRAY;
+                        signal_1 += UNDERSCORE;
+                        signal_1 += to_string( indx );
+
+                
+                        signal_2 = "'1'";
+                        
+                        netlist << "\t"  << signal_1  << " <= " << signal_2 << SEMICOLOUMN << endl;     
+                        
+                        
+ 
+                    }
+                    //if ( nodes[i].inputs.input[indx].type == "y" )
+                    {
+                        
+                    }
+                }   
+
+                if (!mc_lsq) {
+                    signal_1 = nodes[i].name;
+                    signal_1 += UNDERSCORE;
+                    signal_1 += "din1";
+
+                    signal_2 = nodes[i].memory;
+                    signal_2 += UNDERSCORE;
+                    signal_2 += "din1";
+
+                    netlist << "\t"  << signal_1  << " <= " << signal_2 << SEMICOLOUMN << endl;  
+
+                    signal_1 = nodes[i].name;
+                    signal_1 += UNDERSCORE;
+                    signal_1 += "store_ready";
+
+                    signal_2 = "'1'";
+
+                    netlist << "\t"  << signal_1  << " <= " << signal_2 << SEMICOLOUMN << endl; 
+
+                    signal_1 = nodes[i].name;
+                    signal_1 += UNDERSCORE;
+                    signal_1 += "load_ready";
+
+                    signal_2 = "'1'";
+
+                    netlist << "\t"  << signal_1  << " <= " << signal_2 << SEMICOLOUMN << endl; 
+                }  
+
+                for ( int indx = 0; indx < nodes[i].outputs.size; indx++ )
+                {
+                    cout << nodes[i].name << " output " << indx << " type " << nodes[i].outputs.output[indx].type << endl;  
+
+                    if ( nodes[i].outputs.output[indx].type == "x" )
+                    {
+                        //- for the port x0a, check the index (in this case, it's out3) and build a load address interface as follows:                        
+                        // LSQ_x_load_ready <= LSQ_x_nReadyArray_2;
+                        // LSQ_x_dataOutArray_2 <= LSQ_x_address1;
+                        // LSQ_x_validArray_2 <= LSQ_x_ce1;
+
+                        signal_1 = nodes[i].name;
+                        signal_1 += UNDERSCORE;
+                        signal_1 += "load_ready";
+                
+                        signal_2 = nodes[i].name;
+                        signal_2 += UNDERSCORE;
+                        signal_2 += NREADY_ARRAY;
+                        signal_2 += UNDERSCORE;
+                        signal_2 += to_string( indx );
+                    
+                        netlist << "\t"  << signal_1  << " <= " << signal_2 << SEMICOLOUMN << endl;     
+                        
+                        signal_1 = nodes[i].name;
+                        signal_1 += UNDERSCORE;
+                        signal_1 += DATAOUT_ARRAY;
+                        signal_1 += UNDERSCORE;
+                        signal_1 += to_string( indx );
+
+                
+                        signal_2 = nodes[i].name;
+                        signal_2 += UNDERSCORE;
+                        signal_2 += "address1";
+
+                        netlist << "\t"  << signal_1  << " <= " << signal_2 << SEMICOLOUMN << endl;     
+                        
+                        signal_1 = nodes[i].name;
+                        signal_1 += UNDERSCORE;
+                        signal_1 += VALID_ARRAY;
+                        signal_1 += UNDERSCORE;
+                        signal_1 += to_string( indx );
+
+                
+                        signal_2 = nodes[i].name;
+                        signal_2 += UNDERSCORE;
+                        signal_2 += "ce1";
+
+                        netlist << "\t"  << signal_1  << " <= " << signal_2 << SEMICOLOUMN << endl;     
+                        
+ 
+                    }else
+                    if ( nodes[i].outputs.output[indx].type == "y" )
+                    {
+                        
+                        if ( nodes[i].outputs.output[indx].info_type == "a")
+                        {
+                            // 
+                            // - for the port y0a:
+                            // LSQ_x_validArray_3 <= LSQ_x_we0_ce0;
+                            // LSQ_x_store_ready <= LSQ_x_nReadyArray_3;
+                            // LSQ_x_dataOutArray_3 <= LSQ_x_address0;
+                            signal_1 = nodes[i].name;
+                            signal_1 += UNDERSCORE;
+                            signal_1 += VALID_ARRAY;
+                            signal_1 += UNDERSCORE;
+                            signal_1 += to_string( indx );
+
+                    
+                            signal_2 = nodes[i].name;
+                            signal_2 += UNDERSCORE;
+                            signal_2 += "we0_ce0";
+
+                            netlist << "\t"  << signal_1  << " <= " << signal_2 << SEMICOLOUMN << endl;     
+
+                            signal_1 = nodes[i].name;
+                            signal_1 += UNDERSCORE;
+                            signal_1 += "store_ready";
+
+                    
+                            signal_2 = nodes[i].name;
+                            signal_2 += UNDERSCORE;
+                            signal_2 += NREADY_ARRAY;
+                            signal_2 += UNDERSCORE;
+                            signal_2 += to_string( indx );
+
+                            netlist << "\t"  << signal_1  << " <= " << signal_2 << SEMICOLOUMN << endl;     
+
+                            
+                            signal_1 = nodes[i].name;
+                            signal_1 += UNDERSCORE;
+                            signal_1 += DATAOUT_ARRAY;
+                            signal_1 += UNDERSCORE;
+                            signal_1 += to_string( indx );
+                            
+                    
+                            signal_2 = nodes[i].name;
+                            signal_2 += UNDERSCORE;
+                            signal_2 += "address0";
+
+
+                            netlist << "\t"  << signal_1  << " <= " << signal_2 << SEMICOLOUMN << endl;     
+
+                            
+                        }
+                        else
+                        if ( nodes[i].outputs.output[indx].info_type == "d")
+                        {
+                            // 
+                            // - for the port y0d: 
+                            // LSQ_x_validArray_4 <= LSQ_x_we0_ce0;
+                            // LSQ_x_dataOutArray_4 <= LSQ_x_dout0;
+                            signal_1 = nodes[i].name;
+                            signal_1 += UNDERSCORE;
+                            signal_1 += VALID_ARRAY;
+                            signal_1 += UNDERSCORE;
+                            signal_1 += to_string( indx );
+
+                    
+                            signal_2 = nodes[i].name;
+                            signal_2 += UNDERSCORE;
+                            signal_2 += "we0_ce0";
+
+                            netlist << "\t"  << signal_1  << " <= " << signal_2 << SEMICOLOUMN << endl;     
+
+                            signal_1 = nodes[i].name;
+                            signal_1 += UNDERSCORE;
+                            signal_1 += DATAOUT_ARRAY;
+                            signal_1 += UNDERSCORE;
+                            signal_1 += to_string( indx );
+                            
+                    
+                            signal_2 = nodes[i].name;
+                            signal_2 += UNDERSCORE;
+                            signal_2 += "dout0";
+                            
+                            netlist << "\t"  << signal_1  << " <= " << signal_2 << SEMICOLOUMN << endl;     
+
+                            
+                        }
+
+                        
+                    }
+                   
+
+
+
+                }
+
+                if (!mc_lsq) {
+
+                    signal_1 = nodes[i].memory;
+                    signal_1 += UNDERSCORE;
+                    signal_1 += "address1";
+
+                    signal_2 = nodes[i].name;
+                    signal_2 += UNDERSCORE;
+                    signal_2 += "address1";
+                    
+                    netlist << "\t"  << signal_1  << " <= " << signal_2 << SEMICOLOUMN << endl;  
+
+                    signal_1 = nodes[i].memory;
+                    signal_1 += UNDERSCORE;
+                    signal_1 += "ce1";
+
+                    signal_2 = nodes[i].name;
+                    signal_2 += UNDERSCORE;
+                    signal_2 += "ce1";
+                    
+                    netlist << "\t"  << signal_1  << " <= " << signal_2 << SEMICOLOUMN << endl;  
+
+                    signal_1 = nodes[i].memory;
+                    signal_1 += UNDERSCORE;
+                    signal_1 += "address0";
+
+                    signal_2 = nodes[i].name;
+                    signal_2 += UNDERSCORE;
+                    signal_2 += "address0";
+
+                    netlist << "\t"  << signal_1  << " <= " << signal_2 << SEMICOLOUMN << endl;  
+
+                    signal_1 = nodes[i].memory;
+                    signal_1 += UNDERSCORE;
+                    signal_1 += "ce0";
+
+                    signal_2 = nodes[i].name;
+                    signal_2 += UNDERSCORE;
+                    signal_2 += "we0_ce0";
+
+                    netlist << "\t"  << signal_1  << " <= " << signal_2 << SEMICOLOUMN << endl;  
+
+                    signal_1 = nodes[i].memory;
+                    signal_1 += UNDERSCORE;
+                    signal_1 += "we0";
+
+                    signal_2 = nodes[i].name;
+                    signal_2 += UNDERSCORE;
+                    signal_2 += "we0_ce0";
+
+                    netlist << "\t"  << signal_1  << " <= " << signal_2 << SEMICOLOUMN << endl;  
+
+                    signal_1 = nodes[i].memory;
+                    signal_1 += UNDERSCORE;
+                    signal_1 += "dout0";
+
+                    signal_2 = nodes[i].name;
+                    signal_2 += UNDERSCORE;
+                    signal_2 += "dout0";
+
+                    netlist << "\t"  << signal_1  << " <= " << signal_2 << SEMICOLOUMN << endl;  
+                }      
+        }
 
             if ( nodes[i].type == "Entry" )
             {
@@ -504,20 +817,23 @@ void write_connections (  int indx )
                         signal_2 = nodes[i].name;
                         signal_2 += UNDERSCORE;
                         signal_2 += VALID_ARRAY;
+                        signal_2 += UNDERSCORE;
+                        signal_2 += to_string( indx );;
+
                     
-                        netlist << "\t"  << signal_1 << " <= " << signal_2 << UNDERSCORE << indx <<SEMICOLOUMN << endl;
+                        netlist << "\t"  << signal_1 << " <= " << signal_2 << SEMICOLOUMN << endl;
 
                     }
                     
                     if ( nodes[i].outputs.output[indx].next_nodes_id != COMPONENT_NOT_FOUND )
                     {
-                    
+ 
+
                         signal_1 = nodes[i].name;
                         signal_1 += UNDERSCORE;
                         signal_1 += NREADY_ARRAY;
                         signal_1 += UNDERSCORE;
                         signal_1 += to_string( indx );
-
                     
                         signal_2 = nodes[nodes[i].outputs.output[indx].next_nodes_id].name;
                         //signal_2 = (nodes[i].outputs.output[indx].next_nodes_id == COMPONENT_NOT_FOUND ) ? "unconnected" : nodes[nodes[i].outputs.output[indx].next_nodes_id].name;
@@ -996,7 +1312,33 @@ string get_generic ( int node_id )
         generic += to_string(nodes[node_id].outputs.output[0].bit_size);
         generic += COMMA;
         generic += to_string(nodes[node_id].slots);
-    }    
+    } 
+
+    if ( nodes[node_id].type.find("nFifo") != std::string::npos )
+    {
+        generic = to_string(nodes[node_id].inputs.size);
+        generic += COMMA;
+        generic += to_string(nodes[node_id].outputs.size);
+        generic += COMMA;
+        generic += to_string(nodes[node_id].inputs.input[0].bit_size);
+        generic += COMMA;
+        generic += to_string(nodes[node_id].outputs.output[0].bit_size);
+        generic += COMMA;
+        generic += to_string(nodes[node_id].slots);
+    }   
+
+    if ( nodes[node_id].type.find("tFifo") != std::string::npos )
+    {
+        generic = to_string(nodes[node_id].inputs.size);
+        generic += COMMA;
+        generic += to_string(nodes[node_id].outputs.size);
+        generic += COMMA;
+        generic += to_string(nodes[node_id].inputs.input[0].bit_size);
+        generic += COMMA;
+        generic += to_string(nodes[node_id].outputs.output[0].bit_size);
+        generic += COMMA;
+        generic += to_string(nodes[node_id].slots);
+    }      
 
     if ( nodes[node_id].type.find("TEHB") != std::string::npos )
     {
@@ -1125,8 +1467,10 @@ void write_components ( )
             
             // Andrea 20200117 Added to be compatible with chisel LSQ
             netlist << "," << endl;
-            netlist << "\t" << "io_memIsReadyForLoads => '1' ," << endl;
-            netlist << "\t" << "io_memIsReadyForStores => '1' ";
+//            netlist << "\t" << "io_memIsReadyForLoads => '1' ," << endl;
+//            netlist << "\t" << "io_memIsReadyForStores => '1' ";
+            netlist << "\t" << "io_memIsReadyForLoads => " <<  nodes[i].name << "_load_ready" << COMMA << endl;
+            netlist << "\t" << "io_memIsReadyForStores => " <<  nodes[i].name << "_store_ready";
             
         }
         int indx = 0;
@@ -1172,23 +1516,38 @@ void write_components ( )
             
             for ( int lsq_indx = 0; lsq_indx < nodes[i].inputs.size; lsq_indx++ )
             {    
-                //cout << "LSQ input "<< lsq_indx << " = " << nodes[i].inputs.input[lsq_indx].type << "port = " << nodes[i].inputs.input[lsq_indx].port << "info_type = " <<nodes[i].inputs.input[lsq_indx].info_type << endl;     
+                cout << nodes[i].name << "LSQ input "<< lsq_indx << " = " << nodes[i].inputs.input[lsq_indx].type << " port = " << nodes[i].inputs.input[lsq_indx].port << " info_type = " <<nodes[i].inputs.input[lsq_indx].info_type << endl;     
             }
 
             for ( int lsq_indx = 0; lsq_indx < nodes[i].outputs.size; lsq_indx++ )
             {    
-                //cout << "LSQ output "<< lsq_indx << " = " << nodes[i].outputs.output[lsq_indx].type << "port = " << nodes[i].outputs.output[lsq_indx].port << "info_type = " <<nodes[i].outputs.output[lsq_indx].info_type << endl;     
+                cout << nodes[i].name << "LSQ output "<< lsq_indx << " = " << nodes[i].outputs.output[lsq_indx].type << " port = " << nodes[i].outputs.output[lsq_indx].port << " info_type = " <<nodes[i].outputs.output[lsq_indx].info_type << endl;     
             }
 
             netlist << "," << endl;
-            input_signal = nodes[i].memory;
+            
+            if ( nodes[i].type == "LSQ" )
+            {
+                input_signal = nodes[i].name;
+            }
+            else
+            {
+                input_signal = nodes[i].memory;
+            }
             input_signal += UNDERSCORE;
             input_signal += "dout0";
             input_signal += COMMA;
             
             netlist << "\t" << "io_storeDataOut" << " => "   << input_signal << endl;
 
-            input_signal = nodes[i].memory;
+            if ( nodes[i].type == "LSQ" )
+            {
+                input_signal = nodes[i].name;
+            }
+            else
+            {
+                input_signal = nodes[i].memory;
+            }
             input_signal += UNDERSCORE;
             input_signal += "address0";
             input_signal += COMMA;
@@ -1202,21 +1561,42 @@ void write_components ( )
 
             netlist << "\t" << "io_storeEnable"<< " => "  << input_signal << endl;
             
-            input_signal = nodes[i].memory;
+            if ( nodes[i].type == "LSQ" )
+            {
+                input_signal = nodes[i].name;
+            }
+            else
+            {
+                input_signal = nodes[i].memory;
+            }
             input_signal += UNDERSCORE;
             input_signal += "din1";
             input_signal += COMMA;
 
             netlist << "\t" << "io_loadDataIn" << " => "  << input_signal << endl;
             
-            input_signal = nodes[i].memory;
+            if ( nodes[i].type == "LSQ" )
+            {
+                input_signal = nodes[i].name;
+            }
+            else
+            {
+                input_signal = nodes[i].memory;
+            }
             input_signal += UNDERSCORE;
             input_signal += "address1";
             input_signal += COMMA;
 
             netlist << "\t" << "io_loadAddrOut"<< " => "  << input_signal  << endl;
             
-            input_signal = nodes[i].memory;
+            if ( nodes[i].type == "LSQ" )
+            {
+                input_signal = nodes[i].name;
+            }
+            else
+            {
+                input_signal = nodes[i].memory;
+            }
             input_signal += UNDERSCORE;
             input_signal += "ce1";
             //input_signal += COMMA;
@@ -1356,7 +1736,9 @@ void write_components ( )
                     input_port += UNDERSCORE;
                     input_port += "ready";
                     input_port += "(";
-                    input_port += to_string(load_indx);
+//                    input_port += to_string(load_indx);
+                    input_port += to_string(nodes[i].inputs.input[lsq_indx].port);
+                    
                     input_port += ")";
                     
                 }
@@ -1377,7 +1759,9 @@ void write_components ( )
                     input_port += UNDERSCORE;
                     input_port += "rdPortsPrev";
                     input_port += UNDERSCORE;
-                    input_port += to_string(load_indx);
+                    //input_port += to_string(load_indx);
+                    input_port += to_string(nodes[i].inputs.input[lsq_indx].port);
+
                     input_port += UNDERSCORE;
                     input_port += "valid";
                 }
@@ -1389,7 +1773,9 @@ void write_components ( )
                     input_port += UNDERSCORE;
                     input_port += "valid";
                     input_port += "(";
-                    input_port += to_string(load_indx);
+                    //input_port += to_string(load_indx);
+                    input_port += to_string(nodes[i].inputs.input[lsq_indx].port);
+
                     input_port += ")";
                     
                 }
@@ -1410,7 +1796,9 @@ void write_components ( )
                     input_port += UNDERSCORE;
                     input_port += "rdPortsPrev";
                     input_port += UNDERSCORE;
-                    input_port += to_string(load_indx);
+                    //input_port += to_string(load_indx);
+                    input_port += to_string(nodes[i].inputs.input[lsq_indx].port);
+
                     input_port += UNDERSCORE;
                     input_port += "bits";
                 }
@@ -1422,7 +1810,9 @@ void write_components ( )
                     input_port += UNDERSCORE;
                     input_port += "bits";
                     input_port += "(";
-                    input_port += to_string(load_indx);
+                    //input_port += to_string(load_indx);
+                    input_port += to_string(nodes[i].inputs.input[lsq_indx].port);
+
                     input_port += ")";
                     
                 }
@@ -1459,7 +1849,9 @@ void write_components ( )
                         input_port += "Addr";
                         input_port += "Ports";
                         input_port += UNDERSCORE;
-                        input_port += to_string(store_add_indx);
+                        //input_port += to_string(store_add_indx);
+                        input_port += to_string(nodes[i].inputs.input[lsq_indx].port);
+
                     }
                     else
                     {
@@ -1467,7 +1859,9 @@ void write_components ( )
 
                         input_port += "Ports";
                         input_port += UNDERSCORE;
-                        input_port += to_string(store_data_indx);
+                        //input_port += to_string(store_data_indx);
+                        input_port += to_string(nodes[i].inputs.input[lsq_indx].port);
+
                     }
                     
 
@@ -1493,7 +1887,9 @@ void write_components ( )
                     input_port += UNDERSCORE;
                     input_port += "valid";
                     input_port += "(";
-                    input_port += to_string(store_data_indx);
+                    //input_port += to_string(store_data_indx);
+                    input_port += to_string(nodes[i].inputs.input[lsq_indx].port);
+
                     input_port += ")";
 
 
@@ -1527,7 +1923,9 @@ void write_components ( )
                         input_port += "Ports";
                         input_port += UNDERSCORE;
                         //if ( nodes[i].type == "MC" )  { input_port +="("; input_port += to_string(nodes[i].inputs.input[lsq_indx].port); input_port +=")"; } else { input_port += UNDERSCORE; input_port += to_string(nodes[i].inputs.input[lsq_indx].port); }
-                        input_port += to_string(store_add_indx);
+                        //input_port += to_string(store_add_indx);
+                        input_port += to_string(nodes[i].inputs.input[lsq_indx].port);
+
                         
                     }
                     else
@@ -1537,7 +1935,9 @@ void write_components ( )
                         input_port += "Ports";
                         input_port += UNDERSCORE;
                         //if ( nodes[i].type == "MC" )  { input_port +="("; input_port += to_string(nodes[i].inputs.input[lsq_indx].port); input_port +=")"; } else { input_port += UNDERSCORE; input_port += to_string(nodes[i].inputs.input[lsq_indx].port); }
-                        input_port += to_string(store_data_indx);
+                        //input_port += to_string(store_data_indx);
+                        input_port += to_string(nodes[i].inputs.input[lsq_indx].port);
+
                     }
                     
 
@@ -1556,7 +1956,9 @@ void write_components ( )
                         input_port += UNDERSCORE;
                         input_port += "ready";
                         input_port += "(";
-                        input_port += to_string(store_add_indx);
+                        //input_port += to_string(store_add_indx);
+                        input_port += to_string(nodes[i].inputs.input[lsq_indx].port);
+
                         input_port += ")";
                     }
                     else
@@ -1566,7 +1968,9 @@ void write_components ( )
                         input_port += UNDERSCORE;
                         input_port += "ready";
                         input_port += "(";
-                        input_port += to_string(store_data_indx);
+                        //input_port += to_string(store_data_indx);
+                        input_port += to_string(nodes[i].inputs.input[lsq_indx].port);
+
                         input_port += ")";
                     }
                     
@@ -1600,7 +2004,9 @@ void write_components ( )
                         input_port += "Ports";
                         input_port += UNDERSCORE;
                         //if ( nodes[i].type == "MC" )  { input_port +="("; input_port += to_string(nodes[i].inputs.input[lsq_indx].port); input_port +=")"; } else { input_port += UNDERSCORE; input_port += to_string(nodes[i].inputs.input[lsq_indx].port); }
-                        input_port += to_string(store_add_indx);
+                        //input_port += to_string(store_add_indx);
+                        input_port += to_string(nodes[i].inputs.input[lsq_indx].port);
+
                         store_add_indx++;
 
 
@@ -1611,7 +2017,9 @@ void write_components ( )
                         input_port += "Ports";
                         input_port += UNDERSCORE;
                         //if ( nodes[i].type == "MC" )  { input_port +="("; input_port += to_string(nodes[i].inputs.input[lsq_indx].port); input_port +=")"; } else { input_port += UNDERSCORE; input_port += to_string(nodes[i].inputs.input[lsq_indx].port); }
-                        input_port += to_string(store_data_indx);
+                        //input_port += to_string(store_data_indx);
+                        input_port += to_string(nodes[i].inputs.input[lsq_indx].port);
+
                         store_data_indx++;
 
                         
@@ -1633,7 +2041,9 @@ void write_components ( )
                         input_port += UNDERSCORE;
                         input_port += "bits";
                         input_port += "(";
-                        input_port += to_string(store_add_indx);
+                        //input_port += to_string(store_add_indx);
+                        input_port += to_string(nodes[i].inputs.input[lsq_indx].port);
+
                         input_port += ")";
                         store_add_indx++;
                     }
@@ -1644,7 +2054,9 @@ void write_components ( )
                         input_port += UNDERSCORE;
                         input_port += "bits";
                         input_port += "(";
-                        input_port += to_string(store_data_indx);
+                        //input_port += to_string(store_data_indx);
+                        input_port += to_string(nodes[i].inputs.input[lsq_indx].port);
+
                         input_port += ")";
                         store_data_indx++;
 
@@ -1867,7 +2279,8 @@ void write_components ( )
                 input_port += "wrpValids";
                 input_port += UNDERSCORE;
                 //if ( nodes[i].type == "MC" )  { input_port +="("; input_port += to_string(nodes[i].inputs.input[lsq_indx].port); input_port +=")"; } else { input_port += UNDERSCORE; input_port += to_string(nodes[i].inputs.input[lsq_indx].port); }
-                input_port += to_string(store_indx);
+                //input_port += to_string(store_indx);
+                input_port += to_string(nodes[i].outputs.output[lsq_indx].port);
 
                 
                 input_signal = nodes[i].name;
@@ -1885,7 +2298,8 @@ void write_components ( )
                 input_port += "wrReadyToPrevs";
                 input_port += UNDERSCORE;
                 //if ( nodes[i].type == "MC" )  { input_port +="("; input_port += to_string(nodes[i].inputs.input[lsq_indx].port); input_port +=")"; } else { input_port += UNDERSCORE; input_port += to_string(nodes[i].inputs.input[lsq_indx].port); }
-                input_port += to_string(store_indx);
+                //input_port += to_string(store_indx);
+                input_port += to_string(nodes[i].outputs.output[lsq_indx].port);
 
                 input_signal = nodes[i].name;
                 input_signal += UNDERSCORE;
@@ -2577,7 +2991,16 @@ void write_entity ( string  filename, int indx )
                 netlist << "\t" << nodes[i].name << "_write_address : out std_logic_vector (31 downto 0)";
             }
 
-                if ( nodes[i].type.find("LSQ") != std::string::npos || nodes[i].type.find("MC") != std::string::npos)
+                bool mc_lsq = false; 
+                if ( nodes[i].type.find("LSQ") != std::string::npos)
+                     for ( int indx = 0; indx < nodes[i].inputs.size; indx++ )
+                        if ( nodes[i].inputs.input[indx].type == "x" ) {
+                            mc_lsq = true;
+                            break;
+                        }
+            
+                if ( (nodes[i].type.find("LSQ") != std::string::npos && !mc_lsq) || nodes[i].type.find("MC") != std::string::npos)
+                //if ( nodes[i].type.find("MC") != std::string::npos )
                 {
                     netlist << ";" << endl; 
                     
@@ -2602,6 +3025,7 @@ void write_entity ( string  filename, int indx )
                     netlist << "\t" << nodes[i].memory << "_din1 : in std_logic_vector (31 downto 0)";
                     
                 }
+
         }
         
         netlist << ");" << endl;

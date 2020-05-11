@@ -621,6 +621,9 @@ entity merge is
 end merge;
 
 architecture arch of merge is
+signal tehb_data_in  : std_logic_vector(DATA_SIZE_IN - 1 downto 0);
+signal tehb_pvalid : std_logic;
+signal tehb_ready : std_logic;
 
 begin
 
@@ -637,17 +640,31 @@ begin
             end if;
         end loop;
 
-        dataOutArray(0)  <= std_logic_vector(resize(tmp_data_out, DATA_SIZE_OUT));
-        validArray(0) <= tmp_valid_out;
+        tehb_data_in  <= std_logic_vector(resize(tmp_data_out, DATA_SIZE_OUT));
+        tehb_pvalid <= tmp_valid_out;
 
     end process;
 
-    process(nReadyArray)
+    process(tehb_ready)
     begin
         for I in 0 to INPUTS - 1 loop
-            readyArray(I) <= nReadyArray(0);
+            readyArray(I) <= tehb_ready;
         end loop;
     end process;
+
+    tehb1: entity work.TEHB(arch) generic map (1, 1, DATA_SIZE_IN, DATA_SIZE_IN)
+        port map (
+        --inputspValidArray
+            clk => clk, 
+            rst => rst, 
+            pValidArray(0)  => tehb_pvalid, 
+            nReadyArray(0) => nReadyArray(0),    
+            validArray(0) => validArray(0), 
+        --outputs
+            readyArray(0) => tehb_ready,   
+            dataInArray(0) => tehb_data_in,
+            dataOutArray(0) => dataOutArray(0)
+        );
 end arch;
 
 
@@ -1055,7 +1072,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 USE work.customTypes.all;
 
-entity elasticFifo is
+entity nontranspFifo is
 
   Generic (
     INPUT_COUNT:integer; OUTPUT_COUNT:integer; DATA_SIZE_IN:integer; DATA_SIZE_OUT:integer; FIFO_DEPTH : integer
@@ -1069,51 +1086,112 @@ port(
     ValidArray : out std_logic_vector(0 downto 0);
     nReadyArray : in std_logic_vector(0 downto 0);
     pValidArray : in std_logic_vector(0 downto 0));
-end elasticFifo;
------------------------------------------------------------------------- 
--- elastic buffer 
------------------------------------------------------------------------- 
-architecture arch of elasticFifo is
-    
-    signal tehb1_valid, tehb1_ready : STD_LOGIC;
-    signal oehb1_valid, oehb1_ready : STD_LOGIC;
-    signal tehb1_dataOut, oehb1_dataOut : std_logic_vector(DATA_SIZE_IN-1 downto 0);
+end nontranspFifo;
 
+architecture arch of nontranspFifo is
     
+    signal tehb_valid, tehb_ready : STD_LOGIC;
+    signal fifo_valid, fifo_ready : STD_LOGIC;
+    signal tehb_dataOut, fifo_dataOut : std_logic_vector(DATA_SIZE_IN-1 downto 0);
+  
 begin
 
-tehb1: entity work.TEHB(arch) generic map (1, 1, DATA_SIZE_IN, DATA_SIZE_IN)
+tehb: entity work.TEHB(arch) generic map (1, 1, DATA_SIZE_IN, DATA_SIZE_IN)
         port map (
-        --inputspValidArray
+        --inputs
             clk => clk, 
             rst => rst, 
-            pValidArray(0)  => pValidArray(0), -- real or speculatef condition (determined by merge1)
-            nReadyArray(0) => oehb1_ready,    
-            validArray(0) => tehb1_valid, 
+            pValidArray(0)  => pValidArray(0), 
+            nReadyArray(0) => fifo_ready,    
+            validArray(0) => tehb_valid, 
         --outputs
-            readyArray(0) => tehb1_ready,   
+            readyArray(0) => tehb_ready,   
             dataInArray(0) => dataInArray(0),
-            dataOutArray(0) => tehb1_dataOut
+            dataOutArray(0) => tehb_dataOut
         );
 
-oehb1: entity work.elasticFifoInner(arch) generic map (1, 1, DATA_SIZE_IN, DATA_SIZE_IN, FIFO_DEPTH)
+fifo: entity work.elasticFifoInner(arch) generic map (1, 1, DATA_SIZE_IN, DATA_SIZE_IN, FIFO_DEPTH)
         port map (
-        --inputspValidArray
+        --inputs
             clk => clk, 
             rst => rst, 
-            pValidArray(0)  => tehb1_valid, -- real or speculatef condition (determined by merge1)
+            pValidArray(0)  => tehb_valid, 
             nReadyArray(0) => nReadyArray(0),    
-            validArray(0) => oehb1_valid, 
+            validArray(0) => fifo_valid, 
         --outputs
-            readyArray(0) => oehb1_ready,   
-            dataInArray(0) =>tehb1_dataOut,
-            dataOutArray(0) => oehb1_dataOut
+            readyArray(0) => fifo_ready,   
+            dataInArray(0) =>tehb_dataOut,
+            dataOutArray(0) => fifo_dataOut
         );
 
-dataOutArray(0) <= oehb1_dataOut;
-ValidArray(0) <= oehb1_valid;
-ReadyArray(0) <= tehb1_ready;
+dataOutArray(0) <= fifo_dataOut;
+ValidArray(0) <= fifo_valid;
+ReadyArray(0) <= tehb_ready;
     
+end arch;
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+USE work.customTypes.all;
+
+entity transpFIFO is 
+    generic(
+        INPUTS        : integer;
+        OUTPUTS        : integer;
+        DATA_SIZE_IN  : integer;
+        DATA_SIZE_OUT : integer;
+        FIFO_DEPTH : integer
+    );
+port (
+        clk, rst      : in  std_logic;
+        dataInArray   : in  data_array(INPUTS - 1 downto 0)(DATA_SIZE_IN - 1 downto 0);
+        dataOutArray  : out data_array(0 downto 0)(DATA_SIZE_OUT - 1 downto 0);
+        pValidArray   : in  std_logic_vector(INPUTS - 1 downto 0);
+        nReadyArray   : in  std_logic_vector(0 downto 0);
+        validArray    : out std_logic_vector(0 downto 0);
+        readyArray    : out std_logic_vector(INPUTS - 1 downto 0));
+end transpFIFO;
+
+architecture arch of transpFIFO is
+    signal mux_sel : std_logic;
+    signal fifo_valid, fifo_ready : STD_LOGIC;
+    signal fifo_pvalid, fifo_nready : STD_LOGIC;
+    signal fifo_in, fifo_out: std_logic_vector(DATA_SIZE_IN-1 downto 0);
+begin
+    
+
+    process (mux_sel, fifo_out, dataInArray) is
+        begin
+            if (mux_sel = '1') then
+                dataOutArray(0) <= fifo_out;
+            else
+                dataOutArray(0) <= dataInArray(0);
+            end if;
+    end process;
+
+    validArray(0) <= pValidArray(0) or fifo_valid;    
+    readyArray(0) <= fifo_ready or nReadyArray(0);
+    fifo_pvalid <= pValidArray(0) and (not nReadyArray(0) or fifo_valid);
+    mux_sel <= fifo_valid;
+
+    fifo_nready <= nReadyArray(0);
+    fifo_in <= dataInArray(0);
+
+    fifo: entity work.elasticFifoInner(arch) generic map (1, 1, DATA_SIZE_IN, DATA_SIZE_IN, FIFO_DEPTH)
+        port map (
+        --inputs
+            clk => clk, 
+            rst => rst, 
+            pValidArray(0)  => fifo_pvalid, 
+            nReadyArray(0) => fifo_nready,    
+            validArray(0) => fifo_valid, 
+        --outputs
+            readyArray(0) => fifo_ready,   
+            dataInArray(0) =>fifo_in,
+            dataOutArray(0) => fifo_out
+        );
+
 end arch;
 --------------------------------------------------------------  read port
 -------------------------------------------------------------------------

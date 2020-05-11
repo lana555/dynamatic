@@ -15,5 +15,6 @@ int getBBLdCount(ENode* enode, ENode* memnode);
 int getBBStCount(ENode* enode, ENode* memnode);
 int getLSQDepth(ENode* memnode);
 void setMemPortIndex(ENode* enode, ENode* memnode);
+void setLSQMemPortIndex(ENode* enode, ENode* memnode);
 void setBBOffset(ENode* enode, ENode* memnode);
 bool compareMemInst(ENode* enode1, ENode* enode2);

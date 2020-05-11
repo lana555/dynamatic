@@ -202,6 +202,8 @@ bool DFnetlist_Impl::checkFunc(blockID b)
             return false;
         }
     */
+    if (getBlockType(b)==OPERATOR && getOperation(b) == "select_op")
+        return true;
     return checkGenericPorts(b);
 }
 

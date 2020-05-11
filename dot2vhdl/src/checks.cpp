@@ -30,7 +30,7 @@ void check_names ( int indx )
 {
     if ( ( nodes[indx].name.empty() ) )
     {
-        cout << "**Warning**: Node["<< indx << "] " << "without name" << endl;
+        //cout << "**Warning**: Node["<< indx << "] " << "without name" << endl;
     }
     
 }
@@ -39,7 +39,7 @@ void check_type ( int indx )
 {
     if ( ( nodes[indx].type.empty() ) )
     {
-        cout << "**Warning**: Node["<< indx << "] " << "without type" << endl;
+        //cout << "**Warning**: Node["<< indx << "] " << "without type" << endl;
     }    
 }
 
@@ -49,11 +49,11 @@ void check_inputs ( int indx )
     {
         if ( nodes[indx].inputs.input[indx2].bit_size > 32 )
         {
-            cout << "**Warning**: Node["<< indx << "] Node_Name:"<< nodes[indx].name << " input " << indx2+1 << " bitsize exceed " << endl;
+            //cout << "**Warning**: Node["<< indx << "] Node_Name:"<< nodes[indx].name << " input " << indx2+1 << " bitsize exceed " << endl;
         }
         if ( nodes[indx].inputs.input[indx2].prev_nodes_id > components_in_netlist || nodes[indx].inputs.input[indx2].prev_nodes_id == COMPONENT_NOT_FOUND )
         {
-            cout << "**Warning**: Node["<< indx << "] Node_Name:" << nodes[indx].name << " input " << indx2+1 << " has no predecessor -- signals connections will be omitted in the netlist" << endl;
+            //cout << "**Warning**: Node["<< indx << "] Node_Name:" << nodes[indx].name << " input " << indx2+1 << " has no predecessor -- signals connections will be omitted in the netlist" << endl;
         }
     //cout << "Node["<< indx << "] Node_Name:" << nodes[indx].name << " input " << indx2+1 << "bit_size " <<  nodes[indx].inputs.input[indx2].bit_size << endl;
     }
@@ -65,11 +65,11 @@ void check_outputs ( int indx )
     {
         if ( nodes[indx].outputs.output[indx2].bit_size > 32 )
         {
-            cout << "**Warning**: Node["<< indx << "] Node_Name:"<< nodes[indx].name << " output " << indx2+1 << " bitsize exceed " << endl;
+            //cout << "**Warning**: Node["<< indx << "] Node_Name:"<< nodes[indx].name << " output " << indx2+1 << " bitsize exceed " << endl;
         }
         if ( nodes[indx].outputs.output[indx2].next_nodes_id > components_in_netlist || nodes[indx].outputs.output[indx2].next_nodes_id == COMPONENT_NOT_FOUND )
         {
-            cout << "**Warning**: Node["<< indx << "] Node_Name:" << nodes[indx].name << " output " << indx2+1 << " has no successor -- signals connections will be omitted in the netlist" << endl;
+            //cout << "**Warning**: Node["<< indx << "] Node_Name:" << nodes[indx].name << " output " << indx2+1 << " has no successor -- signals connections will be omitted in the netlist" << endl;
         }
 
     }

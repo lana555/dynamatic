@@ -561,6 +561,21 @@ public:
     */
     int getExecutionFrequency(blockID id) const;
 
+
+    /**
+     * @brief Sets the true/false exe. fraction of a select op.
+     * @param id Identifier of the block.
+     * @param freq Execution frequency of the block.
+     */
+    void setTrueFrac(blockID id, double freq);
+
+    /**
+    * @brief Returns the the true/false exe. fraction of a select op.
+    * @param id Identifier of the block.
+    * @return The execution frequency of the block.
+    */
+    double getTrueFrac(blockID id) const;
+
     /**
      * @brief Defines the value of a constant block.
      * @param id Identifier of the block.
@@ -1214,6 +1229,7 @@ private:
         portID data;                // Port for data (input for branch/demux, output for select)
         portID srcCond;             // Port that generates the condition for the branch (beyond forks)
         double freq;                // Execution frequency (obtained from profiling)
+        double frac;                // True/false fraction of select inputs (obtained from profiling)
         bool mark;                  // Flag used for traversals
         int scc_number;             // SCC number
         int DFSorder;               // Post-visit number during DFS traversal

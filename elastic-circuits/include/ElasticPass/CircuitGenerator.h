@@ -104,6 +104,7 @@ public:
     void constructLSQNodes(std::map<const Value*, ENode*>& LSQnodes);
     ENode* getOrCreateMCEnode(const Value* base, std::map<const Value*, ENode*>& baseToMCEnode);
     void addMCForEnode(ENode* enode, std::map<const Value*, ENode*>& baseToMCEnode);
+    void updateMCConstant(ENode* enode, ENode* mcEnode);
 
     void setGetelementPtrConsts(std::vector<ENode*>* enode_dag);
 

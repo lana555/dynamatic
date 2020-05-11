@@ -294,14 +294,19 @@ static bool readExecFrequency(DFnetlist_Impl& DF, blockID id, Agnode_t* v)
     return true;
 }
 
-static bool readExecFrequencyBB(DFnetlist_Impl& DF, bbID id, Agnode_t* v) {
-    const char* attr = agget(v, (char *) "freq");
+
+static bool readTrueFrac(DFnetlist_Impl& DF, blockID id, Agnode_t* v) {
+    const char* attr = agget(v, (char *) "trueFrac");
     if (attr != nullptr and strlen(attr) > 0) {
-        double freq = getPositiveDouble(attr);
-        if (freq < 0) {
-            DF.setError("Basic Block " + to_string(id) + ": wrong value for execution frequency.");
+        //if (DF.getOperation(id) != "select_op")
+            //DF.setError("True/false execution fraction can be specified only for select op.");
+        double frac = getPositiveDouble(attr);
+        if (frac < 0) {
+            DF.setError("Select " + to_string(id) + ": wrong value for execution fraction.");
         }
+        DF.setTrueFrac(id, frac);
     }
+    return true;
 }
 
 // Lana: reads ops of operators
@@ -726,6 +731,9 @@ bool DFnetlist_Impl::readDataflowDot(FILE *f)
 
         // Reading execution frequency
         if (not readExecFrequency(*this, id, v)) return false;
+
+        // Reading select input fraction
+        if (not readTrueFrac(*this, id, v)) return false;
 
         // Reading the value for constants
         if (not readValue(*this, id, v)) return false;

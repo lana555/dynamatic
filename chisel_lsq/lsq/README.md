@@ -1,16 +1,28 @@
 Chisel LSQ
 =======================
-## Required IntelliJ Plugins
+
+## How to build jar from command-line
+
+1. Install the necessary tools for working with Chisel3.
+https://github.com/freechipsproject/chisel3/blob/master/SETUP.md
+
+2. Go to the 'chisel_lsq/lsq' directory from the terminal. 
+
+3. Run **sbt clean compile assembly**. This will create ./output/lsq.jar.
+
+
+## How to build jar from IntelliJ IDEA
+
+### Required IntelliJ Plugins
 1. Scala
 2. sbt
-## How to open the project in IntelliJ IDEA
+
+### How to open the project in IntelliJ IDEA
 
 1. Open IntelliJ IDEA and click **Import Project**.
 2. Open dhls/chisel_lsq/lsq/build.sbt.
 3. This should open **Import Project from sbt** dialog box.
 4. Click OK.
-
-## How to build jar
 
 ### Follow these steps before you generate the jar for the first time.
 
@@ -28,3 +40,4 @@ Chisel LSQ
 
 
 lsq.jar can be found in dhls/chisel_lsq/lsq/out/artifacts/lsq_jar.
+

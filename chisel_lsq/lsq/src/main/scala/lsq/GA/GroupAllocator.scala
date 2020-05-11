@@ -7,7 +7,7 @@ import lsq.util._
 import scala.math._
 
 class GroupAllocator(config: LsqConfigs) extends Module {
-  override def desiredName: String = "GROUP_ALLOCATOR"
+  override def desiredName: String = "GROUP_ALLOCATOR_" + config.name
 
   val io = IO(new Bundle {
     // to load queue

@@ -218,6 +218,15 @@ public:
     int getExecutionFrequency(blockID id) const;
 
     /**
+     * @brief Sets the true/false exe. fraction of a select op.
+     * @param id Identifier of the block.
+     * @param freq Execution frequency of the block.
+     */
+    void setTrueFrac(blockID id, double freq);
+
+    double getTrueFrac(blockID id) const;
+
+    /**
             * @brief Returns the number of slots of an elastic buffer.
     * @param id Identifier of the block.
     * @return The number of slots of the buffer.

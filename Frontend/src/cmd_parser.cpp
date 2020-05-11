@@ -22,6 +22,7 @@
 #include <list>
 #include <cctype>
 
+#include <unistd.h>
 
 #include "cmd_parser.h"
 #include "cmd_list.h"
@@ -78,6 +79,19 @@ void stripExtension(std::string &path, string extension )
     {
         path.resize(dot);
     }
+}
+
+
+void eraseAllSubStr(std::string & mainStr, const std::string & toErase)
+{
+	size_t pos = std::string::npos;
+ 
+	// Search for the substring in string in a loop untill nothing is found
+	while ((pos  = mainStr.find(toErase) )!= std::string::npos)
+	{
+		// If found then erase it from string
+		mainStr.erase(pos, toErase.length());
+	}
 }
 
 string clean_path ( string filename )
@@ -149,7 +163,26 @@ int exit_funct ( string input_cmp )
 
 int synth ( string input_cmp )
 {
-    std::cout << "Synth" << endl;
+    std::cout << "Synthesize" << endl;
+    bool verbose = 0;
+    bool help = 0;
+
+    if ( input_cmp.find("-verbose") != std::string::npos )
+    {
+        eraseAllSubStr(input_cmp, "-verbose");
+        verbose = 1;
+    }
+
+    if ( input_cmp.find("-help") != std::string::npos )
+    {
+        eraseAllSubStr(input_cmp, "-help");
+        
+        cout << "This command perform synthesis. " << endl;
+        cout << "Available options are: " << endl;
+        cout << "-use-lsq={true|false} : enable/disable LSQ insertion in the design. Default value = true." << endl;
+        cout << "-simple-buffers={true|false} : enable/dispable placement of naive buffers. Default value = false." << endl;
+        return OK;
+    }
 
     string command;
     if ( set_filename )
@@ -170,7 +203,11 @@ int synth ( string input_cmp )
         cout << command;
         //current_file = current_file;
         string com = GetStdoutFromCommand( command.c_str() );
-        cout <<  com << endl;
+        if ( verbose )
+        {
+            cout <<  com << endl;
+        }
+        cout << endl;
     }
     else
     {
@@ -185,6 +222,8 @@ int synth ( string input_cmp )
 int cdfg ( string input_cmp )
 {
     std::cout << "Display Data Control Flow Graph" << endl;
+    
+    
 
     string command;
     if ( set_filename )
@@ -193,6 +232,9 @@ int cdfg ( string input_cmp )
         current_file = clean_path ( current_file );
         command += project_dir;
         command += OUTPUT_DIR;
+        stripExtension(current_file, ".cpp");    
+        stripExtension(current_file, ".c");
+        stripExtension(current_file, ".dot");
         command += current_file;
         command += ".dot &";
 
@@ -322,9 +364,34 @@ int set_file ( string input_cmp )
 int shell ( string input_cmp )
 {
     //std::cout << "DHLS Command Not-Recognized--passing to system shell " << endl;
+    std::vector<string> sub_cmd;
 
-     string com = GetStdoutFromCommand(input_cmp);
-     cout << com << endl;
+    //cout << input_cmp;
+    
+    string_split( input_cmp, ' ', sub_cmd );
+    
+    //cout << "sub_cmd.size()" << sub_cmd.size() << endl;
+    
+    if ( sub_cmd.size() > 0 )
+    {
+        //cout << "sub_cmd[0]" << sub_cmd[0] << "sub_cmd[1]" << sub_cmd[1];
+        
+        if ( sub_cmd[0] == "cd" )
+        {
+            chdir (sub_cmd[1].c_str());
+        }
+        else
+        {
+            system ( input_cmp.c_str() );   
+        }        
+    }
+    else
+    {
+        system ( input_cmp.c_str() );
+    }
+
+    // string com = GetStdoutFromCommand(input_cmp);
+    // cout << com << endl;
 
     //std::cout << "DHLS Command Not-Recognized--output from system shell " << endl;
 
@@ -359,7 +426,8 @@ int analyze ( string input_cmp )
         //command += project_dir;
         //command += "/src/";
         stripExtension(filename, ".cpp");    
-        stripExtension(filename, ".c");    
+        stripExtension(filename, ".c");
+        
         command += filename;
         command += "_analyzed.cpp ";
         command += PRAGMAS_LIST_PATH;
@@ -405,7 +473,7 @@ int elaborate ( string input_cmp )
             //command += "/src/";
             stripExtension(filename, ".cpp");
             stripExtension(filename, ".c");    
-
+            
             command += filename;
             command += "_elaborated.cpp ";
             
@@ -417,6 +485,25 @@ int elaborate ( string input_cmp )
             //current_file += "/src/";
             current_file = filename;
             current_file += "_elaborated.cpp";
+        
+            
+            
+ /*           string current_file_tmp = clean_path ( current_file );
+            
+            command = "mv ";
+            command += current_file;
+            
+            command +=" ";
+            
+            command +="src/.";
+            command += current_file_tmp;
+
+            system (command.c_str());
+
+            current_file = "src/.";
+            current_file += current_file_tmp;
+ */
+            
         }
     }
     else
@@ -513,6 +600,8 @@ int optimize ( string input_cmp )
         command += current_file;
         command += " -period=";
         command += to_string ( period );
+        command += " ";
+        command += input_cmp;
         
         
         cout << command;
@@ -532,6 +621,22 @@ int optimize ( string input_cmp )
         
         
         system (command.c_str());
+        
+        //dot -Tpng reports/histogram_elaborated_optimized.dot > file.png
+        command = "dot -Tpng ";
+        command += project_dir;
+        command += OUTPUT_DIR;
+        command += current_file;
+        command += "_optimized.dot";
+        command += " > ";
+        command += project_dir;
+        command += OUTPUT_DIR;
+        command += current_file;
+        command += "_optimized.png";
+        
+        
+        system (command.c_str());
+        
         
         current_file = output_file;
 
@@ -692,10 +797,10 @@ void cmd_parser_init ( void )
     ui_cmds[CMD_SOURCE].function = &source_script;
     ui_cmds[CMD_SET_PERIOD].function = &set_period;
     ui_cmds[CMD_SET_TARGET].function = &set_target;
-    ui_cmds[CMD_REPORTS].function = &reports;
-    ui_cmds[CMD_SIMULATE].function = &simulate;
+    //ui_cmds[CMD_REPORTS].function = &reports;
+    //ui_cmds[CMD_SIMULATE].function = &simulate;
     ui_cmds[CMD_CDFG].function = &cdfg;
-    ui_cmds[CMD_STATUS].function = &report_status;
+    //ui_cmds[CMD_STATUS].function = &report_status;
     ui_cmds[CMD_UPDATE].function = &update;
     ui_cmds[CMD_HISTORY].function = &history;
 
@@ -708,27 +813,34 @@ int cmd_parser ( string input_cmd )
 {
     std::vector<string> sub_cmd;
     string sub_command;
+    
+    string full_string = input_cmd;
 
     int indx;
 
-            
     string_split( input_cmd, ' ', sub_cmd );
     
     //cout << sub_cmd.size() << endl;
     
     if ( sub_cmd.size() > 0 )
     {
+        input_cmd = sub_cmd[0];
         sub_command = sub_cmd[1];
         if ( sub_cmd.size() > 2 )
         {
-            sub_command += " ";   
-            sub_command += sub_cmd[2];
+            for ( int indx2 = 2; indx2 < sub_cmd.size(); indx2++ )
+            {
+                sub_command += " ";   
+                sub_command += sub_cmd[indx2];
+            }
         }
-    }
-        
+    }     
+    
     for ( indx = 0; indx < CMD_MAX; indx++ )
     {
-        if ( input_cmd.find(ui_cmds[indx].cmd) != std::string::npos )
+        //if ( input_cmd.find(ui_cmds[indx].cmd) != std::string::npos )
+        //cout << input_cmd << " " << ui_cmds[indx].cmd << endl;
+        if ( input_cmd.compare (ui_cmds[indx].cmd) == 0 )
         {
             switch ( ui_cmds[indx].function( sub_command ) )
             {
@@ -748,7 +860,7 @@ int cmd_parser ( string input_cmd )
     }
 //    cout << "Command not found!" << endl;
 
-    shell ( input_cmd );
+    shell ( full_string );
 
     return OK;
 }

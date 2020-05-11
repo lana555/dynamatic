@@ -448,9 +448,9 @@ string get_component_name ( string name )
     
     if ( name[0] == '_' )
     {
-        cout << "***WARNING***: Vivado doesn't support names with '_' as first character. Component "<< name <<" renamed as ";
+        //cout << "***WARNING***: Vivado doesn't support names with '_' as first character. Component "<< name <<" renamed as ";
         name.replace(0,1,"");
-        cout << name << endl;
+        //cout << name << endl;
     }
         
     name_ret = name;
@@ -647,7 +647,7 @@ void parse_components ( string v_0, string v_1 )
             {
                 nodes[components_in_netlist].slots = get_component_slots( parameters[indx] );
 
-                cout << "nodes[components_in_netlist].slots" << nodes[components_in_netlist].slots;
+                //cout << "nodes[components_in_netlist].slots" << nodes[components_in_netlist].slots;
                 
                 switch ( nodes[components_in_netlist].slots )
                 {
@@ -697,10 +697,11 @@ void parse_components ( string v_0, string v_1 )
                     nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].type = "c";
                     nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].bit_size = 32;
                     nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].info_type = "fake"; //Andrea 20200128 Try to force 0 to inputs.
+                    nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].port = 0; //Andrea 20200211 
 
                 }
                 
-                cout << nodes[components_in_netlist].name << " inputs.size " << nodes[components_in_netlist].inputs.size << endl;
+                //cout << nodes[components_in_netlist].name << " inputs.size " << nodes[components_in_netlist].inputs.size << endl;
 
             }
             if ( parameter.find("ldcount") != std::string::npos )
@@ -712,6 +713,8 @@ void parse_components ( string v_0, string v_1 )
                     nodes[components_in_netlist].inputs.size += 1;
                     nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].type = "l";
                     nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].info_type = "a";
+                    nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].bit_size = 32;
+                    nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].port = 0; //Andrea 20200424
 //                     nodes[components_in_netlist].inputs.size += 1;
 //                     nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].type = "l";
 //                     nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].info_type = "d";
@@ -721,6 +724,7 @@ void parse_components ( string v_0, string v_1 )
                     nodes[components_in_netlist].outputs.output[nodes[components_in_netlist].outputs.size-1].type = "l";
                     nodes[components_in_netlist].outputs.output[nodes[components_in_netlist].outputs.size-1].info_type = "a";
                     nodes[components_in_netlist].outputs.output[nodes[components_in_netlist].outputs.size-1].bit_size = 32;
+                    nodes[components_in_netlist].outputs.output[nodes[components_in_netlist].outputs.size-1].port = 0; //Andrea 20200424
 
                     
 
@@ -735,9 +739,16 @@ void parse_components ( string v_0, string v_1 )
                     nodes[components_in_netlist].inputs.size += 1;
                     nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].type = "s";
                     nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].info_type = "a";
+                    nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].port = 0; //Andrea 20200424
+                    nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].bit_size = 32; //Andrea 20200424
+
+                    
                     nodes[components_in_netlist].inputs.size += 1;
                     nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].type = "s";
                     nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].info_type = "d";
+                    nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].port = 0; //Andrea 20200424
+                    nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].bit_size = 32; //Andrea 20200424
+
 
                 }
             }
@@ -820,6 +831,19 @@ void parse_components ( string v_0, string v_1 )
             else
             {
                 //nodes[components_in_netlist].type = "OEHB";
+            }
+            nodes[components_in_netlist].component_operator = nodes[components_in_netlist].type;
+        }
+
+        if ( nodes[components_in_netlist].type == "Fifo")
+        {
+            if ( nodes[components_in_netlist].trasparent )
+            {
+                nodes[components_in_netlist].type = "tFifo";
+            }
+            else
+            {
+                nodes[components_in_netlist].type = "nFifo";
             }
             nodes[components_in_netlist].component_operator = nodes[components_in_netlist].type;
         }

@@ -305,6 +305,18 @@ void DFnetlist_Impl::setExecutionFrequency(blockID id, double freq)
 }
 
 
+void DFnetlist_Impl::setTrueFrac(blockID id, double freq)
+{
+    assert(validBlock(id));
+    blocks[id].frac = freq;
+}
+
+double DFnetlist_Impl::getTrueFrac(blockID id) const
+{
+    assert(validBlock(id));
+    return blocks[id].frac;
+}
+
 void DFnetlist_Impl::setValue(blockID id, long long value)
 {
     assert(validBlock(id));

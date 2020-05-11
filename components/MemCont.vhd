@@ -791,9 +791,11 @@ begin
               
             elsif rising_edge(CLK) then
                 -- increment counter by number of stores in BB
-                if (io_bbpValids(BB_COUNT -1 downto 0)  /= zero)   then
-                     counter:= std_logic_vector(unsigned(counter) + unsigned(io_bb_stCountArray(0)));
-                end if;
+                for I in 0 to BB_COUNT - 1 loop
+                    if (io_bbpValids(I) = '1') then
+                        counter:= std_logic_vector(unsigned(counter) + unsigned(io_bb_stCountArray(I)));
+                    end if;
+                end loop;
 
                 -- decrement counter whenever store issued to memory
                 if (io_StoreEnable = '1') then

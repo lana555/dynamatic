@@ -5,7 +5,7 @@ import chisel3.util._
 import lsq.config.LsqConfigs
 
 class StoreDataPort(config: LsqConfigs) extends Module {
-  override def desiredName: String = "STORE_DATA_PORT"
+  override def desiredName: String = "STORE_DATA_PORT_" + config.name
 
   val io = IO(new Bundle {
     // interface to previous

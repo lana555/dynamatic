@@ -155,20 +155,21 @@ int main ( int argc, char* argv[] )
 
     int exit_val = 255;
     int return_parse;
-    
+        
     fe_init ( );
 
     return_parse = argument_parser ( argc, argv );
-
-    string input_cmp_;
         
     while ( return_parse != exit_val )
     {
+        bool backspace = 0;
+        bool parse = 0;
+        bool tab = 0;
+
+
+        char c;
         if ( no_prompt != 1 )
         std::cout << CURSOR_STRING;
-
-        
-        char c;
         
         c = console ();
         
@@ -177,57 +178,82 @@ int main ( int argc, char* argv[] )
             continue;
         }
         
+
+        #if 1
         
-        bool backspace;
-        backspace = 0;
+        if ( c == 9 )
+        {            
+            cout << endl;
+            int count = 0;
+            string autocompletion;
+
+            for ( int indx = 0; indx < CMD_MAX; indx++ )
+            {
+                {
+                    if ( input_cmp.compare( 0 , input_cmp.size () , ui_cmds[indx].cmd, 0, input_cmp.size () ) == 0 )
+                    {
+                        cout << ui_cmds[indx].cmd << " " ;
+                        autocompletion = ui_cmds[indx].cmd;
+                        count++;
+                        tab = 1;
+                        
+                    }
+                }
+            }
+            cout << endl;
+            cout << "\r" << CURSOR_STRING << input_cmp;
+            if ( count == 1 )
+            {
+                input_cmp = autocompletion;
+                cout << "\r                                    ";
+                cout << "\r" << CURSOR_STRING << input_cmp;
+                
+            }
+            
+        }
+        #endif
+        
         if ( c == 127 )
         {
-            
-            //input_cmp.erase(input_cmp.size() - 1);
             if ( input_cmp.size() > 0 ) 
             {
                 input_cmp.pop_back();
             }
-            //cout << input_cmp.size() << endl;
-            //cout << "backspace detected" << endl;
-            cout << "\r                                                  ";
+            cout << "\r                                       ";
             cout << "\r" << CURSOR_STRING << input_cmp;
             backspace = 1;
         }
-        if ( c =='\r' )
-         {
-             cout << endl;
-             backspace = 0;
-             
-             goto PARSE;
-             //continue;
-         }
-         //else 
+        
          if ( ! backspace )
          {
-            
-            cout << c ;
-            getline ( cin, input_cmp_ );
-            //input_cmp+=c;
-            input_cmp += c+input_cmp_;
-            //input_cmp += input_cmp_;
+            if ( c != 9 )
+            {
+                cout << c ;
+            }
+            no_prompt = 1;
+            if ( c !='\r' && c != 9 )
+            {
+                input_cmp += c;
+                parse = 0;
+            }
+            else
+            {
+                backspace = 0;
+                if ( tab == 0 )
+                {
+                    parse = 1;
+                }
+            }
         
          }
-        
-        PARSE:
-        if ( (!input_cmp.empty()) && (!backspace) )
+        if ( (parse) && (!backspace) )
         {
-            
-            
             std::cout << endl << input_cmp << endl;
             command_history[history_indx++] = input_cmp;
             command_indx = history_indx;
-            //std::cout << history_indx << endl;
             return_parse = cmd_parser ( input_cmp );
             no_prompt = 0;
-            input_cmp.clear();
-            
-            //std::cout << return_parse;
+            input_cmp.clear();            
         }
     }
 

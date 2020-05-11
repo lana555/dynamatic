@@ -25,9 +25,19 @@ architecture arch of ret_op is
 
 begin 
 
-    dataOutArray(0) <= dataInArray(0);
-    validArray(0) <= pValidArray(0);
-    readyArray(0) <= nReadyArray(0);
+tehb: entity work.TEHB(arch) generic map (1, 1, DATA_SIZE_IN, DATA_SIZE_IN)
+        port map (
+        --inputs
+            clk => clk, 
+            rst => rst, 
+            pValidArray(0)  => pValidArray(0), 
+            nReadyArray(0) => nReadyArray(0),    
+            validArray(0) => validArray(0), 
+        --outputs
+            readyArray(0) => readyArray(0),   
+            dataInArray(0) => dataInArray(0),
+            dataOutArray(0) => dataOutArray(0)
+        );
 
 end architecture;
 
@@ -115,117 +125,7 @@ end architecture;
 -- int mul, version 0.0
 -----------------------------------------------------------------------
 
-Library IEEE;
-use IEEE.std_logic_1164.all;
-use ieee.numeric_std.all;
-use work.customTypes.all;
 
-entity mul_op is
-Generic (
- INPUTS: integer; OUTPUTS: integer; DATA_SIZE_IN: integer; DATA_SIZE_OUT: integer
-);
-port (
-  clk : IN STD_LOGIC;
-  rst : IN STD_LOGIC;
-  pValidArray : IN std_logic_vector(1 downto 0);
-  nReadyArray : in std_logic_vector(0 downto 0);
-  validArray : out std_logic_vector(0 downto 0);
-  readyArray : OUT std_logic_vector(1 downto 0);
-  dataInArray : in data_array (1 downto 0)(DATA_SIZE_IN-1 downto 0); 
-  dataOutArray : out data_array (0 downto 0)(DATA_SIZE_OUT-1 downto 0));
-end entity;
-
-architecture arch of mul_op is
-
--- Interface to Vivado component
-component array_RAM_mul_32sbkb_MulnS_0 is
-  port (
-        clk : IN STD_LOGIC;
-        ce : IN STD_LOGIC;
-        a : IN STD_LOGIC_VECTOR;
-        b : IN STD_LOGIC_VECTOR;
-        p : OUT STD_LOGIC_VECTOR);
-end component;
-
-signal q0, q1, q2, q3: std_logic;
-signal join_valid : STD_LOGIC;
-
-begin 
-
-    join_write_temp:   entity work.join(arch) generic map(2)
-            port map( pValidArray,  --pValidArray
-                      nReadyArray(0),     --nready                    
-                      join_valid,         --valid          
-                      readyArray);   --readyarray 
-
-    multiply_unit :  component array_RAM_mul_32sbkb_MulnS_0
-    port map (
-        clk => clk,
-        ce => nReadyArray(0),
-        a => dataInArray(0),
-        b => dataInArray(1),
-        p => dataOutArray(0));
-
-    process (clk) is
-    begin
-      if rising_edge(clk) then  
-        if (rst = '1') then
-          q0 <= join_valid;
-          q1 <= '0';
-          q2 <= '0';
-          q3 <= '0';
-        elsif (nReadyArray(0)='1') then
-          q0 <= join_valid;
-          q1 <= q0;
-          q2 <= q1;
-          q3 <= q2;
-        end if;
-      end if;
-    end process;
-
-    validArray(0) <= q3;
-
-end architecture;
-
-architecture arch_with_delay_buffer of mul_op is
-
-    -- Interface to Vivado component
-    component array_RAM_mul_32sbkb_MulnS_0 is
-      port (
-            clk : IN STD_LOGIC;
-            ce : IN STD_LOGIC;
-            a : IN STD_LOGIC_VECTOR;
-            b : IN STD_LOGIC_VECTOR;
-            p : OUT STD_LOGIC_VECTOR);
-    end component;
-
-    signal join_valid : STD_LOGIC;
-    
-    begin 
-    
-        join_write_temp:   entity work.join(arch) generic map(2)
-                port map( pValidArray,  --pValidArray
-                          nReadyArray(0),     --nready                    
-                          join_valid,         --valid          
-                          readyArray);   --readyarray 
-
-        buff: entity work.delay_buffer(arch) 
-            generic map(4)
-            port map(clk,
-                     rst,
-                     join_valid,
-                     nReadyArray(0),
-                     validArray(0));
-    
-        multiply_unit :  component array_RAM_mul_32sbkb_MulnS_0
-        port map (
-            clk => clk,
-            ce => nReadyArray(0),
-            a => dataInArray(0),
-            b => dataInArray(1),
-            p => dataOutArray(0));
-    
-    end architecture;
 
 -----------------------------------------------------------------------
 -- logic and, version 0.0

@@ -484,6 +484,21 @@ std::string getNodeDotOp(ENode* enode) {
     return name;
 }
 
+std::string inputSuffix (ENode* enode, int i) {
+    if (i == 0 && enode->isMux)
+        return "?";
+    if (enode->type == Inst_)
+        if (enode->Instr->getOpcode() == Instruction::Select) {
+            if (i == 0)
+                return "?";
+            if (i == 1)
+                return "+";
+            if (i == 2)
+                return "-";
+        }
+    return "";
+}
+
 std::string getNodeDotInputs(ENode* enode) {
     string name = "";
 
@@ -514,7 +529,8 @@ std::string getNodeDotInputs(ENode* enode) {
             for (int i = 0; i < (int)enode->CntrlPreds->size() + (int)enode->JustCntrlPreds->size();
                  i++) {
                 name += "in" + to_string(i + 1);
-                name += ((i == 0 && enode->isMux) ? "?:" : ":");
+                name += inputSuffix(enode, i);
+                name += ":";
                 name += to_string(getInPortSize(enode, i)) + " ";
             }
             if (enode->type == Inst_)
@@ -534,7 +550,7 @@ std::string getNodeDotInputs(ENode* enode) {
             }
 
             for (auto& pred : *enode->CntrlPreds) {
-                if (pred->type != Cst_) {
+                if (pred->type != Cst_ && pred->type !=LSQ_) {
 
                     name +=
                         "in" + to_string(getDotAdrIndex(pred, enode)) + ":" + to_string(ADDR_SIZE);
@@ -547,6 +563,19 @@ std::string getNodeDotInputs(ENode* enode) {
                         name += "*s" + to_string(pred->memPortId) + "d ";
                     }
                 }
+                if (pred->type == LSQ_) {
+                	int inputs = getMemInputCount(enode);
+                	int pred_ld_id = pred->lsqMCLoadId;
+                    int pred_st_id = pred->lsqMCStoreId;
+                    name += "in" + to_string (inputs + 1) + ":" + to_string(ADDR_SIZE) + "*l" + to_string(pred_ld_id) + "a ";
+                    name += "in" + to_string (inputs + 2) + ":" + to_string(ADDR_SIZE)+ "*s" + to_string(pred_st_id) + "a ";
+                    name += "in" + to_string (inputs + 3) + ":" + to_string(DATA_SIZE)+ "*s" + to_string(pred_st_id) + "d ";
+
+                }
+            }
+            if (enode->type == LSQ_ && enode->lsqToMC == true) {
+            	int inputs = getMemInputCount(enode);
+                name += "in" + to_string (inputs + 1) + ":" + to_string(DATA_SIZE) + "*x0d ";
             }
             name += "\"";
             break;
@@ -624,18 +653,33 @@ std::string getNodeDotOutputs(ENode* enode) {
         case LSQ_:
         case MC_:
             name += ", out = \"";
-
-            if (getMemOutputCount(enode) > 0) {
-                for (auto& pred : *enode->CntrlPreds)
-                    if (pred->type != Cst_ && pred->Instr->getOpcode() == Instruction::Load) {
-                        name += "out" + to_string(getDotDataIndex(pred, enode)) + ":" +
-                                to_string(DATA_SIZE);
-                        name += "*l" + to_string(pred->memPortId) + "d ";
-                    }
+           
+            if (getMemOutputCount(enode) > 0 || enode->lsqToMC) {
+                for (auto& pred : *enode->CntrlPreds) {
+                    if (pred->type != Cst_ && pred->type != LSQ_)
+                        if (pred->Instr->getOpcode() == Instruction::Load) {
+                            name += "out" + to_string(getDotDataIndex(pred, enode)) + ":" +
+                                    to_string(DATA_SIZE);
+                            name += "*l" + to_string(pred->memPortId) + "d ";
+                        }
+                    if (pred->type == LSQ_)
+                        name += "out" + to_string (getMemOutputCount(enode ) + 1) + ":" + to_string(DATA_SIZE)+ "*l" + to_string(pred->lsqMCLoadId) + "d ";
+                }
             }
 
-            name += "out" + to_string(getMemOutputCount(enode) + 1) + ":" +
+            if (enode->type == MC_ && enode->lsqToMC == true)
+                name += "out" + to_string(getMemOutputCount(enode) + 2) + ":" +
+                        to_string(CONTROL_SIZE) + "*e ";
+            else 
+                name += "out" + to_string(getMemOutputCount(enode) + 1) + ":" +
                     to_string(CONTROL_SIZE) + "*e ";
+
+            if (enode->type == LSQ_ && enode->lsqToMC == true) {
+                name += "out" + to_string (getMemOutputCount(enode) + 2) + ":" + to_string(ADDR_SIZE) + "*x0a ";
+                name += "out" + to_string (getMemOutputCount(enode) + 3) + ":" + to_string(ADDR_SIZE) + "*y0a ";
+                name += "out" + to_string (getMemOutputCount(enode) + 4) + ":" + to_string(DATA_SIZE) + "*y0d ";
+            }
+            
             name += "\"";
             break;
         case End_:
@@ -677,6 +721,8 @@ std::string getNodeDotParams(ENode* enode) {
         case Inst_:
             if (enode->Instr->getOpcode() == Instruction::GetElementPtr)
                  name += ", constants=" + to_string(enode->JustCntrlPreds->size());
+            if (enode->Instr->getOpcode() == Instruction::Select)
+                 name += ", trueFrac=0.2";
             name += ", delay=" + getFloatValue(get_component_delay(enode->Name, DATA_SIZE));
             
             if (isLSQport(enode))
@@ -732,10 +778,10 @@ std::string getLSQJsonParams(ENode* memnode) {
         numSt += to_string(st_count);
         numSt += count == (memnode->JustCntrlPreds->size() - 1) ? "" : "; ";
 
-        ldOff += "{";
-        stOff += "{";
-        ldPts += "{";
-        stPts += "{";
+        ldOff += (ldOff.find_last_of("{") == ldOff.find_first_of("{")) ? "{" : ";{";     
+        stOff += (stOff.find_last_of("{") == stOff.find_first_of("{")) ? "{" : ";{";  
+        ldPts += (ldPts.find_last_of("{") == ldPts.find_first_of("{")) ? "{" : ";{";  
+        stPts += (stPts.find_last_of("{") == stPts.find_first_of("{")) ? "{" : ";{";  
 
         for (auto& node : *memnode->CntrlPreds) {
 
@@ -794,8 +840,17 @@ std::string getLSQJsonParams(ENode* memnode) {
 std::string getNodeDotMemParams(ENode* enode) {
     string name = ", memory = \"" + string(enode->Name) + "\", ";
     name += "bbcount = " + to_string(getMemBBCount(enode)) + ", ";
-    name += "ldcount = " + to_string(getMemLoadCount(enode)) + ", ";
-    name += "stcount = " + to_string(getMemStoreCount(enode));
+
+    int ldcount = getMemLoadCount(enode);
+    int stcount = getMemStoreCount(enode);
+    if (enode->type == MC_ && enode->lsqToMC) {
+        ldcount++; 
+        stcount++;
+    }
+
+    name += "ldcount = " + to_string(ldcount) + ", ";
+    name += "stcount = " + to_string(stcount);
+
     if (enode->type == LSQ_)
         name += getLSQJsonParams(enode);
     return name;
@@ -887,6 +942,8 @@ std::string printMemEdges(std::vector<ENode*>* enode_dag) {
                 }
             }
             int end_ind = getMemOutputCount(enode) + 1;
+            if (enode->type == MC_ && enode->lsqToMC)
+                end_ind++;
             for (auto& succ : *(enode->JustCntrlSuccs)) {
                 if (succ->type == End_) {
                     memstr += printEdge(enode, succ);
@@ -899,6 +956,40 @@ std::string printMemEdges(std::vector<ENode*>* enode_dag) {
 
                     memstr += ", from = \"out" + to_string(end_ind) + "\"";
                     memstr += ", to = \"in" + to_string(succ_ind) + "\"";
+                    memstr += "];\n";
+                }
+            }
+        }
+        if (enode->type == MC_ ) {
+            for (auto& pred : *(enode->CntrlPreds)) {
+                if (pred->type == LSQ_) {
+                    memstr += printEdge(pred, enode);
+                    memstr += " [";
+                    memstr += printColor(pred, enode);
+                    memstr += ", mem_address = \"true\"";
+                    memstr += ", from = \"out" + to_string(getMemOutputCount(pred) + 2) + "\"";
+                    memstr += ", to = \"in" + to_string(getMemInputCount(enode) + 1) + "\"";
+                    memstr += "];\n";
+                    memstr += printEdge(pred, enode);
+                    memstr += " [";
+                    memstr += printColor(pred, enode);
+                    memstr += ", mem_address = \"true\"";
+                    memstr += ", from = \"out" + to_string(getMemOutputCount(pred) + 3) + "\"";
+                    memstr += ", to = \"in" + to_string(getMemInputCount(enode) + 2) + "\"";
+                    memstr += "];\n";
+                    memstr += printEdge(pred, enode);
+                    memstr += " [";
+                    memstr += printColor(pred, enode);
+                    memstr += ", mem_address = \"false\"";
+                    memstr += ", from = \"out" + to_string(getMemOutputCount(pred) + 4) + "\"";
+                    memstr += ", to = \"in" + to_string(getMemInputCount(enode) + 3) + "\"";
+                    memstr += "];\n";
+                    memstr += printEdge(enode, pred);
+                    memstr += " [";
+                    memstr += printColor(pred, enode);
+                    memstr += ", mem_address = \"false\"";
+                    memstr += ", from = \"out" + to_string(getMemOutputCount(enode) + 1) + "\"";
+                    memstr += ", to = \"in" + to_string(getMemInputCount(pred) + 1) + "\"";
                     memstr += "];\n";
                 }
             }
@@ -1088,9 +1179,10 @@ std::string printDataflowEdges(std::vector<ENode*>* enode_dag, std::vector<BBNod
                             }
                             str += "];\n";
                         }
+                        enode_index++;
                     }
                     pastSuccs->push_back(enode_succ);
-                    enode_index++;
+                    //enode_index++;
                 }
 
                 for (auto& enode_csucc : *(enode->JustCntrlSuccs)) {

@@ -44,6 +44,8 @@
 #define ENTITY_TEHB             "TEHB"
 #define ENTITY_OEHB             "OEHB"
 #define ENTITY_FIFO             "elasticFifo"
+#define ENTITY_NFIFO            "nontranspFifo"
+#define ENTITY_TFIFO            "transpFifo"
 #define ENTITY_FORK             "fork"
 #define ENTITY_ICMP             "intCmp"
 #define ENTITY_CONSTANT         "Const"
@@ -69,6 +71,8 @@
 #define COMPONENT_TEHB          "TEHB"
 #define COMPONENT_OEHB          "OEHB"
 #define COMPONENT_FIFO          "Fifo"
+#define COMPONENT_NFIFO         "nFifo"
+#define COMPONENT_TFIFO         "tFifo"
 #define COMPONENT_FORK          "Fork"
 #define COMPONENT_ICMP          "icmp"
 #define COMPONENT_CONSTANT_     "Constant"
@@ -118,6 +122,8 @@ enum
     ENTITY_TEHB_INDX,
     ENTITY_OEHB_INDX,
     ENTITY_FIFO_INDX,
+    ENTITY_NFIFO_INDX,
+    ENTITY_TFIFO_INDX,
     ENTITY_FORK_INDX,
     ENTITY_ICMP_INDX,
     ENTITY_CONSTANT_INDX,

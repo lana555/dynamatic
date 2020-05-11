@@ -51,7 +51,7 @@ $OPT -die -instcombine -lowerswitch .$name"_mem2reg_constprop_simplifycfg.ll" -S
 
 cc -c $PASS_DIR/FrequencyCounterPass/log_FrequencyCounter.c
 $CLANG -Xclang -load -Xclang $PASS_DIR/_build/FrequencyCounterPass/libFrequencyCounterPass.so -c .$name"_mem2reg_constprop_simplifycfg_die.ll"
-cc .$name"_mem2reg_constprop_simplifycfg_die.o" log_FrequencyCounter.o
+cc -no-pie .$name"_mem2reg_constprop_simplifycfg_die.o" log_FrequencyCounter.o
 ./a.out
 rm a.out .$name"_mem2reg_constprop_simplifycfg_die.o" log_FrequencyCounter.o
 

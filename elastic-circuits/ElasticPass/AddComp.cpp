@@ -915,7 +915,7 @@ void CircuitGenerator::setMuxes() {
                 fork->isCntrlMg = false;
 
                 for (auto& phi_node : *enode_dag) {
-                    if (phi_node->type == Phi_n || phi_node->type == Phi_)
+                    if (phi_node->type == Phi_)
                         if (enode->BB == phi_node->BB) {
                             phi_found       = true;
                             phi_node->isMux = true;
@@ -1050,7 +1050,9 @@ void CircuitGenerator::addControl() {
                         if (enode->CntrlSuccs->front()->Instr->getOpcode() ==
                             Instruction::GetElementPtr ||
                             enode->CntrlSuccs->front()->Instr->getOpcode() ==
-                            Instruction::Load ) {
+                            Instruction::Load ||
+                            enode->CntrlSuccs->front()->Instr->getOpcode() ==
+                            Instruction::Store ) {
                             forkC_node->JustCntrlSuccs->push_back(enode);
                             enode->JustCntrlPreds->push_back(forkC_node);
                         }

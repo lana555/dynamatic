@@ -49,33 +49,7 @@ void CircuitGenerator::addMCForEnode(ENode* enode, std::map<const Value*, ENode*
     Instruction* I = enode->Instr;
     auto* mcEnode  = getOrCreateMCEnode(findBase(I), baseToMCEnode);
     connectEnodeWithMCEnode(enode, mcEnode, findBB(enode));
-
-    /* Each memory controller contains a notion of how many
-     * store operations will be executed for a given BB, when
-     * entering said BB. This constant is used to ensure that
-     * all pending stores are completed, before the program is
-     * allowed to terminate.
-     * If present, locate this constant node and increment the
-     * count, else create a new constant node.
-     */
-    if (enode->Instr->getOpcode() == Instruction::Store) {
-        bool found = false;
-        for (auto& pred : *mcEnode->JustCntrlPreds)
-            if (pred->BB == enode->BB && pred->type == Cst_) {
-                pred->cstValue++;
-                found = true;
-            }
-        if (!found) {
-            ENode* cstNode    = new ENode(Cst_, enode->BB);
-            cstNode->cstValue = 1;
-            cstNode->JustCntrlSuccs->push_back(mcEnode);
-            cstNode->id = cst_id++;
-            mcEnode->JustCntrlPreds->push_back(cstNode);
-
-            // Add new constant to enode_dag
-            enode_dag->push_back(cstNode);
-        }
-    }
+    updateMCConstant(enode, mcEnode);
 }
 
 void CircuitGenerator::constructLSQNodes(std::map<const Value*, ENode*>& LSQnodes) {
@@ -92,6 +66,36 @@ void CircuitGenerator::constructLSQNodes(std::map<const Value*, ENode*>& LSQnode
     /* Append all the LSQ ENodes to the enode_dag */
     for (const auto& it : LSQnodes)
         enode_dag->push_back(it.second);
+}
+
+void CircuitGenerator::updateMCConstant(ENode* enode, ENode* mcEnode) {
+    /* Each memory controller contains a notion of how many
+     * store operations will be executed for a given BB, when
+     * entering said BB. This constant is used to ensure that
+     * all pending stores are completed, before the program is
+     * allowed to terminate.
+     * If present, locate this constant node and increment the
+     * count, else create a new constant node.
+     */
+
+    if (enode->Instr->getOpcode() == Instruction::Store) {
+        bool found = false;
+        for (auto& pred : *mcEnode->JustCntrlPreds)
+            if (pred->BB == enode->BB && pred->type == Cst_) {
+                pred->cstValue++;
+                found = true;
+             }
+        if (!found) {
+            ENode* cstNode    = new ENode(Cst_, enode->BB);
+            cstNode->cstValue = 1;
+            cstNode->JustCntrlSuccs->push_back(mcEnode);
+            cstNode->id = cst_id++;
+            mcEnode->JustCntrlPreds->push_back(cstNode);
+
+            // Add new constant to enode_dag
+            enode_dag->push_back(cstNode);
+        }
+    }
 }
 
 /**
@@ -131,10 +135,59 @@ void CircuitGenerator::addMemoryInterfaces(const bool useLSQ) {
 
         addMCForEnode(enode, baseToMCEnode);
     }
+
+    // Check if LSQ and MC are targetting the same memory
+    for (auto lsq : LSQnodes) {
+        auto* base     = lsq.first;
+        if (baseToMCEnode[base] != NULL) {
+            auto *lsqNode = lsq.second;
+            lsqNode->lsqToMC = true;
+            auto *mcEnode = baseToMCEnode[base];
+            mcEnode->lsqToMC = true;
+
+            // LSQ will connect as a predecessor of MC
+            // MC should keep track of stores arriving from LSQ
+            for (auto& enode : *lsqNode ->CntrlPreds) 
+               updateMCConstant(enode, mcEnode);
+            
+            lsqNode->CntrlSuccs->push_back(mcEnode);
+            mcEnode->CntrlPreds->push_back(lsqNode);
+            //setBBIndex(lsqNode, mcEnode->bbNode);
+            setLSQMemPortIndex(lsqNode, mcEnode);
+            setBBOffset(lsqNode, mcEnode);
+        }
+    }
 }
 
 // set index of BasicBlock in load/store connected to MC or LSQ
 void setBBIndex(ENode* enode, BBNode* bbnode) { enode->bbId = bbnode->Idx + 1; }
+
+// load/store port index for LSQ-MC connection
+void setLSQMemPortIndex(ENode* enode, ENode* memnode) {
+
+    assert (enode->type == LSQ_);
+    int loads = 0;
+    int stores = 0;
+    for (auto& node : *memnode->CntrlPreds) {
+	    if (enode == node)
+	        break;
+	    if (node->type == LSQ_){
+	        loads++;
+	        stores++;
+	    }
+	    else {
+	        auto* I = node->Instr;
+	        if (isa<LoadInst>(I))
+	        	loads++;
+	        else {
+	        	assert (isa<StoreInst>(I));
+	        	stores++;
+	        }
+	    }
+	}
+	enode->lsqMCLoadId = loads; 
+    enode->lsqMCStoreId = stores;
+}
 
 // load/store port index for LSQ or MC
 void setMemPortIndex(ENode* enode, ENode* memnode) {
@@ -146,6 +199,30 @@ void setMemPortIndex(ENode* enode, ENode* memnode) {
             offset++;
     }
     enode->memPortId = offset;
+
+    if (enode->type == LSQ_){
+    	int loads = 0;
+    	int stores = 0;
+    	for (auto& node : *memnode->CntrlPreds) {
+	        if (enode == node)
+	            break;
+	        if (node->type == LSQ_){
+	            loads++;
+	            stores++;
+	        }
+	        else {
+	        	auto* I = node->Instr;
+	        	if (isa<LoadInst>(I))
+	        		loads++;
+	        	else {
+	        		assert (isa<StoreInst>(I));
+	        		stores++;
+	        	}
+	        }
+	    }
+	    enode->lsqMCLoadId = loads; 
+        enode->lsqMCStoreId = stores;
+	}
 }
 
 // ld/st offset within bb (for LSQ or MC grop allocator)
@@ -168,6 +245,12 @@ int getBBOffset(ENode* enode) { return enode->bbOffset; }
 
 // check if two mem instructions are different type (for offset calculation)
 bool compareMemInst(ENode* enode1, ENode* enode2) {
+	// When MC connected to LSQ
+	// LSQ has both load and store port connected to MC 
+	// Need to increase offset of both load and store
+    if (enode1->type == LSQ_ || enode2->type == LSQ_)
+        return false;
+
     auto* I1 = enode1->Instr;
     auto* I2 = enode2->Instr;
 
@@ -178,7 +261,7 @@ bool compareMemInst(ENode* enode1, ENode* enode2) {
 int getMemLoadCount(ENode* memnode) {
     int ld_count = 0;
     for (auto& enode : *memnode->CntrlPreds) {
-        if (enode->type != Cst_) {
+        if (enode->type != Cst_ && enode->type != LSQ_) {
             auto* I = enode->Instr;
             if (isa<LoadInst>(I))
                 ld_count++;
@@ -191,9 +274,11 @@ int getMemLoadCount(ENode* memnode) {
 int getMemStoreCount(ENode* memnode) {
     int st_count = 0;
     for (auto& enode : *memnode->CntrlPreds) {
-        auto* I = enode->Instr;
-        if (isa<StoreInst>(I))
-            st_count++;
+        if (enode->type != Cst_ && enode->type != LSQ_) {
+            auto* I = enode->Instr;
+            if (isa<StoreInst>(I))
+                st_count++;
+        }
     }
     return st_count;
 }

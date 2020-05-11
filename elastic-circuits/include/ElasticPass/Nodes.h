@@ -86,10 +86,13 @@ public:
     int memPortId;
     bool memPort = false; // LD or ST port connected to MC or LSQ
     int bbOffset;
+    bool lsqToMC = false;
 
     bool isMux;
     bool isCntrlMg;
     std::string argName;
+    int lsqMCLoadId = 0; 
+    int lsqMCStoreId = 0; 
 
 private:
     void commonInit(const node_type nd, const char* name, Instruction* inst, Argument* a,

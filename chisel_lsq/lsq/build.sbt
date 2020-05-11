@@ -51,3 +51,19 @@ libraryDependencies ++= (Seq("chisel3","chisel-iotesters").map {
 scalacOptions ++= scalacOptionsVersion(scalaVersion.value)
 
 javacOptions ++= javacOptionsVersion(scalaVersion.value)
+
+resolvers += Resolver.url("bintray-sbt-plugins", url("http://dl.bintray.com/sbt/sbt-plugin-releases"))(Resolver.ivyStylePatterns)
+
+lazy val commonSettings = Seq(
+  version := "3.1.0",
+  organization := "lap",
+  scalaVersion := "2.11.12",
+  test in assembly := {}
+)
+
+lazy val app = (project in file(".")).
+  settings(commonSettings: _*).
+  settings(
+    mainClass in assembly := Some("lsq.Main"),
+    assemblyOutputPath in assembly := file("output/lsq.jar")
+)

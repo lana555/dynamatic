@@ -84,6 +84,16 @@ void DFnetlist::setExecutionFrequency(blockID id, double freq)
     DFI->setExecutionFrequency(id, freq);
 }
 
+void DFnetlist::setTrueFrac(blockID id, double freq)
+{
+    DFI->setTrueFrac(id, freq);
+}
+
+double DFnetlist::getTrueFrac(blockID id) const
+{
+    return DFI->getTrueFrac(id);
+}
+
 int DFnetlist::getBufferSize(blockID id) const
 {
     return DFI->getBufferSize(id);
