@@ -1,0 +1,10 @@
+Version 1.1 - 15/05/20
+- Updated component library (components)
+- Support for transparent and nontransparent FIFOs (dot2vhdl)
+- Updated buffer placement (buffers)
+- Updated mux/merge placement (elastic pass)
+- Support for LSQ/MC interface (elastic pass, dot2vhdl)
+
+-------------------------------
+Version 1.0 - 23/02/20
+First Release
