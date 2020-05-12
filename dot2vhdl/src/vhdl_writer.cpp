@@ -423,7 +423,7 @@ void write_connections (  int indx )
 
                 for ( int indx = 0; indx < nodes[i].inputs.size; indx++ )
                 {
-                    cout << nodes[i].name << " input " << indx << " type " << nodes[i].inputs.input[indx].type << endl;  
+                    //cout << nodes[i].name << " input " << indx << " type " << nodes[i].inputs.input[indx].type << endl;  
                     if ( nodes[i].inputs.input[indx].type == "x" )
                     {
                         // if x port exists, lsq is connected to mc and not to memory directly
@@ -495,7 +495,7 @@ void write_connections (  int indx )
 
                 for ( int indx = 0; indx < nodes[i].outputs.size; indx++ )
                 {
-                    cout << nodes[i].name << " output " << indx << " type " << nodes[i].outputs.output[indx].type << endl;  
+                    //cout << nodes[i].name << " output " << indx << " type " << nodes[i].outputs.output[indx].type << endl;  
 
                     if ( nodes[i].outputs.output[indx].type == "x" )
                     {
@@ -1516,12 +1516,12 @@ void write_components ( )
             
             for ( int lsq_indx = 0; lsq_indx < nodes[i].inputs.size; lsq_indx++ )
             {    
-                cout << nodes[i].name << "LSQ input "<< lsq_indx << " = " << nodes[i].inputs.input[lsq_indx].type << " port = " << nodes[i].inputs.input[lsq_indx].port << " info_type = " <<nodes[i].inputs.input[lsq_indx].info_type << endl;     
+                //cout << nodes[i].name << "LSQ input "<< lsq_indx << " = " << nodes[i].inputs.input[lsq_indx].type << " port = " << nodes[i].inputs.input[lsq_indx].port << " info_type = " <<nodes[i].inputs.input[lsq_indx].info_type << endl;     
             }
 
             for ( int lsq_indx = 0; lsq_indx < nodes[i].outputs.size; lsq_indx++ )
             {    
-                cout << nodes[i].name << "LSQ output "<< lsq_indx << " = " << nodes[i].outputs.output[lsq_indx].type << " port = " << nodes[i].outputs.output[lsq_indx].port << " info_type = " <<nodes[i].outputs.output[lsq_indx].info_type << endl;     
+                //cout << nodes[i].name << "LSQ output "<< lsq_indx << " = " << nodes[i].outputs.output[lsq_indx].type << " port = " << nodes[i].outputs.output[lsq_indx].port << " info_type = " <<nodes[i].outputs.output[lsq_indx].info_type << endl;     
             }
 
             netlist << "," << endl;
