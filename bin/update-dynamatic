@@ -18,14 +18,15 @@ version=`cat $DHLS_INSTALL_DIR/etc/dynamatic/VERSION`
 repo_updated="Already up to date."
 
 
+
 if [ "$check_result" = "$repo_updated" ]; then
     echo "Repository updated"
 else
     echo "New version present - installing. This may take a while..."
     cd $DHLS_INSTALL_DIR/etc/
     mkdir old
-    mv $DHLS_INSTALL_DIR/etc/dynamatic $DHLS_INSTALL_DIR/etc/old/dynamatic$version
-    sh install_packages.sh 2> /dev/null   
+    mv $DHLS_INSTALL_DIR/etc/dynamatic $DHLS_INSTALL_DIR/etc/old/dynamatic_$version
+    sh install_packages.sh > /dev/null 2>&1  
     echo "Software packages updated, please reboot Dynamatic to make effective the modifications"
 fi
 
