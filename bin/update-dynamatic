@@ -6,6 +6,7 @@
 
 
 export check_result
+echo ""
 echo "Checking for new versions"
 
 cd $DHLS_INSTALL_DIR/etc/dynamatic
@@ -14,12 +15,11 @@ check_result=`git pull`
 
 repo_updated="Already up to date."
 
-if [ "$check_result" == "$repo_updated" ]; then
+if [ "$check_result" = "$repo_updated" ]; then
     echo "Repository updated"
 else
-    echo "New version present - installing"
-    echo sh install_elastic_pass.sh
-    echo sh install_packages.sh    
+    echo "New version present - installing. This may take a while..."
+    sh install_packages.sh    
     echo "Software packages updated, please reboot Dynamatic to make effective the modifications"
 fi
 
