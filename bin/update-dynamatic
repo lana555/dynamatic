@@ -21,7 +21,7 @@ else
     echo "New version present - installing. This may take a while..."
     cd $DHLS_INSTALL_DIR/etc/
     mkdir old
-    mv $DHLS_INSTALL_DIR/etc/dynamatic $DHLS_INSTALL_DIR/etc/old/dynamatic_old
+    mv $DHLS_INSTALL_DIR/etc/dynamatic $DHLS_INSTALL_DIR/etc/old/dynamatic
     sh install_packages.sh    
     echo "Software packages updated, please reboot Dynamatic to make effective the modifications"
 fi
