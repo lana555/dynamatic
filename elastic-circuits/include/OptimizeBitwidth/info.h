@@ -1,86 +1,74 @@
-#ifndef INFO_H
-#define INFO_H
-#include "operations.h"
-#include "llvm/ADT/APInt.h"
-#include "llvm/ADT/BitVector.h"
-#include "llvm/IR/Instruction.h"
-#include "llvm/Support/raw_ostream.h"
-#include <bitset>
-#include <fstream>
+#pragma once
+
 #include <iostream>
-#include <map>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string>
+#include <cinttypes>
 
-using namespace llvm;
-/*
- * Information class:contains information about: left most bit,
- * 						 right most bit,
- * 						 bitwidth - it does not change from the
- * initialization
- */
-class Info {
-public:
-    /*
-     * Description: structure to keep statistics
-     */
+
+struct Info {
+public:    
     struct Stats {
-        int m_bits_before;
-        int m_bits_after;
-        int m_total_bit_width;
-        int m_opcode; //-1 - information about the value (is ConstantInt object in llvm), 0 - all
-                      // other
-        std::string m_opname;
+        std::string name;
 
-        void dump(llvm::raw_fd_ostream& stream) {
-            stream << "Bits before: " << m_bits_before << "\n";
-            stream << "Bits after: " << m_bits_after << "\n";
-            stream << "Opcode: " << m_opcode << "\n";
-            stream << "Opname: " << m_opname << "\n";
-        }
+        // -2  : Argument
+        // -1  : Constant
+        // 0<= : LLVM opcode
+        int opcode;
+
+        unsigned forward_opt;
+        unsigned backward_opt;
     };
 
-    /*
-     * Description : structure to keep information about PHI nodes
-     */
-    struct PHIInfo {
-        Value* m_cmp;  // compare instruction, that is corresponding to this phi node
-        int m_pattern; // 0 -decent (sub/div), 1 - accent(add/mul);
-        int m_order;   // 0 -normal,           1 - reverse (order of incoming blocks)
-        PHIInfo(Value* cmp, int pattern, int order)
-            : m_cmp(cmp), m_pattern(pattern), m_order(order) {}
-    };
-
-    void updateParams();
-
-    uint8_t m_bitwidth     = op::S_MAX;
-    uint8_t m_left         = 0;
-    uint8_t m_right        = 0;
-    uint64_t value         = 0;
-    uint8_t m_extend_point = 0;
-    bool m_in_cycle        = false; // for further analysis of induction variables
-
-    uintmax_t m_unknown_bits;
-    uintmax_t m_bit_value;
-
-    uint8_t getLeftBorder(const APInt& val);
-    uint8_t getRightBorder(const APInt& val);
-
-    /*some constructors for conveniece*/
-    Info& operator=(const Info& info) {
-        if (this == &info) {
-            return *this;
-        }
-        this->m_left         = info.m_left;
-        this->m_right        = info.m_right;
-        this->m_bit_value    = info.m_bit_value;
-        this->m_unknown_bits = info.m_unknown_bits;
-        this->m_extend_point = info.m_extend_point;
-        return *this;
-    }
+public:
+    // some basic constructors 
+    explicit Info(uint8_t originalBitwidth);
     Info(const Info& data) = default;
-    Info()                 = default;
-};
+    Info& operator=(const Info& info);
 
-#endif // INFO_H
+    // compare two infos field by field
+    //makes it easy to detect changes
+    bool operator==(const Info& info) const;
+    bool operator!=(const Info& info) const;
+
+    
+    // Returns the min UNSIGNED value the Info can take, given its current bitmasks
+    uintmax_t minUnsignedValuePossible() const;
+    // Returns the max UNSIGNED value the Info can take, given its current bitmasks
+    uintmax_t maxUnsignedValuePossible() const;
+
+    // Returns the min SIGNED value the Info can take, given its current bitmasks
+    //if the bit sign is ? or 1, will return a negative number (the closest to -infinity possible)
+    //if the bit sign is 0, will return a positive signed number (the closest to 0 possible)
+    intmax_t minSignedValuePossible() const;
+    // Returns the max SIGNED value the Info can take, given its current bitmasks
+    //if the sign bit is ? or 0, will return a signed positive number (the closest to +infinity possible)
+    //if the sign bit is 1, will return the negative number (the closest to 0 possible)
+    intmax_t maxSignedValuePossible() const;
+
+    // extends the Info to fit both itself, and the other one
+    //ie. extends its bounds if needed, and set known/unknowns bits accordingly
+    void keepUnion(const Info& other);
+
+    // restricts the Info to hold the intersection of itself with the other one
+    void keepIntersection(const Info& other);
+
+    // tries to reduce bounds (left, right, sign_ext) from existing ones and bit_masks
+    void reduceBounds();
+
+    // Debug
+    std::string toString() const;
+
+    // does some validity checks on Info.
+    //should always hold (at the end of a forward/backward function)
+    void assertValid() const;
+
+public:
+    uintmax_t unknown_bits;
+    uintmax_t bit_value;
+
+    uint8_t right; // lsb's position
+    uint8_t left;  // msb's position
+    uint8_t sign_ext; // msb's position when not extending the sign
+
+    const uint8_t cpp_bitwidth;
+};

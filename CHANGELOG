@@ -1,3 +1,9 @@
+Version 2.0 - 20/3/21
+- Support for IntelFPGAs (components, elastic pass, dot2vhdl)
+- Resource optimizations (front-end, components, buffers, resource sharing, elastic pass)
+- Updated buffer placement (buffers)
+- Updated component library (components)
+
 Version 1.1 - 15/05/20
 - Updated component library (components)
 - Support for transparent and nontransparent FIFOs (dot2vhdl)

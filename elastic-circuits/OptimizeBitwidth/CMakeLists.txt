@@ -4,7 +4,7 @@ add_definitions(-DTESTS)
 add_definitions(-DSTATS)
 #set or unset this parameter depending usage of vectorization during optimization passes
 add_definitions(-DNO_VECTORIZATION)
-set (libsrc OptimizeBitwidth.cpp info.cpp printf.cpp utils.cpp)
+set (libsrc OptimizeBitwidth.cpp info.cpp deps.cpp)
 
 add_library( LLVMOptimizeBitWidth MODULE ${libsrc})
 

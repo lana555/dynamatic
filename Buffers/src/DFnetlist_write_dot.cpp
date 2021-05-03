@@ -21,7 +21,9 @@ static map<BlockType,string> blockShapes = {
     {FUNC_ENTRY, " shape=oval"},
     {FUNC_EXIT, " shape=oval"},
     {SINK, " shape=oval"},
-    {SOURCE, " shape=oval"}
+    {SOURCE, " shape=oval"},
+    {SELECTOR, "shape=oval" },
+    {DISTRIBUTOR, "shape=oval" }
 };
 
 static map<PortType,string> channelDstAttr = {
@@ -128,24 +130,29 @@ bool DFnetlist_Impl::writeDot(std::ostream& of)
         of << "  }" << endl;
     }*/
 
-for (bbID i = 0; i <= BBG.numBasicBlocks(); i++) {
-	if (i>0) {
-    	   of <<  "subgraph cluster_" + to_string(i) + " {\n";
-    	   of << "color = \"darkgreen\"\n";
-		   of << "label = \"block"+ to_string(i) +"\"\n";
-    	}
-
+// Print nodes in BB clusters
+for (bbID i = 1; i <= BBG.numBasicBlocks(); i++) {
+    of <<  "subgraph cluster_" + to_string(i) + " {\n";
+    of << "color = \"darkgreen\"\n";
+	of << "label = \"block"+ to_string(i) +"\"\n";
+    	
     ForAllBlocks(b) {
     	bbID bb_src = getBasicBlock(b);
-    	
-	    
+  
         if (bb_src == i) 
-            writeBlockDot(of, b);
-        
+            writeBlockDot(of, b);  
     }
-    if (i>0)
-    	  of << "}\n";
+
+    of << "}\n";
 }
+// Print remaining nodes (bbID = 0)
+    ForAllBlocks(b) {
+        bbID bb_src = getBasicBlock(b);
+        
+        if (bb_src == 0) 
+            writeBlockDot(of, b);
+    }
+
 
     of << endl << "  // Channels" << endl;
 
@@ -248,7 +255,25 @@ void DFnetlist_Impl::writeBlockDot(ostream& s, blockID b)
     // Lana 24.03.19 Adding missing exit/entry port
     int tmpPortWidth = 0;
 
-    for (auto& p: B.allPorts) {
+    // Axel: Sort the ports by name
+    map<std::string, int> sorted_ports;
+    for (auto p : B.allPorts) {
+        std::string name = getPortName(p, false);
+        int index = name.find_last_not_of("0123456789");
+        int portIndex = stoi(name.substr(index + 1));
+        string portDesc = name.substr(0, index + 1);
+        string newPortIndex =
+                portIndex < 10 ?
+                        "0" + to_string(portIndex) : to_string(portIndex);
+        string newPortName = portDesc + newPortIndex;
+        sorted_ports.emplace(newPortName, p);
+        //sorted_ports.
+    }
+
+    //for (auto& p: B.allPorts) {
+    for (auto it = sorted_ports.begin(); it != sorted_ports.end(); it++) {
+        auto &p = it->second;
+
         double d = getPortDelay(p);
         if (d > 0) {
             if (first_delay) first_delay = false;
@@ -339,13 +364,15 @@ void DFnetlist_Impl::writeBlockDot(ostream& s, blockID b)
     if (B.type == OPERATOR and (B.operation == "getelementptr_op")) {
         s << ", constants=" << getGetPtrConst(b);
     }
+
+    s << ", bbID = " << getBasicBlock(b);
     // Lana 02/07/19
     if (B.type == OPERATOR and (B.operation == "mc_load_op" 
         || B.operation == "mc_store_op" 
         || B.operation == "lsq_load_op"
         || B.operation == "lsq_store_op")) {
         
-        s << ", bbID = " << getBasicBlock(b);
+        //s << ", bbID = " << getBasicBlock(b);
         s << ", portID = " << getMemPortID(b);
         s << ", offset = " << getMemOffset(b);
 
@@ -359,7 +386,7 @@ void DFnetlist_Impl::writeBlockDot(ostream& s, blockID b)
 
     if (B.type == BRANCH) {
         
-        s << ", bbID = " << getBasicBlock(b);
+        //s << ", bbID = " << getBasicBlock(b);
 
     }
 
@@ -414,11 +441,32 @@ void DFnetlist_Impl::writeBlockDot(ostream& s, blockID b)
         } else   s << k;
     }
 
+    //Axel
+    if (B.retimingDiff > 0) {
+        s << ", retimingDiff=" << B.retimingDiff;
+    }
+
     s << ", " << blockShapes[getBlockType(b)];
 
     // Special color for control blocks
    // if (B.type != ELASTIC_BUFFER and num_control > num_noncontrol) s << ", color=green, fillcolor=greenyellow";
 
+    if (B.type == SELECTOR) {
+        s << ", orderings=\"";
+        for (auto mappings : B.orderings) {
+            for (auto index_it = mappings.second.begin();
+                    index_it != mappings.second.end(); ++index_it) {
+                if (index_it != (mappings.second.end() - 1)) {
+                    s << to_string(*index_it) + "|";
+                } else {
+                    s << to_string(*index_it) + " ";
+                }
+            }
+        }
+        s << "\"";
+        s << ", color=pink, fillcolor=pink";
+    }
+    
     s << "];" << endl;
 }
 

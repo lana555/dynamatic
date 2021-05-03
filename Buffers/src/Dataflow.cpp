@@ -54,6 +54,16 @@ void DFnetlist::setBlockDelay(blockID id, double d)
     DFI->setBlockDelay(id, d);
 }
 
+double DFnetlist::getBlockRetimingDiff(blockID id) const
+{
+	return DFI->getBlockRetimingDiff(id);
+}
+
+void DFnetlist::setBlockRetimingDiff(blockID id, double retimingDiff){
+	DFI->setBlockRetimingDiff(id, retimingDiff);
+}
+
+
 int DFnetlist::getLatency(blockID id) const
 {
     return DFI->getLatency(id);
@@ -217,6 +227,11 @@ portID DFnetlist::getDemuxComplementaryPort(portID port) const
 channelID DFnetlist::getConnectedChannel(portID port) const
 {
     return DFI->getConnectedChannel(port);
+}
+
+BlockType DFnetlist::getBlockType(blockID block) const
+{
+	return DFI->getBlockType(block);
 }
 
 bool DFnetlist::isPortConnected(portID port) const

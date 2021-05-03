@@ -106,17 +106,28 @@ int get_lsq_datawidth ()
     
 }
 
-int get_lsq_addresswidth ()
+int get_lsq_addresswidth ( int lsq_indx )
 {
     int addresswidth = LSQ_ADDRESSWIDTH_DEFAULT;
     
     for (int i = 0; i < components_in_netlist; i++) 
     {
+        if ( nodes[i].type.find("LSQ") != std::string::npos )
+        {
+            if ( lsq_indx == nodes[i].lsq_indx )
+            {
+                addresswidth = nodes[i].address_size;
+                break;
+            }
+        }
+
+#if 0
+
         if ( nodes[i].name.find("load") != std::string::npos )
         {
             addresswidth = nodes[i].inputs.input[0].bit_size;
         }
-
+#endif
     }
     
     return addresswidth;
@@ -587,7 +598,7 @@ void lsq_set_configuration ( int lsq_indx )
     
     lsq_conf[lsq_indx].name = get_lsq_name ( lsq_indx );
     lsq_conf[lsq_indx].dataWidth = get_lsq_datawidth ();//     "dataWidth": 32,
-    lsq_conf[lsq_indx].addressWidth = get_lsq_addresswidth ();//     "addressWidth": 10,
+    lsq_conf[lsq_indx].addressWidth = get_lsq_addresswidth ( lsq_indx );//     "addressWidth": 10,
     lsq_conf[lsq_indx].fifoDepth = get_lsq_fifo_depth ( lsq_indx );    //     "fifoDepth": 4,
     lsq_conf[lsq_indx].loadPorts = get_lsq_loadPorts( lsq_indx ); //     "loadPorts": 1,
     lsq_conf[lsq_indx].storePorts = get_lsq_storePorts( lsq_indx ); //     "storePorts": 1,

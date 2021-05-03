@@ -175,7 +175,7 @@ DFnetlist_Impl::subNetlistBB DFnetlist_Impl::extractMarkedGraphBB(const map<bbID
         S_BB[i] = milp.newBooleanVar("S_BB_" + to_string(i));
     }
     for (bbArcID i = 0; i < BBG.numArcs(); i++){
-        if (getBasicBlock(BBG.getSrcBB(i)) == 0 || getBasicBlock(BBG.getDstBB(i)) == 0) continue;
+        if (BBG.getSrcBB(i) == 0 || BBG.getDstBB(i) == 0) continue;
         if (N_e[i] <= 0) continue;
 
         S_e[i] = milp.newBooleanVar("S_e_" + to_string(i));

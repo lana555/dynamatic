@@ -253,6 +253,8 @@ string clean_entity ( string filename )
     
     eraseAllSubStr ( return_string , "_elaborated" );
     eraseAllSubStr ( return_string , "_optimized" );
+    eraseAllSubStr ( return_string , "_area" );
+
     return return_string;
 }
 

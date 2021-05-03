@@ -56,6 +56,8 @@ enum BlockType {OPERATOR,
         		CNTRL_MG,
         		LSQ, 
         		MC,
+				DISTRIBUTOR,
+				SELECTOR,
                 UNKNOWN
                };
 
@@ -81,9 +83,9 @@ class DFlib_Impl;
 class DFnetlist
 {
 
-    DFnetlist_Impl* DFI;    /// Implementation of DFnet;
-
 public:
+	  DFnetlist_Impl* DFI;    /// Implementation of DFnet;
+
     /**
      * @brief Default constructor.
      */
@@ -174,6 +176,11 @@ public:
      * @param d Delay of the block.
      */
     void setBlockDelay(blockID id, double d);
+
+    double getBlockRetimingDiff(blockID id) const;
+
+    void setBlockRetimingDiff(blockID id, double retimingDiff);
+
 
     /**
      * @brief Returns the latency of a block.
@@ -403,6 +410,13 @@ public:
      * @return The channel id..
      */
     channelID getConnectedChannel(portID port) const;
+
+    /**
+     * @brief Returns the block type associated to a block
+     * @param block The block from which we want to obtain the type
+     * @return The block type
+     */
+    BlockType getBlockType(blockID block) const;
 
     /**
      * @brief Checks whether a port is connected.

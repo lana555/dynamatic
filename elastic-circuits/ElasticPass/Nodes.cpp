@@ -16,7 +16,7 @@ void ENode::commonInit(const node_type nd, const char* name, Instruction* inst, 
     CntrlSuccs     = new std::vector<ENode*>;
     JustCntrlPreds = new std::vector<ENode*>;
     JustCntrlSuccs = new std::vector<ENode*>;
-    sizes          = new std::vector<unsigned>;
+    //sizes          = new std::vector<unsigned>;
 
     Instr = inst;
     BB    = bb;

@@ -81,7 +81,10 @@ typedef struct node
     int     bbId = -1; 
     int     portId = -1; 
     int     offset = -1;
-    int     lsq_indx = -1;    
+    int     lsq_indx = -1;
+    //for sel
+    vector<vector<int>> orderings;
+
     string  numLoads;
     string  numStores;
     string  loadOffsets;

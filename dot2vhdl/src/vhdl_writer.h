@@ -58,6 +58,9 @@
 #define ENTITY_CTRLMERGE        "CntrlMerge"
 #define ENTITY_LSQ              "LSQ"
 #define ENTITY_MC               "MemCont"
+#define ENTITY_SEL				"SEL"
+#define ENTITY_DISTRIBUTOR      "Distributor"
+#define ENTITY_SELECTOR			"Selector"
 
 #define COMPONENT_MERGE         "Merge"
 #define COMPONENT_READ_MEMORY   "load"
@@ -85,6 +88,10 @@
 #define COMPONENT_CTRLMERGE     "CntrlMerge"
 #define COMPONENT_LSQ           "LSQ"
 #define COMPONENT_MC            "MC"
+#define COMPONENT_SEL			"SEL"
+#define COMPONENT_DISTRIBUTOR   "Distributor"
+#define COMPONENT_SELECTOR		"Selector"
+
 
 #define UNDERSCORE  "_"
 #define COLOUMN " : "
@@ -137,6 +144,9 @@ enum
     ENTITY_CTRLMERGE_INDX,
     ENTITY_LSQ_INDX,
     ENTITY_MC_INDX,
+    ENTITY_SEL_INDX,
+    ENTITY_DISTRIBUTOR_INDX,
+    ENTITY_SELECTOR_INDX,
     ENTITY_MAX
 };
 

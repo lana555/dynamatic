@@ -38,6 +38,9 @@ static cl::opt<std::string> opt_cfgOutdir("cfg-outdir", cl::desc("Output directo
 static cl::opt<bool> opt_buffers("simple-buffers", cl::desc("Naive buffer placement"), cl::Hidden,
                                 cl::init(false), cl::Optional);
 
+static cl::opt<std::string> opt_serialNumber("target", cl::desc("Targeted FPGA"), cl::Hidden,
+                                cl::init("default"), cl::Optional);
+
 struct timeval start, end;
 
 std::string fname;
@@ -66,6 +69,8 @@ public:
     virtual void getAnalysisUsage(AnalysisUsage& AU) const {
         // 			  AU.setPreservesCFG();
         AU.addRequired<OptimizeBitwidth>();
+        OptimizeBitwidth::setEnabled(true); // enable OB
+
         AU.addRequired<MemElemInfoPass>();
     }
 
@@ -103,7 +108,7 @@ public:
 
             circuitGen->addPhi();
 
-            printDotDFG(enode_dag, bbnode_dag, opt_cfgOutdir + "/" + fname + "_graph.dot", done);
+            printDotDFG(enode_dag, bbnode_dag, opt_cfgOutdir + "/" + fname + "_graph.dot", done, opt_serialNumber);
 
             circuitGen->phiSanityCheck(enode_dag);
 
@@ -124,8 +129,6 @@ public:
 
             circuitGen->addSink();
             circuitGen->addSource();
-
-            // circuitGen->setSizes();
 
             set_clock();
             if (opt_buffers)
@@ -151,12 +154,15 @@ public:
             circuitGen->setFreqs(F.getName());
 
             circuitGen->removeRedundantAfterElastic(enode_dag);
+            
+            if (OptimizeBitwidth::isEnabled())
+                circuitGen->setSizes();
 
             done = true;
 
             fflush(stdout);
 
-            printDotDFG(enode_dag, bbnode_dag, opt_cfgOutdir + "/" + fname + "_graph.dot", done);
+            printDotDFG(enode_dag, bbnode_dag, opt_cfgOutdir + "/" + fname + "_graph.dot", done, opt_serialNumber);
 
             printDotCFG(bbnode_dag, (opt_cfgOutdir + "/" + fname + "_bbgraph.dot").c_str());
 

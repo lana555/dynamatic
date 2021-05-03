@@ -58,8 +58,8 @@ enum {
 
 static const std::string components_name[] = {
     ICMP_NAME,  ADD_NAME,   SUB_NAME,    MUL_NAME,  SEXT_NAME, LOAD_NAME,
-    STORE_NAME, LSQ_LOAD_NAME, LSQ_STORE_NAME, MERGE_NAME, GETPTR_NAME, 
-    FADD_NAME, FSUB_NAME, FMUL_NAME, UDIV_NAME,  SDIV_NAME,  
+    STORE_NAME, LSQ_LOAD_NAME, LSQ_STORE_NAME, MERGE_NAME, GETPTR_NAME,
+    FADD_NAME, FSUB_NAME, FMUL_NAME, UDIV_NAME,  SDIV_NAME,
     FDIV_NAME,   FCMP_NAME, PHIC_NAME, ZDC_NAME};
 
 static const float datapath_delay[CMP_MAX + 1][10] = {
@@ -114,5 +114,5 @@ static const int datapath_latency[CMP_MAX + 1][10] = {
 #define ROUTING_DELAY_30 1.3
 #define ROUTING_DELAY_40 1.4
 
-extern float get_component_delay(std::string component, int datasize);
-extern int get_component_latency(std::string component, int datasize);
+extern float get_component_delay(std::string component, int datasize, std::string serial_number);
+extern int get_component_latency(std::string component, int datasize, std::string serial_number);

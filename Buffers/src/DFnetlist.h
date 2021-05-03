@@ -533,6 +533,12 @@ public:
      */
     void setLatency(blockID id, int lat);
 
+
+    double getBlockRetimingDiff(blockID id) const;
+
+
+    void setBlockRetimingDiff(blockID id, double diff);
+
     /**
     * @brief Returns the initiation interval of a block.
     * @param id Identifier of the block.
@@ -625,6 +631,8 @@ public:
     void setFuncName(blockID id, std::string op);
 
     const std::string& getFuncName(blockID id) const;
+
+    void setOrderings(blockID id, map<bbID, vector<int>> value);
 
     // Lana 04/10/19
 
@@ -1206,6 +1214,13 @@ public:
         computeSCC(onlyMarked);
     }
 
+    setBlocks allBlocks;       // Set of blocks (for iterators)
+    setPorts allPorts;         // Set of ports (for iterators)
+    setChannels allChannels;   // Set of channels (for iterators)
+
+    BasicBlockGraph BBG;        // Graph of Basic Blocks
+
+
 private:
 
     struct Block {
@@ -1230,6 +1245,7 @@ private:
         portID srcCond;             // Port that generates the condition for the branch (beyond forks)
         double freq;                // Execution frequency (obtained from profiling)
         double frac;                // True/false fraction of select inputs (obtained from profiling)
+        double retimingDiff;        // Axel
         bool mark;                  // Flag used for traversals
         int scc_number;             // SCC number
         int DFSorder;               // Post-visit number during DFS traversal
@@ -1254,6 +1270,7 @@ private:
         std::string loadPorts;
         std::string storePorts;
         int getptrc; // Lana: constant for getelementpointer dimensions
+        map<bbID, vector<int>> orderings; //Axel : used by selector to know order of execution
     };
 
     struct Port {
@@ -1513,16 +1530,16 @@ private:
     int freePort;       // Next free Port in the vector of ports
     int freeChannel;    // Next free Channel in the vector of channels
 
-    setBlocks allBlocks;       // Set of blocks (for iterators)
-    setPorts allPorts;         // Set of ports (for iterators)
-    setChannels allChannels;   // Set of channels (for iterators)
+    //setBlocks allBlocks;       // Set of blocks (for iterators)
+    //setPorts allPorts;         // Set of ports (for iterators)
+    //setChannels allChannels;   // Set of channels (for iterators)
 
     setBlocks parameters;       // Set of paramenters of the dataflow netlist (entry)
     setBlocks results;          // Set of results of the dataflow netlist (exit)
     blockID entryControl;       // Entry block for control
     setBlocks exitControl;      // Exit blocks
 
-    BasicBlockGraph BBG;        // Graph of Basic Blocks
+    //BasicBlockGraph BBG;        // Graph of Basic Blocks
     bbID entryBB;               // Entry basic block
 
     std::string milpSolver;     // Name of the MILP solver
@@ -2004,6 +2021,8 @@ private:
      */
     void dumpMilpSolution(const Milp_Model& milp, const milpVarsEB& vars) const;
 
+    void writeRetimingDiffs(const Milp_Model& milp, const milpVarsEB& vars);
+
     /**
      * @brief Makes some buffers non-transparent to cut combinational cycles.
      * @note This function should be rarely invoked. It is only necessary when
@@ -2116,6 +2135,17 @@ private:
 
     bool removeFakeBranches();
 
+public :
+    //added for convenience, probably remove later
+    std::vector<Block> & getBlocks(){
+    	return blocks;       // List of blocks
+    }
+    std::vector<Port> & getPorts(){
+    	return ports;// List of ports
+    }
+    std::vector<Channel> & getChannels(){
+    	return channels;// List of channels
+    }
 };
 
 class DFlib_Impl

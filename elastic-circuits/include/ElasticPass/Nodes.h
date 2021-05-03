@@ -65,7 +65,10 @@ public:
                                          // carries both data and control signals
     std::vector<ENode*>* JustCntrlPreds; // predecessors that only carry control signals
     std::vector<ENode*>* JustCntrlSuccs; // successors that only carry control signals
-    std::vector<unsigned>* sizes;
+    
+    std::vector<unsigned> sizes_preds; // sizes of the signals to predecessors
+    std::vector<unsigned> sizes_succs; // sizes of the signals to successors
+
     bool is_live_in  = false;
     bool is_live_out = false;
     bool visited     = false;

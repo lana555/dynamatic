@@ -9,8 +9,16 @@ std::string NEW_LINE("\n");
 std::string DHLS_VERSION("0.1.1");
 
 #define BB_MINLEN 3
+#define DATA_SIZE 32
 #define COND_SIZE 1
 #define CONTROL_SIZE 0
+
+#define BRANCH_CONDITION_IN 1
+#define MUX_CONDITION_IN 0
+#define CMERGE_CONDITION_OUT 1
+
+std::string inputSuffix (ENode* enode, unsigned i);
+std::string outputSuffix(ENode* enode, unsigned i);
 
 std::ofstream dotfile;
 
@@ -245,7 +253,7 @@ int getInPortSize(ENode* enode, int index) {
         return DATA_SIZE;
     } else if (enode->type == Start_) {
         return CONTROL_SIZE;
-    } else if (enode->type == Sink_) {
+    } else if (enode->type == Sink_ || enode->type == End_) {
         return enode->CntrlPreds->size() > 0 ? DATA_SIZE : CONTROL_SIZE;
     }
 }
@@ -698,6 +706,445 @@ std::string getNodeDotOutputs(ENode* enode) {
     return name;
 }
 
+
+std::string inputSuffix (ENode* enode, unsigned idx) {    
+    switch (enode->type)
+    {
+    case Inst_:
+        if (enode->Instr->getOpcode() == Instruction::Select) {
+            if (idx == 0)
+                return "?";
+            else if (idx == 1)
+                return "+";
+            else if (idx == 2)
+                return "-";
+        }
+        break;
+
+    case Branch_c:
+    case Branch_n:
+        return idx == BRANCH_CONDITION_IN ? "?" : "";
+
+    case Phi_:
+    case Phi_c:
+    case Phi_n:
+        if (enode->isMux && idx == MUX_CONDITION_IN)
+            return "?";
+        return "";
+    
+    default:
+        break;
+    }
+
+    return "";
+}
+int getInPortSize_withOB(ENode* enode, unsigned index) {
+    switch (enode->type)
+    {
+    case Branch_: // 1 input nodes
+    case Cst_:
+    case Fork_:
+    case Fork_c:
+    case Buffera_:
+    case Bufferi_:
+    case Start_:
+    case Source_:
+    case Sink_:
+        return enode->sizes_preds.at(0);
+    case Argument_:
+        return DATA_SIZE; // force Arguments to be 32 bits
+
+    case Branch_n:
+    case Branch_c: {
+        bool isCondition = index == BRANCH_CONDITION_IN;
+
+        unsigned i = 0;
+        for (const ENode* pred : *enode->CntrlPreds) {
+            if (isBranchConditionEdge(pred, enode) == isCondition)
+                return enode->sizes_preds.at(i);
+            i += 1;
+        }
+        for (const ENode* pred : *enode->JustCntrlPreds) {
+            if (isBranchConditionEdge(pred, enode) == isCondition)
+                return enode->sizes_preds.at(i);
+            i += 1;
+        }
+        assert (false && "Illegal state : branch should have both a condition and non-condition input");
+    }
+
+    case Phi_: // n inputs
+    case Phi_n:
+    case Phi_c:
+        // if node is a mux, and index holds MuxCondition
+        if (enode->isMux && index == MUX_CONDITION_IN) {
+            int i = 0;
+            for (const ENode* pred : *enode->CntrlPreds) {
+                if (isMuxConditionEdge(pred, enode))
+                    return enode->sizes_preds.at(i);
+                i += 1;
+            }
+            for (const ENode* pred : *enode->JustCntrlPreds) {
+                if (isMuxConditionEdge(pred, enode))
+                    return enode->sizes_preds.at(i);
+                i += 1;
+            }
+
+            assert (false && "Expected 1 port holding the Mux condition");
+        }
+        // else return the output size ; careful to take the correct output if enode is CMerge
+        else if (enode->isCntrlMg) {
+
+            int i = 0;
+            for (const ENode* succ : *enode->CntrlSuccs) {
+                if (!isCMergeConditionEdge(enode, succ))
+                    return enode->sizes_succs.at(i);
+                i += 1;
+            }
+            for (const ENode* succ : *enode->JustCntrlSuccs) {
+                if (!isCMergeConditionEdge(enode, succ))
+                    return enode->sizes_succs.at(i);
+                i += 1;
+            }
+            
+            assert (false && "Expected 1 port not holding the CMerge condition");
+        }
+        else {
+            return enode->sizes_succs.at(0);
+        }
+    
+    case Inst_: {
+        unsigned opcode = enode->Instr->getOpcode();
+        // special instructions that do not take output_size as input
+        if (opcode == Instruction::ICmp || opcode == Instruction::FCmp
+            || opcode == Instruction::LShr || opcode == Instruction::AShr
+            || opcode == Instruction::SDiv || opcode == Instruction::UDiv
+            || opcode == Instruction::SRem || opcode == Instruction::URem) {
+            
+            // search for maximum in input/output and use it
+            unsigned max_bw = 0;
+            for (unsigned i = 0 ; i < enode->CntrlPreds->size() + enode->JustCntrlPreds->size() ; ++i)
+                max_bw = std::max<unsigned>(max_bw, enode->sizes_preds.at(i));
+            for (unsigned i = 0 ; i < enode->CntrlSuccs->size() + enode->JustCntrlSuccs->size() ; ++i)
+                max_bw = std::max<unsigned>(max_bw, enode->sizes_succs.at(i));
+
+            // if the comparison is signed, and that bitwidth < 32 (unsigned inputs), add 1 bit to make sure sign bit=0
+            if (opcode == Instruction::ICmp && dyn_cast<ICmpInst>(enode->Instr)->isSigned())
+                max_bw = std::min<unsigned>(DATA_SIZE, max_bw + 1);
+            
+            return max_bw;
+        }
+        else if (opcode == Instruction::Select) {
+            // condition input ?
+            if (index == 0)
+                return enode->sizes_preds.at(0);
+            else
+                return std::max(enode->sizes_preds.at(1), enode->sizes_preds.at(2));
+        }
+        else {
+            return enode->sizes_succs.at(0);
+        }
+    }
+    default:
+        break;
+    }
+    
+    return DATA_SIZE;
+}
+std::string getNodeDotInputs_withOB(ENode* enode) {
+    string name = "";
+
+    switch (enode->type) {
+        case Argument_:
+        case Branch_:
+        case Fork_:
+        case Fork_c:
+        case Buffera_:
+        case Bufferi_:
+        case Cst_:
+        case Start_:
+        case Sink_:
+            name += ", in = \"in1:" + to_string(getInPortSize_withOB(enode, 0)) + "\"";
+            break;
+
+        case Branch_n:
+        case Branch_c:
+            name += ",  in = \"in1:" + to_string(getInPortSize_withOB(enode, 0));
+            name += " in2?:" + to_string(getInPortSize_withOB(enode, 1)) + "\"";
+            break;
+
+        case Inst_:
+            name += ", in = \"";
+
+            // conflict in sizes with MC_/LSQ_ nodes
+            //workaround: force IOs to 32
+            if (enode->Instr->getOpcode() == Instruction::Load || enode->Instr->getOpcode() == Instruction::Store) {
+                name += "in1:32 in2:32";
+            }
+            else {
+                for (unsigned i = 0 ; i < enode->CntrlPreds->size() + enode->JustCntrlPreds->size() ; ++i) {
+                    name += "in" + to_string(i + 1);
+                    name += inputSuffix(enode, i);
+                    name += ":";
+                    name += to_string(getInPortSize_withOB(enode, i)) + " ";
+                }
+            }
+            name += "\"";
+            break;
+
+        case Phi_:
+        case Phi_n:
+        case Phi_c:
+            name += ", in = \"";
+
+            for (unsigned i = 0 ; i < enode->CntrlPreds->size() + enode->JustCntrlPreds->size() ; ++i) {
+                name += "in" + to_string(i + 1);
+                name += inputSuffix(enode, i);
+                name += ":";
+                name += to_string(getInPortSize_withOB(enode, i)) + " ";
+            }
+
+            name += "\"";
+            break;
+
+        case LSQ_:
+        case MC_:
+            name += ", in = \"";
+
+            for (int i = 0; i < (int)enode->JustCntrlPreds->size(); i++) {
+                name += "in" + to_string(i + 1) + ":" +
+                        to_string(enode->type == MC_ ? DATA_SIZE : CONTROL_SIZE);
+                name += "*c" + to_string(i) + " ";
+            }
+
+            for (auto& pred : *enode->CntrlPreds) {
+                if (pred->type != Cst_ && pred->type !=LSQ_) {
+
+                    name +=
+                        "in" + to_string(getDotAdrIndex(pred, enode)) + ":" + to_string(ADDR_SIZE);
+                    name += (pred->Instr->getOpcode() == Instruction::Load) ? "*l" : "*s";
+                    name += to_string(pred->memPortId) + "a ";
+
+                    if (pred->Instr->getOpcode() == Instruction::Store) {
+                        name += "in" + to_string(getDotDataIndex(pred, enode)) + ":" +
+                                to_string(DATA_SIZE);
+                        name += "*s" + to_string(pred->memPortId) + "d ";
+                    }
+                }
+                if (pred->type == LSQ_) {
+                	int inputs = getMemInputCount(enode);
+                	int pred_ld_id = pred->lsqMCLoadId;
+                    int pred_st_id = pred->lsqMCStoreId;
+                    name += "in" + to_string (inputs + 1) + ":" + to_string(ADDR_SIZE) + "*l" + to_string(pred_ld_id) + "a ";
+                    name += "in" + to_string (inputs + 2) + ":" + to_string(ADDR_SIZE)+ "*s" + to_string(pred_st_id) + "a ";
+                    name += "in" + to_string (inputs + 3) + ":" + to_string(DATA_SIZE)+ "*s" + to_string(pred_st_id) + "d ";
+
+                }
+            }
+            if (enode->type == LSQ_ && enode->lsqToMC == true) {
+            	int inputs = getMemInputCount(enode);
+                name += "in" + to_string (inputs + 1) + ":" + to_string(DATA_SIZE) + "*x0d ";
+            }
+            name += "\"";
+            break;
+
+        case End_: {
+            name += ", in = \"";
+            
+            unsigned maxBitwidth = 0;
+            for (unsigned i = 0 ; i < enode->JustCntrlPreds->size() + enode->CntrlPreds->size() ; ++i)
+                maxBitwidth = std::max(maxBitwidth, enode->sizes_preds.at(i));
+                
+            for (unsigned i = 0 ; i < enode->JustCntrlPreds->size() ; ++i) {
+                const ENode* pred = enode->JustCntrlPreds->at(i);
+
+                name += "in" + to_string(i + 1) + ":" + to_string(CONTROL_SIZE);
+                // if its not memory, it is the single control port
+                if (pred->type == MC_ || pred->type == LSQ_)
+                    name += "*e";
+                name += " ";
+            }
+
+            for (unsigned i = 0 ; i < enode->CntrlPreds->size() ; ++i)
+                name += "in" + to_string(enode->JustCntrlPreds->size() + i + 1) + ":" + to_string(maxBitwidth) + " ";
+
+            name += "\"";
+
+        }   break;
+
+        default:
+            break;
+    }
+    return name;
+}
+
+std::string outputSuffix (ENode* enode, unsigned idx) {
+    switch (enode->type)
+    {
+    case Branch_n:
+    case Branch_c:
+        return idx == 0 ? "+" : "-";
+
+    case Phi_:
+    case Phi_n:
+    case Phi_c:
+        if (enode->isCntrlMg && idx == CMERGE_CONDITION_OUT)
+            return "?";
+    
+    default:
+        break;
+    }
+    return "";
+}
+int getOutPortSize_withOB(ENode* enode, unsigned index) {
+    switch (enode->type) {
+        case Phi_c: // CMerge? 
+            if (enode->isCntrlMg) {
+                bool isCondition = index == CMERGE_CONDITION_OUT;
+                
+                unsigned i = 0;
+                for (const ENode* succ : *enode->CntrlSuccs) {
+                    if (isCMergeConditionEdge(enode, succ) == isCondition)
+                        return enode->sizes_succs.at(i);
+                    i += 1;
+                }
+                for (const ENode* succ : *enode->JustCntrlSuccs) {
+                    if (isCMergeConditionEdge(enode, succ) == isCondition)
+                        return enode->sizes_succs.at(i);
+                    i += 1;
+                }
+
+                assert (false && "Illegal state : CMerges must have both a condition and non-condition output");
+            }
+            // else:
+        case Buffera_: // 1 output node
+        case Bufferi_:
+        case Branch_:
+        case Phi_:
+        case Phi_n:
+        case Start_:
+        case Source_:
+        case Cst_:
+        case End_:
+            return enode->sizes_succs.at(0);
+        case Argument_:
+            return DATA_SIZE; // force Arguments to be 32 bits
+
+        case Branch_n:
+        case Branch_c: // output sizes depend on input_size (non-condition) : they're the same anyway
+            return enode->sizes_succs.at(0);
+
+        case Fork_:
+        case Fork_c: // output sizes == input_size
+            return enode->sizes_preds.at(0);
+
+        case Inst_:
+            return enode->sizes_succs.at(index);
+        default:
+            break;
+    }
+
+    return DATA_SIZE;
+}
+std::string getNodeDotOutputs_withOB(ENode* enode) {
+    string name = "";
+
+    switch (enode->type) {
+        case Argument_: // 1 output node
+        case Buffera_:
+        case Bufferi_:
+        case Cst_:
+        case Branch_:
+        case Phi_:
+        case Phi_n:
+        case Start_:
+        case Source_:
+        case End_:
+            name += ", out = \"out1:" + to_string(getOutPortSize_withOB(enode, 0)) + "\"";
+            break;
+
+        case Branch_n:
+        case Branch_c:
+            name += ", out = \"out1+:" + to_string(getOutPortSize_withOB(enode, 0));
+            name += " out2-:" + to_string(getOutPortSize_withOB(enode, 0)) + "\"";
+            break;
+
+        case Fork_:
+        case Fork_c:
+            name += ", out = \"";
+            for (unsigned i = 0 ; i < enode->CntrlSuccs->size() + enode->JustCntrlSuccs->size() ; i++) {
+                name += "out" + to_string(i + 1) + ":";
+                name += to_string(getOutPortSize_withOB(enode, 0)) + " ";
+            }
+            name += "\"";
+            break;
+
+        case Inst_:
+            if (!enode->CntrlSuccs->empty() || !enode->JustCntrlSuccs->empty()) {    
+                name += ", out = \"";
+                
+                if (enode->Instr->getOpcode() == Instruction::Load || enode->Instr->getOpcode() == Instruction::Store) {
+                    name += "out1:32 out2:32";
+                }
+                else {
+                    for (unsigned i = 0 ; i < enode->CntrlSuccs->size() + enode->JustCntrlSuccs->size() ; i++) {
+                        name += "out" + to_string(i + 1) + ":";
+                        name += to_string(getOutPortSize_withOB(enode, i)) + " ";
+                    }
+                }
+            
+                name += "\"";
+            }
+            break;
+
+        case Phi_c:
+            name += ", out = \"";
+            name += "out1:" + to_string(getOutPortSize_withOB(enode, 0));
+            if (enode->isCntrlMg)
+                name += " out2?:" + to_string(getOutPortSize_withOB(enode, 1));
+            name += "\"";
+            break;
+
+        case LSQ_:
+        case MC_:
+            name += ", out = \"";
+           
+            if (getMemOutputCount(enode) > 0 || enode->lsqToMC) {
+                for (auto& pred : *enode->CntrlPreds) {
+                    if (pred->type != Cst_ && pred->type != LSQ_)
+                        if (pred->Instr->getOpcode() == Instruction::Load) {
+                            name += "out" + to_string(getDotDataIndex(pred, enode)) + ":" +
+                                    to_string(DATA_SIZE);
+                            name += "*l" + to_string(pred->memPortId) + "d ";
+                        }
+                    if (pred->type == LSQ_)
+                        name += "out" + to_string (getMemOutputCount(enode ) + 1) + ":" + to_string(DATA_SIZE)+ "*l" + to_string(pred->lsqMCLoadId) + "d ";
+                }
+            }
+
+            if (enode->type == MC_ && enode->lsqToMC == true)
+                name += "out" + to_string(getMemOutputCount(enode) + 2) + ":" +
+                        to_string(CONTROL_SIZE) + "*e ";
+            else 
+                name += "out" + to_string(getMemOutputCount(enode) + 1) + ":" +
+                    to_string(CONTROL_SIZE) + "*e ";
+
+            if (enode->type == LSQ_ && enode->lsqToMC == true) {
+                name += "out" + to_string (getMemOutputCount(enode) + 2) + ":" + to_string(ADDR_SIZE) + "*x0a ";
+                name += "out" + to_string (getMemOutputCount(enode) + 3) + ":" + to_string(ADDR_SIZE) + "*y0a ";
+                name += "out" + to_string (getMemOutputCount(enode) + 4) + ":" + to_string(DATA_SIZE) + "*y0d ";
+            }
+            
+            name += "\"";
+            break;
+
+        default:
+            break;
+    }
+
+    return name;
+}
+
+
 std::string getFloatValue(float x) {
 #define nodeDotNameSIZE 100
     char* nodeDotName = new char[nodeDotNameSIZE];
@@ -712,7 +1159,7 @@ std::string getHexValue(int x) {
     return string(nodeDotName);
 }
 
-std::string getNodeDotParams(ENode* enode) {
+std::string getNodeDotParams(ENode* enode, std::string serial_number) {
     string name = "";
     switch (enode->type) {
         case Branch_:
@@ -723,12 +1170,12 @@ std::string getNodeDotParams(ENode* enode) {
                  name += ", constants=" + to_string(enode->JustCntrlPreds->size());
             if (enode->Instr->getOpcode() == Instruction::Select)
                  name += ", trueFrac=0.2";
-            name += ", delay=" + getFloatValue(get_component_delay(enode->Name, DATA_SIZE));
+            name += ", delay=" + getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number));
             
             if (isLSQport(enode))
-                name += ", latency=" + to_string(get_component_latency(("lsq_" + enode->Name), DATA_SIZE));
+                name += ", latency=" + to_string(get_component_latency(("lsq_" + enode->Name), DATA_SIZE, serial_number));
             else
-                name += ", latency=" + to_string(get_component_latency((enode->Name), DATA_SIZE));
+                name += ", latency=" + to_string(get_component_latency((enode->Name), DATA_SIZE, serial_number));
             
             name += ", II=1";
             break;
@@ -736,12 +1183,12 @@ std::string getNodeDotParams(ENode* enode) {
         case Phi_n:
             name += ", delay=";
             if (enode->CntrlPreds->size() == 1)
-                name += getFloatValue(get_component_delay(ZDC_NAME, DATA_SIZE));
+                name += getFloatValue(get_component_delay(ZDC_NAME, DATA_SIZE, serial_number));
             else
-                name += getFloatValue(get_component_delay(enode->Name, DATA_SIZE));
+                name += getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number));
             break;
         case Phi_c:
-            name += ", delay=" + getFloatValue(get_component_delay(enode->Name, DATA_SIZE));
+            name += ", delay=" + getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number));
             break;
         case Cst_:
             name += ", value = \"0x" + getHexValue(getConstantValue(enode)) + "\"";
@@ -856,7 +1303,7 @@ std::string getNodeDotMemParams(ENode* enode) {
     return name;
 }
 
-void printDotNodes(std::vector<ENode*>* enode_dag, bool full) {
+void printDotNodes(std::vector<ENode*>* enode_dag, bool full, std::string serial_number) {
 
     for (auto& enode : *enode_dag) {
         if (!skipNodePrint(enode)) {
@@ -877,7 +1324,7 @@ void printDotNodes(std::vector<ENode*>* enode_dag, bool full) {
 
                 dotline += getNodeDotInputs(enode);
                 dotline += getNodeDotOutputs(enode);
-                dotline += getNodeDotParams(enode);
+                dotline += getNodeDotParams(enode, serial_number);
                 if (enode->type == MC_ || enode->type == LSQ_)
                     dotline += getNodeDotMemParams(enode);
 
@@ -895,6 +1342,41 @@ std::string printEdge(ENode* from, ENode* to) {
     s += " -> ";
     s += getNodeDotNameNew(to);
     return s;
+}
+std::string printEdgeWidth(const ENode* from, const ENode* to) {
+    // printEdgeWidth may be called when sizes are not computed yet,
+    //in which case we print nothing
+    if (from->sizes_succs.empty() && to->sizes_preds.empty())
+        return "";
+
+    int idxSuccInFrom = getSuccIdxInPred(to, from);
+    unsigned size_from = from->sizes_succs.at(idxSuccInFrom);
+    assert(idxSuccInFrom != -1);
+    
+    int idxPredInTo = getPredIdxInSucc(from, to);
+    unsigned size_to = to->sizes_preds.at(idxPredInTo);
+    assert(idxPredInTo != -1);
+
+    std::string label = ", label=\"";
+    if (size_from == size_to)
+        label += to_string(size_from);
+    // conflict in sizes ? print it
+    // else {
+    //     label += "from:" + to_string(size_from) 
+    //         + ",to:" + to_string(size_to);
+    
+    //     label += "\\nfrom=" + from->Name + "(type=" + to_string(from->type)
+    //         + "), to=" + to->Name + "(type=" + to_string(to->type) + ")";
+    //     label += "\\nfrom_succ=" + (idxSuccInFrom < from->CntrlSuccs->size() ? 
+    //         from->CntrlSuccs->at(idxSuccInFrom) : 
+    //         from->JustCntrlSuccs->at(idxSuccInFrom - from->CntrlSuccs->size()))->Name;
+    //     label += "\\nto_pred=" + (idxPredInTo < to->CntrlPreds->size() ? 
+    //         to->CntrlPreds->at(idxPredInTo) : 
+    //         to->JustCntrlPreds->at(idxPredInTo - to->CntrlPreds->size()))->Name;
+    // }
+
+    label += '"';
+    return label;
 }
 
 std::string printColor(ENode* from, ENode* to) {
@@ -1078,6 +1560,7 @@ std::string printDataflowEdges(std::vector<ENode*>* enode_dag, std::vector<BBNod
                                 str += printColor(enode, enode_succ);
                                 str += ", from = \"out" + to_string(enode_index) + "\"";
                                 str += ", to = \"in1\""; // data Branch or Fork input
+                                str += printEdgeWidth(enode, enode_succ);
                                 str += "];\n";
                             }
                             if (enode_succ->JustCntrlSuccs->size() > 0) {
@@ -1096,6 +1579,7 @@ std::string printDataflowEdges(std::vector<ENode*>* enode_dag, std::vector<BBNod
                                 str += printColor(enode, enode_succ);
                                 str += ", from = \"out" + to_string(enode_index) + "\"";
                                 str += ", to = \"in2\""; /// Branch condition
+                                str += printEdgeWidth(enode, enode_succ);
                                 str += "];\n";
                             }
                         } else if (enode->type == Branch_ &&
@@ -1122,6 +1606,7 @@ std::string printDataflowEdges(std::vector<ENode*>* enode_dag, std::vector<BBNod
                                 else if (enode_succ->type == Branch_)
                                     str += ", to = \"in2\"";
 
+                                str += printEdgeWidth(enode, enode_succ);
                                 str += "];\n";
                             }
                         } else {
@@ -1177,6 +1662,7 @@ std::string printDataflowEdges(std::vector<ENode*>* enode_dag, std::vector<BBNod
                                     str += ", to = \"in" + to_string(toInd) + "\"";
                                 }
                             }
+                            str += printEdgeWidth(enode, enode_succ);
                             str += "];\n";
                         }
                         enode_index++;
@@ -1204,6 +1690,7 @@ std::string printDataflowEdges(std::vector<ENode*>* enode_dag, std::vector<BBNod
                             toInd = indexOf(enode_csucc->JustCntrlPreds, enode) + enode_csucc->CntrlPreds->size() + 1;
                         }
                         str += ", to = \"in" + to_string(toInd) + "\"";
+                        str += printEdgeWidth(enode, enode_csucc);
                         str += "];\n";
                     }
 
@@ -1214,6 +1701,7 @@ std::string printDataflowEdges(std::vector<ENode*>* enode_dag, std::vector<BBNod
                         str += ", from = \"out" + to_string(enode_index) + "\"";
                         int toInd = indexOf(enode_csucc->JustCntrlPreds, enode) + 1;
                         str += ", to = \"in" + to_string(toInd) + "\"";
+                        str += printEdgeWidth(enode, enode_csucc);
                         str += "];\n";
                     }
 
@@ -1270,6 +1758,7 @@ std::string printDataflowEdges(std::vector<ENode*>* enode_dag, std::vector<BBNod
                             str += ", from = \"out" + to_string(fromInd) + "\"";
                             str += ", to = \"in" + to_string(toInd) + "\"";
                         }
+                        str += printEdgeWidth(enode, enode_succ);
                         str += "];\n";
                     }
                 }
@@ -1297,6 +1786,7 @@ std::string printDataflowEdges(std::vector<ENode*>* enode_dag, std::vector<BBNod
                         }
                         str += ", from = \"out" + to_string(fromInd) + "\"";
                         str += ", to = \"in" + to_string(toInd) + "\"";
+                        str += printEdgeWidth(enode, enode_csucc);
                         str += "];\n";
                     }
                 }
@@ -1314,7 +1804,7 @@ void printDotEdges(std::vector<ENode*>* enode_dag, std::vector<BBNode*>* bbnode_
     dotfile << printDataflowEdges(enode_dag, bbnode_dag);
 }
 void printDotDFG(std::vector<ENode*>* enode_dag, std::vector<BBNode*>* bbnode_dag, std::string name,
-                 bool full) {
+                 bool full, std::string serial_number) {
 
     std::string output_filename = name;
 
@@ -1333,7 +1823,7 @@ void printDotDFG(std::vector<ENode*>* enode_dag, std::vector<BBNode*>* bbnode_da
 
     dotfile << infoStr;
 
-    printDotNodes(enode_dag, full);
+    printDotNodes(enode_dag, full, serial_number);
 
     printDotEdges(enode_dag, bbnode_dag, full);
 

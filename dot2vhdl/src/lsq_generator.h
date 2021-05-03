@@ -16,6 +16,9 @@
 void lsq_generate_configuration ( string top_level_filename );
 void lsq_generate ( string top_level_filename );
 
+int get_lsq_datawidth ();
+int get_lsq_addresswidth ();
+
 #define MAX_SIZES   16
 typedef struct bb_params
 {

@@ -97,6 +97,8 @@ END arch;
 
 --------------------------------------------------------------  join
 ---------------------------------------------------------------------
+--------------------------------------------------------------  join
+---------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 
@@ -109,7 +111,8 @@ port (
 end join;
 
 architecture arch of join is
-    signal allPValid : std_logic;
+signal allPValid : std_logic;
+    
 begin
     
     allPValidAndGate : entity work.andN generic map(SIZE)
@@ -118,11 +121,20 @@ begin
     
     valid <= allPValid;
     
-    process (pValidArray, allPValid, nReady)
-    begin
-    for i in 0 to SIZE-1 loop
-        readyArray(i) <= (not pValidArray(i)) or (allPValid and nReady);
-    end loop;
+    process (pValidArray, nReady)
+        variable  singlePValid : std_logic_vector(SIZE-1 downto 0);
+        begin
+        for i in 0 to SIZE-1 loop
+            singlePValid(i) := '1';
+            for j in 0 to SIZE-1 loop
+                if (i /= j) then
+                    singlePValid(i) := (singlePValid(i) and pValidArray(j));
+                end if;
+            end loop;
+        end loop;
+        for i in 0 to SIZE-1 loop
+            readyArray(i) <=  (singlePValid(i) and nReady);
+        end loop;
     end process;
           
 end arch;
@@ -357,7 +369,7 @@ port (
     nReadyArray : in std_logic_vector(0 downto 0);
     pValidArray : in std_logic_vector(INPUTS - 1 downto 0);
     eReadyArray : out std_logic_vector(MEM_INPUTS - 1 downto 0);
-    eValidArray : in std_logic_vector(MEM_INPUTS - 1  downto 0));
+    eValidArray : in std_logic_vector(MEM_INPUTS - 1  downto 0) := (others => '1'));
 end end_node;
 
 architecture arch of end_node is
@@ -489,7 +501,6 @@ begin
     end process; 
 
 end arch;
-
 
 -----------------------------------------------  eagerFork_RegisterBLock
 ------------------------------------------------------------------------
@@ -667,6 +678,66 @@ begin
         );
 end arch;
 
+library ieee;
+use ieee.std_logic_1164.all;
+use work.customTypes.all;
+use ieee.numeric_std.all;
+
+entity merge_notehb is
+
+    generic(
+        INPUTS        : integer;
+        OUTPUTS        : integer;
+        DATA_SIZE_IN  : integer;
+        DATA_SIZE_OUT : integer
+    );
+    port(
+        clk, rst      : in  std_logic;
+        dataInArray   : in  data_array(INPUTS - 1 downto 0)(DATA_SIZE_IN - 1 downto 0);
+        dataOutArray  : out data_array(0 downto 0)(DATA_SIZE_OUT - 1 downto 0);
+        pValidArray   : in  std_logic_vector(INPUTS - 1 downto 0);
+        nReadyArray   : in  std_logic_vector(0 downto 0);
+        validArray    : out std_logic_vector(0 downto 0);
+        readyArray    : out std_logic_vector(INPUTS - 1 downto 0));
+end merge_notehb;
+
+architecture arch of merge_notehb is
+signal tehb_data_in  : std_logic_vector(DATA_SIZE_IN - 1 downto 0);
+signal tehb_pvalid : std_logic;
+signal tehb_ready : std_logic;
+
+begin
+
+    process(pValidArray, dataInArray)
+        variable tmp_data_out  : unsigned(DATA_SIZE_IN - 1 downto 0);
+        variable tmp_valid_out : std_logic;
+    begin
+        tmp_data_out  := unsigned(dataInArray(0));
+        tmp_valid_out := '0';
+        for I in INPUTS - 1 downto 0 loop
+            if (pValidArray(I) = '1') then
+                tmp_data_out  := unsigned(dataInArray(I));
+                tmp_valid_out := pValidArray(I);
+            end if;
+        end loop;
+
+        tehb_data_in  <= std_logic_vector(resize(tmp_data_out, DATA_SIZE_OUT));
+        tehb_pvalid <= tmp_valid_out;
+
+    end process;
+
+    process(tehb_ready)
+    begin
+        for I in 0 to INPUTS - 1 loop
+            readyArray(I) <= tehb_ready;
+        end loop;
+    end process;
+
+    tehb_ready <= nReadyArray(0);
+    validArray(0) <= tehb_pvalid;
+    dataOutArray(0) <= tehb_data_in;
+
+end arch;
 
 library IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
@@ -1543,7 +1614,7 @@ begin
 
 readyArray <= phi_C1_readyArray;
 
-phi_C1: entity work.merge(arch) generic map (2, 1, 1, 1)
+phi_C1: entity work.merge_notehb(arch) generic map (2, 1, 1, 1)
 port map (
 --inputs
     clk => clk,  --clk
@@ -1689,3 +1760,6 @@ begin
 
         
 end architecture;
+
+
+

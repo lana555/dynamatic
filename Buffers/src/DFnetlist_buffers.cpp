@@ -628,6 +628,10 @@ bool DFnetlist_Impl::addElasticBuffersBB_sc(double Period, double BufferDelay, b
             printChannelInfo(c, slots, transparent);
         }
 
+        //write retiming diffs
+        writeRetimingDiffs(milp, milpVars_sc[i]);
+
+
         if (MaxThroughput) {
             for (auto sub_mg: components[i]) {
                 cout << "\n*** Throughput achieved in sub MG " << sub_mg << ": " <<
@@ -650,6 +654,8 @@ bool DFnetlist_Impl::addElasticBuffersBB_sc(double Period, double BufferDelay, b
         setError(milp.getError());
         return false;
     }
+
+
 
     milpVarsEB remaining;
 
@@ -679,9 +685,8 @@ bool DFnetlist_Impl::addElasticBuffersBB_sc(double Period, double BufferDelay, b
     Milp_Model::Status stat = milp.getStatus();
     if (stat != Milp_Model::OPTIMAL and stat != Milp_Model::NONOPTIMAL) {
         setError("No solution found to add elastic buffers.");
-        return false;
+        return true;
     }
-
     // Add channels
     vector<channelID> buffers;
     ForAllChannels(c) {
@@ -1512,6 +1517,7 @@ void DFnetlist_Impl::makeNonTransparentBuffers()
 
 void DFnetlist_Impl::instantiateElasticBuffers()
 {
+    std::cout << "INSTANTIATE";
 
     vecChannels ebs;
     ForAllChannels(c) {
@@ -1699,5 +1705,23 @@ void DFnetlist_Impl::dumpMilpSolution(const Milp_Model& milp, const milpVarsEB& 
             cout << "ret_dst_tok: " << milp[ret_dst_tok] << endl;
             cout << endl;
         }
+    }
+
+}
+
+void DFnetlist_Impl::writeRetimingDiffs(const Milp_Model& milp, const milpVarsEB& vars)
+{
+    ForAllBlocks(b) {
+        int in_ret = vars.in_retime_tokens[0][b];
+        if (in_ret < 0) continue;
+        int out_ret = vars.out_retime_tokens[0][b];
+        int ret_bub = vars.retime_bubbles[0][b];
+        //cout << "Block " << getBlockName(b) << ": ";
+        if (in_ret == out_ret) {
+            setBlockRetimingDiff(b, milp[in_ret]);
+        } else {
+			setBlockRetimingDiff(b, milp[out_ret] - milp[in_ret]);
+        }
+        //cout << ", Retiming bub = " << milp[ret_bub] << endl;
     }
 }

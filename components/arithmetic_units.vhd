@@ -127,6 +127,7 @@ end architecture;
 
 
 
+
 -----------------------------------------------------------------------
 -- logic and, version 0.0
 -----------------------------------------------------------------------
@@ -994,6 +995,10 @@ port(
   readyArray : OUT std_logic_vector(INPUTS -1 downto 0);
   dataInArray: IN data_array(INPUTS-1 downto 0)(INPUT_SIZE - 1 DOWNTO 0);
   dataOutArray : OUT data_array(0 downto 0)(OUTPUT_SIZE - 1 DOWNTO 0));
+
+attribute use_dsp48 : string;
+attribute use_dsp48 of getelementptr_op : entity is "no";
+
 end entity;
 
 
@@ -1046,6 +1051,7 @@ end architecture;
 Library IEEE;
 use IEEE.std_logic_1164.all;
 use ieee.numeric_std.all;
+
 use work.customTypes.all;
 
 entity fcmp_oeq_op is
@@ -1065,7 +1071,7 @@ end entity;
 architecture arch of fcmp_oeq_op is
 
     --Interface to vivado component
-    component array_RAM_fcmp_32ns_32ns_1_2_1 is
+    component array_RAM_fcmp_32cud is
         generic (
             ID         : integer := 1;
             NUM_STAGE  : integer := 2;
@@ -1092,7 +1098,7 @@ begin
     --TODO check with lana
     dataOutArray(0)(DATA_SIZE_OUT - 1 downto 1) <= (others => '0');
 
-    array_RAM_fcmp_32ns_32ns_1_2_1_u1 : component array_RAM_fcmp_32ns_32ns_1_2_1 
+    array_RAM_fcmp_32ns_32ns_1_2_1_u1 : component array_RAM_fcmp_32cud 
     generic map (
         ID => 1,
         NUM_STAGE => 2,
@@ -1150,7 +1156,7 @@ end entity;
 architecture arch of fcmp_ogt_op is
 
     --Interface to vivado component
-    component array_RAM_fcmp_32ns_32ns_1_2_1 is
+    component array_RAM_fcmp_32cud is
         generic (
             ID         : integer := 1;
             NUM_STAGE  : integer := 2;
@@ -1178,7 +1184,7 @@ begin
     dataOutArray(0)(DATA_SIZE_OUT - 1 downto 1) <= (others => '0');
 
 
-    array_RAM_fcmp_32ns_32ns_1_2_1_u1 : component array_RAM_fcmp_32ns_32ns_1_2_1 
+    array_RAM_fcmp_32ns_32ns_1_2_1_u1 : component array_RAM_fcmp_32cud 
     generic map (
         ID => 1,
         NUM_STAGE => 2,
@@ -1235,7 +1241,7 @@ end entity;
 architecture arch of fcmp_oge_op is
 
     --Interface to vivado component
-    component array_RAM_fcmp_32ns_32ns_1_2_1 is
+    component array_RAM_fcmp_32cud is
         generic (
             ID         : integer := 1;
             NUM_STAGE  : integer := 2;
@@ -1263,7 +1269,7 @@ begin
     dataOutArray(0)(DATA_SIZE_OUT - 1 downto 1) <= (others => '0');
 
 
-    array_RAM_fcmp_32ns_32ns_1_2_1_u1 : component array_RAM_fcmp_32ns_32ns_1_2_1 
+    array_RAM_fcmp_32ns_32ns_1_2_1_u1 : component array_RAM_fcmp_32cud 
     generic map (
         ID => 1,
         NUM_STAGE => 2,
@@ -1322,7 +1328,7 @@ end entity;
 architecture arch of fcmp_olt_op is
 
     --Interface to vivado component
-    component array_RAM_fcmp_32ns_32ns_1_2_1 is
+    component array_RAM_fcmp_32cud is
         generic (
             ID         : integer := 1;
             NUM_STAGE  : integer := 2;
@@ -1350,7 +1356,7 @@ begin
     dataOutArray(0)(DATA_SIZE_OUT - 1 downto 1) <= (others => '0');
 
 
-    array_RAM_fcmp_32ns_32ns_1_2_1_u1 : component array_RAM_fcmp_32ns_32ns_1_2_1 
+    array_RAM_fcmp_32ns_32ns_1_2_1_u1 : component array_RAM_fcmp_32cud 
     generic map (
         ID => 1,
         NUM_STAGE => 2,
@@ -1409,7 +1415,7 @@ entity fcmp_ole_op is
     architecture arch of fcmp_ole_op is
     
         --Interface to vivado component
-        component array_RAM_fcmp_32ns_32ns_1_2_1 is
+        component array_RAM_fcmp_32cud is
             generic (
                 ID         : integer := 1;
                 NUM_STAGE  : integer := 2;
@@ -1437,7 +1443,7 @@ entity fcmp_ole_op is
     dataOutArray(0)(DATA_SIZE_OUT - 1 downto 1) <= (others => '0');
 
 
-    array_RAM_fcmp_32ns_32ns_1_2_1_u1 : component array_RAM_fcmp_32ns_32ns_1_2_1 
+    array_RAM_fcmp_32ns_32ns_1_2_1_u1 : component array_RAM_fcmp_32cud 
     generic map (
         ID => 1,
         NUM_STAGE => 2,
@@ -1495,7 +1501,7 @@ entity fcmp_one_op is
     architecture arch of fcmp_one_op is
     
         --Interface to vivado component
-        component array_RAM_fcmp_32ns_32ns_1_2_1 is
+        component array_RAM_fcmp_32cud is
             generic (
                 ID         : integer := 1;
                 NUM_STAGE  : integer := 2;
@@ -1523,7 +1529,7 @@ entity fcmp_one_op is
     dataOutArray(0)(DATA_SIZE_OUT - 1 downto 1) <= (others => '0');
 
 
-    array_RAM_fcmp_32ns_32ns_1_2_1_u1 : component array_RAM_fcmp_32ns_32ns_1_2_1 
+    array_RAM_fcmp_32ns_32ns_1_2_1_u1 : component array_RAM_fcmp_32cud 
     generic map (
         ID => 1,
         NUM_STAGE => 2,
@@ -1738,7 +1744,7 @@ use IEEE.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.customTypes.all;
 
-entity fcmp_ult is
+entity fcmp_ult_op is
 Generic (
 INPUTS:integer; OUTPUTS:integer; DATA_SIZE_IN: integer; DATA_SIZE_OUT: integer
 );
@@ -1752,7 +1758,7 @@ port(
     readyArray : out std_logic_vector(1 downto 0));
 end entity;
 
-architecture arch of fcmp_ult is
+architecture arch of fcmp_ult_op is
 
     signal join_valid : STD_LOGIC;
     signal one: std_logic_vector (0 downto 0) := "1";
@@ -1927,7 +1933,7 @@ end entity;
 architecture arch of fadd_op is
 
     -- Interface to Vivado component
-    component array_RAM_fadd_32ns_32ns_32_10_full_dsp_1 is
+    component array_RAM_fadd_32bkb is
         generic (
             ID         : integer := 1;
             NUM_STAGE  : integer := 10;
@@ -1946,28 +1952,46 @@ architecture arch of fadd_op is
     end component;
 
     signal join_valid : STD_LOGIC;
+
+    signal buff_valid, oehb_valid, oehb_ready : STD_LOGIC;
+    signal oehb_dataOut, oehb_datain : std_logic_vector(0 downto 0);
     
     begin 
-    
-        join_write_temp:   entity work.join(arch) generic map(2)
-                port map( pValidArray,  --pValidArray
-                          nReadyArray(0),     --nready                    
-                          join_valid,         --valid          
-                          readyArray);   --readyarray 
+  
 
-        buff: entity work.delay_buffer(arch) 
-            generic map(9)
-            port map(clk,
-                     rst,
-                     join_valid,
-                     nReadyArray(0),
-                     validArray(0));
+        join: entity work.join(arch) generic map(2)
+        port map( pValidArray,  
+                oehb_ready,                        
+                join_valid,                  
+                readyArray);   
+
+        buff: entity work.delay_buffer(arch) generic map(8)
+        port map(clk,
+                rst,
+                join_valid,
+                oehb_ready,
+                buff_valid);
+
+        oehb: entity work.OEHB(arch) generic map (1, 1, 1, 1)
+                port map (
+                --inputspValidArray
+                    clk => clk, 
+                    rst => rst, 
+                    pValidArray(0)  => buff_valid, -- real or speculatef condition (determined by merge1)
+                    nReadyArray(0) => nReadyArray(0),    
+                    validArray(0) => validArray(0), 
+                --outputs
+                    readyArray(0) => oehb_ready,   
+                    dataInArray(0) => oehb_datain,
+                    dataOutArray(0) => oehb_dataOut
+                );
+
     
-        array_RAM_fadd_32ns_32ns_32_10_full_dsp_1_U1 :  component array_RAM_fadd_32ns_32ns_32_10_full_dsp_1
+        array_RAM_fadd_32ns_32ns_32_10_full_dsp_1_U1 :  component array_RAM_fadd_32bkb
         port map (
             clk   => clk,
             reset => rst,
-            ce    => nReadyArray(0),
+            ce    => oehb_ready,
             din0  => dataInArray(0),
             din1  => dataInArray(1),
             dout  => dataOutArray(0));
@@ -2002,7 +2026,7 @@ end entity;
 architecture arch of fsub_op is
 
     -- Interface to Vivado component
-    component array_RAM_fsub_32ns_32ns_32_10_full_dsp_1 is
+    component array_RAM_fsub_32bkb is
         generic (
             ID         : integer := 1;
             NUM_STAGE  : integer := 10;
@@ -2021,28 +2045,44 @@ architecture arch of fsub_op is
     end component;
 
     signal join_valid : STD_LOGIC;
+
+    signal buff_valid, oehb_valid, oehb_ready : STD_LOGIC;
+    signal oehb_dataOut, oehb_datain : std_logic_vector(0 downto 0);
     
 begin 
     
-    join_write_temp:   entity work.join(arch) generic map(2)
-            port map( pValidArray,  --pValidArray
-                      nReadyArray(0),     --nready                    
-                      join_valid,         --valid          
-                      readyArray);   --readyarray 
+        join: entity work.join(arch) generic map(2)
+        port map( pValidArray,  
+                oehb_ready,                        
+                join_valid,                  
+                readyArray);   
 
-    buff: entity work.delay_buffer(arch) 
-        generic map(9)
+        buff: entity work.delay_buffer(arch) generic map(8)
         port map(clk,
-                 rst,
-                 join_valid,
-                 nReadyArray(0),
-                 validArray(0));
+                rst,
+                join_valid,
+                oehb_ready,
+                buff_valid);
 
-    array_RAM_fsub_32ns_32ns_32_10_full_dsp_1_U1 :  component array_RAM_fsub_32ns_32ns_32_10_full_dsp_1
+        oehb: entity work.OEHB(arch) generic map (1, 1, 1, 1)
+                port map (
+                --inputspValidArray
+                    clk => clk, 
+                    rst => rst, 
+                    pValidArray(0)  => buff_valid, -- real or speculatef condition (determined by merge1)
+                    nReadyArray(0) => nReadyArray(0),    
+                    validArray(0) => validArray(0), 
+                --outputs
+                    readyArray(0) => oehb_ready,   
+                    dataInArray(0) => oehb_datain,
+                    dataOutArray(0) => oehb_dataOut
+                );
+
+    array_RAM_fsub_32ns_32ns_32_10_full_dsp_1_U1 :  component array_RAM_fsub_32bkb
     port map (
         clk   => clk,
         reset => rst,
-        ce    => nReadyArray(0),
+        ce    => oehb_ready,
         din0  => dataInArray(0),
         din1  => dataInArray(1),
         dout  => dataOutArray(0));
@@ -2076,7 +2116,7 @@ end entity;
 architecture arch of fmul_op is
 
     -- Interface to Vivado component
-    component array_RAM_fmul_32ns_32ns_32_6_max_dsp_1 is
+    component array_RAM_fmul_32cud is
         generic (
             ID         : integer := 1;
             NUM_STAGE  : integer := 6;
@@ -2094,29 +2134,45 @@ architecture arch of fmul_op is
         );
     end component;
 
-    signal join_valid : STD_LOGIC;
+        signal join_valid : STD_LOGIC;
+
+    signal buff_valid, oehb_valid, oehb_ready : STD_LOGIC;
+    signal oehb_dataOut, oehb_datain : std_logic_vector(0 downto 0);
     
 begin 
     
-    join_write_temp:   entity work.join(arch) generic map(2)
-            port map( pValidArray,  --pValidArray
-                      nReadyArray(0),     --nready                    
-                      join_valid,         --valid          
-                      readyArray);   --readyarray 
+        join: entity work.join(arch) generic map(2)
+        port map( pValidArray,  
+                oehb_ready,                        
+                join_valid,                  
+                readyArray);   
 
-    buff: entity work.delay_buffer(arch) 
-        generic map(5)
+        buff: entity work.delay_buffer(arch) generic map(4)
         port map(clk,
-                 rst,
-                 join_valid,
-                 nReadyArray(0),
-                 validArray(0));
+                rst,
+                join_valid,
+                oehb_ready,
+                buff_valid);
 
-    array_RAM_fmul_32ns_32ns_32_6_max_dsp_1_U1 :  component array_RAM_fmul_32ns_32ns_32_6_max_dsp_1
+        oehb: entity work.OEHB(arch) generic map (1, 1, 1, 1)
+                port map (
+                --inputspValidArray
+                    clk => clk, 
+                    rst => rst, 
+                    pValidArray(0)  => buff_valid, -- real or speculatef condition (determined by merge1)
+                    nReadyArray(0) => nReadyArray(0),    
+                    validArray(0) => validArray(0), 
+                --outputs
+                    readyArray(0) => oehb_ready,   
+                    dataInArray(0) => oehb_datain,
+                    dataOutArray(0) => oehb_dataOut
+                );
+
+    array_RAM_fmul_32ns_32ns_32_6_max_dsp_1_U1 :  component array_RAM_fmul_32cud
     port map (
         clk   => clk,
         reset => rst,
-        ce    => nReadyArray(0),
+        ce    => oehb_ready, 
         din0  => dataInArray(0),
         din1  => dataInArray(1),
         dout  => dataOutArray(0));
@@ -2155,6 +2211,7 @@ begin
     dataOutArray(0) <= dataInArray(0) xor msb_mask;
     validArray(0) <= pValidArray(0);
     readyArray(0) <= nReadyArray(0);
+
 
 end architecture;
 ----------------------------------------------------------------------- 
@@ -2355,28 +2412,44 @@ architecture arch of fdiv_op is
     end component;
 
     signal join_valid : STD_LOGIC;
+    signal buff_valid, oehb_valid, oehb_ready : STD_LOGIC;
+    signal oehb_dataOut, oehb_datain : std_logic_vector(0 downto 0);
     
 begin 
     
     join_write_temp:   entity work.join(arch) generic map(2)
             port map( pValidArray,  --pValidArray
-                      nReadyArray(0),     --nready                    
+                      oehb_ready,     --nready                    
                       join_valid,         --valid          
                       readyArray);   --readyarray 
 
     buff: entity work.delay_buffer(arch) 
-        generic map(29)
+        generic map(28)
         port map(clk,
                  rst,
                  join_valid,
-                 nReadyArray(0),
-                 validArray(0));
+                 oehb_ready,
+                 buff_valid);
+
+    oehb: entity work.OEHB(arch) generic map (1, 1, 1, 1)
+        port map (
+        --inputspValidArray
+            clk => clk, 
+            rst => rst, 
+            pValidArray(0)  => buff_valid, -- real or speculatef condition (determined by merge1)
+            nReadyArray(0) => nReadyArray(0),    
+            validArray(0) => validArray(0), 
+        --outputs
+            readyArray(0) => oehb_ready,   
+            dataInArray(0) => oehb_datain,
+            dataOutArray(0) => oehb_dataOut
+        );
 
     array_RAM_fdiv_32ns_32ns_32_30_1_U1 :  component array_RAM_fdiv_32ns_32ns_32_30_1
     port map (
         clk   => clk,
         reset => rst,
-        ce    => nReadyArray(0),
+        ce    => oehb_ready,
         din0  => dataInArray(0),
         din1  => dataInArray(1),
         dout  => dataOutArray(0));

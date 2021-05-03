@@ -26,7 +26,7 @@ using namespace std;
 ";
 //#define VERSION_STRING	"******Version 0.1 - Build 0.1 ************************************\n\r******************************************************************\n\r\n\r"
 
-#define VERSION_STRING "0.21"
+#define VERSION_STRING "2.0"
 
 #define BUG_STRING	"\n\r\n\r\
 ***********************************************************************\n\r\

@@ -9,7 +9,7 @@ entity read_priority is
     );
     port(
         req          : in  std_logic_vector(ARBITER_SIZE - 1 downto 0); -- read requests (pValid signals)
-        data_ready   : in  std_logic_vector(ARBITER_SIZE - 1 downto 0); -- ready from next 
+        data_ready   : in  std_logic_vector(ARBITER_SIZE - 1 downto 0); -- ready from next
         priority_out : out std_logic_vector(ARBITER_SIZE - 1 downto 0) -- priority function output
     );
 end entity;
@@ -128,10 +128,10 @@ begin
         elsif (rising_edge(clk)) then
             for I in 0 to ARBITER_SIZE - 1 loop
                 sel_prev(I) <= sel(I);
-                if (sel(I) = '1') then 
+                if (sel(I) = '1') then
                     valid(I)    <= '1';  --or not nReady(I); -- just sel(I) ??
                     --sel_prev(I) <= '1';
-                else 
+                else
                     if (nReady(I) = '1') then
                         valid(I)  <= '0';
                         ---sel_prev(I) <= '0';
@@ -530,10 +530,10 @@ USE work.customTypes.all;
 
 entity elasticBufferDummy is
 Generic (
-  SIZE :integer; INPUTS :integer:=32; DATA_SIZE_IN: integer;DATA_SIZE_OUT: integer 
+  SIZE :integer; INPUTS :integer:=32; DATA_SIZE_IN: integer;DATA_SIZE_OUT: integer
 );
 port(
-    clk, rst : in std_logic;  
+    clk, rst : in std_logic;
     dataInArray : in data_array (0 downto 0)(DATA_SIZE_IN-1 downto 0);
     dataOutArray : out data_array (0 downto 0)(DATA_SIZE_OUT-1 downto 0);
     ReadyArray : out std_logic_vector(0 downto 0);
@@ -541,17 +541,17 @@ port(
     nReadyArray : in std_logic_vector(0 downto 0);
     pValidArray : in std_logic_vector(0 downto 0));
 end elasticBufferDummy;
------------------------------------------------------------------------- 
--- elastic buffer 
------------------------------------------------------------------------- 
+------------------------------------------------------------------------
+-- elastic buffer
+------------------------------------------------------------------------
 architecture arch of elasticBufferDummy is
-    
+
 begin
 
 dataOutArray(0) <= dataInArray(0);
 ValidArray(0) <= pValidArray(0);
 ReadyArray(0) <= nReadyArray(0);
-    
+
 end arch;
 
 library IEEE;
@@ -568,11 +568,11 @@ port (
     --- interface to previous
     pValidArray : in std_logic_vector(INPUTS - 1 downto 0);
     readyArray : out std_logic_vector(INPUTS - 1 downto 0);
-    dataInArray: in data_array (0 downto 0)(ADDRESS_SIZE -1 downto 0);
+    dataInArray: in data_array (0 downto 0)(DATA_SIZE -1 downto 0);
     input_addr: in std_logic_vector(ADDRESS_SIZE -1 downto 0);
 
     ---interface to next
-    nReadyArray : in std_logic_vector(OUTPUTS - 1 downto 0); 
+    nReadyArray : in std_logic_vector(OUTPUTS - 1 downto 0);
     validArray : out std_logic_vector(OUTPUTS - 1 downto 0);
     dataOutArray : out data_array (0 downto 0)(DATA_SIZE-1 downto 0);
     output_addr: out std_logic_vector(ADDRESS_SIZE -1 downto 0)
@@ -580,10 +580,14 @@ port (
 
 end entity;
 
-architecture arch of mc_load_op is 
+architecture arch of mc_load_op is
     signal Buffer_1_readyArray_0 : std_logic;
     signal Buffer_1_validArray_0 : std_logic;
     signal Buffer_1_dataOutArray_0 : std_logic_vector(ADDRESS_SIZE-1 downto 0);
+
+    signal Buffer_2_readyArray_0 : std_logic;
+    signal Buffer_2_validArray_0 : std_logic;
+    signal Buffer_2_dataOutArray_0 : std_logic_vector(DATA_SIZE-1 downto 0);
 
     signal addr_from_circuit: std_logic_vector(ADDRESS_SIZE-1 downto 0);
     signal addr_from_circuit_valid: std_logic;
@@ -631,10 +635,22 @@ begin
 
     data_from_lsq <= dataInArray(0);
     data_from_lsq_valid <= pValidArray(0);
-    data_from_lsq_ready <= nReadyArray(0);
+    data_from_lsq_ready <= Buffer_2_readyArray_0;
 
-    dataOutArray(0) <= data_from_lsq; -- data from LSQ to load output
-    validArray(0) <=  data_from_lsq_valid;
+    dataOutArray(0) <= Buffer_2_dataOutArray_0; -- data from LSQ to load output
+    validArray(0) <=  Buffer_2_validArray_0;
+
+    Buffer_2: entity work.TEHB(arch) generic map (1,1,DATA_SIZE,DATA_SIZE)
+    port map (
+        clk => clk,
+        rst => rst,
+        dataInArray(0) => data_from_lsq,
+        pValidArray(0) => data_from_lsq_valid,
+        readyArray(0) => Buffer_2_readyArray_0,
+        nReadyArray(0) => nReadyArray(0),
+        validArray(0) => Buffer_2_validArray_0,
+        dataOutArray(0) => Buffer_2_dataOutArray_0
+    );
 
         
 end architecture;
@@ -670,14 +686,14 @@ end entity;
 architecture arch of mc_store_op is
     signal single_ready: std_logic;
     signal join_valid: std_logic;
-   
+
     begin
 
     join_write:   entity work.join(arch) generic map(2)
             port map(   pValidArray,  --pValidArray
-                        nReadyArray(0),                  --nready                    
-                        join_valid,                    --valid          
-                        ReadyArray);   --readyarray 
+                        nReadyArray(0),                  --nready
+                        join_valid,                    --valid
+                        ReadyArray);   --readyarray
 
 
     dataOutArray(0) <= dataInArray(0); -- data to LSQ
@@ -686,7 +702,7 @@ architecture arch of mc_store_op is
 
     output_addr <= input_addr; -- address to LSQ
     validArray(1) <= join_valid;
-       
+
 
 
  end architecture;
@@ -775,10 +791,10 @@ begin
             ready          => io_wrAddrPorts_ready,
             address_in     => io_wrAddrPorts_bits, -- if two address lines are presented change this to corresponding one.
             data_in        => io_wrDataPorts_bits,
-            nReady         => (others => '1'), --for now, setting as always ready 
+            nReady         => (others => '1'), --for now, setting as always ready
             valid          => valid_WR, -- unconnected
             write_enable   => io_storeEnable,
-            enable         => io_storeEnable,
+            --enable         => io_storeEnable,
             write_address  => io_storeAddrOut,
             data_to_memory => io_storeDataOut
         );

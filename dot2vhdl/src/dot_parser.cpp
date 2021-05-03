@@ -18,6 +18,7 @@
 #include <algorithm> 
 #include <list>
 #include <cctype>
+#include "assert.h"
 #include "dot2vhdl.h"
 #include "dot_parser.h"
 #include "vhdl_writer.h"
@@ -194,6 +195,40 @@ int get_component_constants ( string parameters )
     return stoi_p( type );
 }
 
+vector<vector<int>> get_component_orderings(string parameter){
+    vector<vector<int>> orderings;
+    vector<string> par = vector<string>();
+    string_split( parameter, '=', par ); 
+    assert(par.size() == 2);
+    par[1].erase( remove( par[1].begin(), par[1].end(), '"' ), par[1].end() );
+    string value = par[1];
+    //trim the value
+    int start_index = value.find_first_not_of(" ");
+    int end_index = value.find_last_not_of(" ") + 1;
+    value = value.substr(start_index, end_index);
+    
+    vector<string> ordering_per_bb = vector<string>();
+    if(value.find(" ") != string::npos){
+        string_split(value, ' ', ordering_per_bb);
+    }else{
+        ordering_per_bb.push_back(value);
+    }
+
+    for(auto ordering_inside_bb : ordering_per_bb){
+        vector<string> string_indices{};
+        if(ordering_inside_bb.find("|") != string::npos){
+            string_split(ordering_inside_bb, '|', string_indices);
+        }else{
+            string_indices.push_back(ordering_inside_bb);
+        }
+        vector<int> int_indices{};
+        for(auto string_index : string_indices){
+            int_indices.push_back(stoi_p(string_index));
+        }
+        orderings.push_back(int_indices);
+    }
+    return orderings;
+}
 
 string get_input_type ( string in )
 {
@@ -802,6 +837,9 @@ void parse_components ( string v_0, string v_1 )
                 nodes[components_in_netlist].storePorts = stripExtension( get_component_numstores( parameters[indx] ), "];" );
                 
             }
+            if ( parameter.find("orderings") != std::string::npos){
+                nodes[components_in_netlist].orderings = get_component_orderings(parameters[indx]);
+            }
             if ( parameter.find("constants") != std::string::npos )
             {
                 nodes[components_in_netlist].constants = get_component_constants ( parameters[indx] );
@@ -834,7 +872,15 @@ void parse_components ( string v_0, string v_1 )
             }
             nodes[components_in_netlist].component_operator = nodes[components_in_netlist].type;
         }
-
+        if ( nodes[components_in_netlist].type == "Buffer" && nodes[components_in_netlist].slots == 2 )
+        {
+            if ( nodes[components_in_netlist].trasparent )
+            {
+                nodes[components_in_netlist].type = "tFifo";
+            }
+            nodes[components_in_netlist].component_operator = nodes[components_in_netlist].type;
+        }
+        
         if ( nodes[components_in_netlist].type == "Fifo")
         {
             if ( nodes[components_in_netlist].trasparent )

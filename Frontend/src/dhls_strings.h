@@ -12,7 +12,7 @@
 
 
 #define INIT_STRING	"\n\r\n\r******************************************************************\n\r******Dynamic High-Level Synthesis Compiler***********************\n\r******Andrea Guerrieri - Lana Josipovic - EPFL-LAP 2019 **********\n\r"
-#define VERSION_STRING	"******Version 0.2 - Build 0.1 ************************************\n\r******************************************************************\n\r\n\r"
+#define VERSION_STRING	"******Version 2.0 - Build 1.0 ************************************\n\r******************************************************************\n\r\n\r"
 //#define CURSOR_STRING	"DHLS> "
 #define CURSOR_STRING	"Dynamatic> "
 #define EXIT_STRING	"Exit...\n\rGoodbye!\n\r\n\r"

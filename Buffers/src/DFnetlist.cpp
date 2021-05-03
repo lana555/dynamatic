@@ -29,7 +29,9 @@ map<BlockType,string> DFnetlist_Impl::BlockType2String = {
     {CNTRL_MG, "CntrlMerge"},
     {MUX, "Mux"}, 
     {LSQ, "LSQ"},
-    {MC, "MC"}
+    {MC, "MC"},
+	{SELECTOR, "Selector"},
+	{DISTRIBUTOR, "Distributor"}
 };
 
 map<PortType,string> DFnetlist_Impl::PortType2String = {
@@ -265,6 +267,18 @@ void DFnetlist_Impl::setBlockDelay(blockID id, double d)
 {
     assert(validBlock(id));
     blocks[id].delay = d;
+}
+
+double DFnetlist_Impl::getBlockRetimingDiff(blockID id) const
+{
+	assert (validBlock(id));
+	return blocks[id].retimingDiff;
+}
+
+void DFnetlist_Impl::setBlockRetimingDiff(blockID id, double diff)
+{
+	assert (validBlock(id));
+	blocks[id].retimingDiff = diff;
 }
 
 int DFnetlist_Impl::getLatency(blockID id) const
@@ -505,7 +519,7 @@ void DFnetlist_Impl::setStoreOffsets(blockID id, std::string s)
 const string& DFnetlist_Impl::getStoreOffsets(blockID id) const
 {
     assert(validBlock(id));
-    return blocks[id].storePorts;
+    return blocks[id].storeOffsets;
 }
 
 void DFnetlist_Impl::setLoadPorts(blockID id, std::string s)
@@ -540,6 +554,11 @@ void DFnetlist_Impl::setGetPtrConst(blockID id, int c)
     assert(validBlock(id));
     blocks[id].getptrc = c;
 
+}
+
+void DFnetlist_Impl::setOrderings(blockID id, map<bbID, vector<int>> value){
+    assert (validBlock(id));
+    blocks[id].orderings = value;
 }
 
 //---------------------------

@@ -41,6 +41,7 @@ string filename = DUMMY;
 
 #define DEFAULT_PERIOD 3
 int period = DEFAULT_PERIOD;
+int use_default_period = 1;
 
 
 
@@ -56,6 +57,11 @@ enum
 };
 
 bool set_filename = FALSE;
+
+bool is_target_set = FALSE;
+string target;
+
+string vendor = "xilinx";
 
 void string_split(const string& s, char c, vector<string>& v)
 {
@@ -181,6 +187,7 @@ int synth ( string input_cmp )
         cout << "Available options are: " << endl;
         cout << "-use-lsq={true|false} : enable/disable LSQ insertion in the design. Default value = true." << endl;
         cout << "-simple-buffers={true|false} : enable/dispable placement of naive buffers. Default value = false." << endl;
+        cout << "-target={part-number} : part number of the targeted FPGA. Default value = 7k160tfbg484" << endl;
         return OK;
     }
 
@@ -199,6 +206,12 @@ int synth ( string input_cmp )
 
         command += " ";
         command += input_cmp;
+
+        if (is_target_set) {
+            command += " ";
+            command += "-target=";
+            command += target;
+        }
         
         cout << command;
         //current_file = current_file;
@@ -519,6 +532,14 @@ int optimize ( string input_cmp )
 {
     string source_file2;
     std::cout << "Optimize" << endl;
+    bool area_opt = 0;
+    
+    if ( input_cmp.find("-area") != std::string::npos )
+    {
+        eraseAllSubStr(input_cmp, "-area");
+        area_opt = 1;
+    }
+
     
     string command;
     if ( set_filename )
@@ -598,8 +619,12 @@ int optimize ( string input_cmp )
         command += project_dir;
         command += OUTPUT_DIR;
         command += current_file;
+        
+        if ( use_default_period == 0 )
+        {
         command += " -period=";
         command += to_string ( period );
+        }
         command += " ";
         command += input_cmp;
         
@@ -608,19 +633,120 @@ int optimize ( string input_cmp )
         string com = GetStdoutFromCommand( command.c_str() );
         cout <<  com << endl;
         
-        command = "mv ";
+        if ( area_opt == 1 )
+        {
+            
+            //cd $targetFolder
+            system ( "mkdir _input" );
+            system ( "mkdir _output" );
+            system ( "mkdir _tmp");
+            
+            
+            //cp $1_graph.dot _input
+            command = "cp ";
         command += project_dir;
         command += OUTPUT_DIR;
         command += current_file;
+            //command += "_optimized.dot ";
         command += "_graph_buf.dot ";
         
         command += project_dir;
+            //command += OUTPUT_DIR;
+            command += "/_input/";
+            command += current_file;
+            command += "_graph.dot ";
+
+            system (command.c_str());
+            cout << command<< endl;
+
+            
+            //cp $1_bbgraph.dot _input
+            command = "cp ";
+            command += project_dir;
+            command += OUTPUT_DIR;
+            command += current_file;
+            command += "_bbgraph_buf.dot ";
+            
+            command += project_dir;
+            //command += OUTPUT_DIR;
+            command += "/_input/";
+            //command += OUTPUT_DIR;
+            command += current_file;
+            command += "_bbgraph.dot ";
+            
+            system (command.c_str());
+            cout << command<< endl;
+
+
+
+            //cp $1_bbgraph.dot _tmp/out_bbgraph.dot"
+            command = "cp ";
+            command += project_dir;
+            command += OUTPUT_DIR;
+            command += current_file;
+            command += "_bbgraph_buf.dot ";
+            
+            command += project_dir;
+            //command += OUTPUT_DIR;
+            command += "/_tmp/out_bbgraph.dot";
+
+            system (command.c_str());
+            cout << command<< endl;
+
+            
+            
+            //system (  $ressourceMinExec min $1 
+            command = "resource_minimization ";
+            command += "min ";
+            command += current_file;
+            //command += "_graph.dot ";
+                        
+            system (command.c_str());
+            cout << command<< endl;
+
+            
+            //cp _output/$1_graph.dot .
+
+            command = "cp ";
+            command += project_dir;
+            //command += OUTPUT_DIR;
+            command += "/_output/";
+            command += current_file;
+            command += "_graph.dot ";
+            
+            current_file += "_area";
+
+            command += project_dir;
         command += OUTPUT_DIR;
         command += current_file;
         command += "_optimized.dot";
         
+            system (command.c_str());
+            cout << command << endl;
+
+            //Clean-up
+            system ( "rm -r _input" );
+            system ( "rm -r _output" );
+            system ( "rm -r _tmp");
+
+            
+        }
+        else
+        {
+            command = "mv ";
+            command += project_dir;
+            command += OUTPUT_DIR;
+            command += current_file;
+            command += "_graph_buf.dot ";
+            
+            command += project_dir;
+            command += OUTPUT_DIR;
+            command += current_file;
+            command += "_optimized.dot";
         
         system (command.c_str());
+        
+        }
         
         //dot -Tpng reports/histogram_elaborated_optimized.dot > file.png
         command = "dot -Tpng ";
@@ -637,6 +763,10 @@ int optimize ( string input_cmp )
         
         system (command.c_str());
         
+        output_file = project_dir;
+        output_file += OUTPUT_DIR;
+        output_file += current_file;
+        output_file += "_optimized.dot";
         
         current_file = output_file;
 
@@ -703,6 +833,8 @@ int set_period ( string input_cmp )
     
     period = stoi ( input_cmp );
 
+    use_default_period = 0;
+    
     return OK;
 
 }
@@ -775,6 +907,9 @@ int history ( string input_cmp )
 
 int set_target ( string input_cmp )
 {
+    is_target_set = TRUE;
+    target = input_cmp;
+
     return OK;
 }
 
