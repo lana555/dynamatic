@@ -5,13 +5,13 @@
 ### Build and install LLVM 
 
 ```bash
-git clone http://llvm.org/git/llvm.git --branch release_60 --depth 1
+git clone http://github.com/llvm-mirror/llvm --branch release_60 --depth 1
 cd llvm/tools
-git clone http://llvm.org/git/clang.git --branch release_60 --depth 1
-git clone http://llvm.org/git/polly.git --branch release_60 --depth 1
+git clone http://github.com/llvm-mirror/clang --branch release_60 --depth 1
+git clone http://github.com/llvm-mirror/polly --branch release_60 --depth 1
 cd ..
 mkdir _build && cd _build
-cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLLVM_INSTALL_UTILS=ON -DLLVM_TARGETS_TO_BUILD="X86" -DCMAKE_INSTALL_PREFIX=$HOME/llvm-6.0
+cmake .. -DCMAKE_BUILD_TYPE=Debug -DLLVM_INSTALL_UTILS=ON -DLLVM_TARGETS_TO_BUILD="X86" -DCMAKE_INSTALL_PREFIX=$HOME/llvm-6.0
 make
 make install
 ```
