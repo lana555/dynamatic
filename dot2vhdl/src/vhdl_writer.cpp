@@ -1256,6 +1256,14 @@ string get_generic ( int node_id )
         {
             generic += to_string(nodes[node_id].inputs.input[1].bit_size);
         }
+	// Lana 9.6.2021 Sizes for memory address ports
+        else if ( nodes[node_id].component_operator.find("mc_load_op") != std::string::npos 
+            || nodes[node_id].component_operator.find("mc_store_op") != std::string::npos 
+            || nodes[node_id].component_operator.find("lsq_load_op") != std::string::npos 
+            || nodes[node_id].component_operator.find("lsq_store_op") != std::string::npos )
+        {
+            generic += to_string(nodes[node_id].inputs.input[1].bit_size);
+        }
         else
         {
             generic += to_string(nodes[node_id].inputs.input[0].bit_size);
@@ -2786,7 +2794,8 @@ void write_components ( )
                         input_port += to_string(indx - (nodes[i].inputs.size - nodes[i].orderings.size()));
                         input_port += ")";
                     }
-                    else if ( ( ( nodes[i].component_operator.find("mc_store_op") != std::string::npos ) || ( nodes[i].component_operator.find("mc_load_op") != std::string::npos ) || ( nodes[i].component_operator.find("lsq_store_op") != std::string::npos ) ) && indx == 1 )
+ 		    // Lana 9.6.2021. Changed lsq memory port interface
+                    else if ( ( ( nodes[i].component_operator.find("mc_store_op") != std::string::npos ) || ( nodes[i].component_operator.find("mc_load_op") != std::string::npos ) || ( nodes[i].component_operator.find("lsq_store_op") != std::string::npos ) || ( nodes[i].component_operator.find("lsq_load_op") != std::string::npos ) ) && indx == 1 )
                     {
                           input_port = "input_addr";
                     }
@@ -3014,6 +3023,11 @@ void write_components ( )
                             output_port = "Condition(0)"; 
                     }
                     else if ( ( ( nodes[i].component_operator.find("mc_store_op") != std::string::npos ) || ( nodes[i].component_operator.find("mc_load_op") != std::string::npos ) ) && indx == 1 )
+                    {
+                            output_port = "output_addr";
+                    }
+                    // Lana 9.6.2021. Changed lsq memory port interface
+                    else if ( ( ( nodes[i].component_operator.find("lsq_store_op") != std::string::npos ) || ( nodes[i].component_operator.find("lsq_load_op") != std::string::npos ) ) && indx == 1 )
                     {
                             output_port = "output_addr";
                     }
@@ -3297,7 +3311,8 @@ void write_lsq_declaration ( )
                     name = "io_rdPortsPrev_"+to_string(nodes[i].inputs.input[lsq_indx].port) + "_valid";
                     write_lsq_signal(name, true, "std_logic", false);
                     name = "io_rdPortsPrev_"+to_string(nodes[i].inputs.input[lsq_indx].port) + "_bits";
-                    write_lsq_signal(name, true, "std_logic_vector("+ to_string(get_lsq_datawidth()-1) +" downto 0)", false);
+                    // Lana 9.6.2021. rdPortsPrev is address port, set to address size
+                    write_lsq_signal(name, true, "std_logic_vector("+ to_string(nodes[i].address_size-1) +" downto 0)", false);
                 } else if (nodes[i].inputs.input[lsq_indx].type == "s") {
                     name = "io_wr";
                     if (nodes[i].inputs.input[lsq_indx].info_type == "a") {

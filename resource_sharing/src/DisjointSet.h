@@ -10,8 +10,7 @@
 
 
 #include <map>
-#include "DFnetlist/Dataflow.h"
-//#include "Dataflow.h"
+#include "Dataflow.h"
 #include "MarkedGraph.h"
 
 using namespace std;

@@ -42,8 +42,8 @@ join_valid,
   readyArray);   
 
         -- instantiated multiplier (work.mul_4_stage or work.mul_8_stage)
-multiply_unit:  entity work.mul_4_stage(behav)
---multiply_unit:  entity work.mul_8_stage(behav)
+multiply_unit:  entity work.mul_4_stage(behav) generic map (INPUTS, OUTPUTS, DATA_SIZE_IN, DATA_SIZE_OUT)
+--multiply_unit:  entity work.mul_8_stage(behav) generic map (INPUTS, OUTPUTS, DATA_SIZE_IN, DATA_SIZE_OUT)
 port map (
 clk => clk,
 ce => oehb_ready,

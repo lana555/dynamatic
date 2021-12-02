@@ -290,10 +290,11 @@ void OptimizeBitwidth::initializeLoop(const Loop* L, const LoopInfo& LI, Dominat
         
     logger.popIndent();
 
-    if (!L->isLCSSAForm(DT)) {
-        logger.log("Loop not in LCSSA form. Cannot reduce iterators.");
-        return;
-    }
+    // Lana 7.6.2021. Removed LCSSA check
+    //if (!L->isLCSSAForm(DT)) {
+    //    logger.log("Loop not in LCSSA form. Cannot reduce iterators.");
+    //    return;
+    //}
 
     BasicBlock* header = L->getHeader();
     BasicBlock* preheader = L->getLoopPredecessor();

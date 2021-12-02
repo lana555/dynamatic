@@ -840,6 +840,16 @@ int getInPortSize_withOB(ENode* enode, unsigned index) {
             else
                 return std::max(enode->sizes_preds.at(1), enode->sizes_preds.at(2));
         }
+        else if (opcode == Instruction::Load) {
+ 	    // Lana 7.6.2021. Load single predecessor is address
+            return enode->sizes_preds.at(0);
+        }
+        else if (opcode == Instruction::Store) {
+            // Lana 7.6.2021. Operands may be reversed (data predecessor is not necessarily the 1st one)
+            // GetOperandIndex returns 2 for address and 1 for data predecessor, pick size accordingly
+            ENode* pred = (index == 0) ? enode->CntrlPreds->front() : enode->CntrlPreds->back();
+            return enode->sizes_preds.at(getOperandIndex(pred, enode)-1);
+        }
         else {
             return enode->sizes_succs.at(0);
         }
@@ -850,8 +860,102 @@ int getInPortSize_withOB(ENode* enode, unsigned index) {
     
     return DATA_SIZE;
 }
+
+int getOutPortSize_withOB(ENode* enode, unsigned index) {
+    switch (enode->type) {
+        case Phi_c: // CMerge? 
+            if (enode->isCntrlMg) {
+                bool isCondition = index == CMERGE_CONDITION_OUT;
+                
+                unsigned i = 0;
+                for (const ENode* succ : *enode->CntrlSuccs) {
+                    if (isCMergeConditionEdge(enode, succ) == isCondition)
+                        return enode->sizes_succs.at(i);
+                    i += 1;
+                }
+                for (const ENode* succ : *enode->JustCntrlSuccs) {
+                    if (isCMergeConditionEdge(enode, succ) == isCondition)
+                        return enode->sizes_succs.at(i);
+                    i += 1;
+                }
+
+                assert (false && "Illegal state : CMerges must have both a condition and non-condition output");
+            }
+            // else:
+        case Buffera_: // 1 output node
+        case Bufferi_:
+        case Branch_:
+        case Phi_:
+        case Phi_n:
+        case Start_:
+        case Source_:
+        case Cst_:
+        case End_:
+            return enode->sizes_succs.at(0);
+        case Argument_:
+            return DATA_SIZE; // force Arguments to be 32 bits
+
+        case Branch_n:
+        case Branch_c: // output sizes depend on input_size (non-condition) : they're the same anyway
+            return enode->sizes_succs.at(0);
+
+        case Fork_:
+        case Fork_c: // output sizes == input_size
+            return enode->sizes_preds.at(0);
+
+        case Inst_:
+            return enode->sizes_succs.at(index);
+        default:
+            break;
+    }
+
+    return DATA_SIZE;
+}
+
+// Lana 9.6.2021. Find largest address bitwidth among all lds/sts connected to enode
+int getMemAddrSize(ENode* enode) {
+    int max_size = 0;
+    for (auto& pred : *enode->CntrlPreds) {
+        int curr_size = 0;
+        // LSQ connected to MC, check LSQ lds/sts
+        if (pred->type == LSQ_)
+            curr_size =  getMemAddrSize(pred);
+        else if (pred->type == Inst_) {
+            if (pred->Instr->getOpcode() == Instruction::Load)
+                curr_size = getInPortSize_withOB(pred, 0);
+            else if (pred->Instr->getOpcode() == Instruction::Store)
+                curr_size = getInPortSize_withOB(pred, 1);
+        }
+        if (curr_size > max_size)
+            max_size = curr_size;
+    }
+    return max_size;
+}
+
+// Lana 9.6.2021. Find largest data bitwidth among all lds/sts connected to enode
+int getMemDataSize(ENode* enode) {
+    int max_size = 0;
+    for (auto& pred : *enode->CntrlPreds) {
+        int curr_size = 0;
+        // LSQ connected to MC, check LSQ lds/sts
+        if (pred->type == LSQ_)
+            curr_size =  getMemDataSize(pred);
+        else if (pred->type == Inst_) {
+            if (pred->Instr->getOpcode() == Instruction::Load)
+                curr_size = (getOutPortSize_withOB(pred, 0));
+            else if (pred->Instr->getOpcode() == Instruction::Store)
+                curr_size = getInPortSize_withOB(pred, 0);
+        }
+        if (curr_size > max_size)
+            max_size = curr_size;
+    }
+    return max_size;
+}
+
 std::string getNodeDotInputs_withOB(ENode* enode) {
     string name = "";
+    int mem_addr_size;
+    int mem_data_size;
 
     switch (enode->type) {
         case Argument_:
@@ -877,8 +981,25 @@ std::string getNodeDotInputs_withOB(ENode* enode) {
 
             // conflict in sizes with MC_/LSQ_ nodes
             //workaround: force IOs to 32
-            if (enode->Instr->getOpcode() == Instruction::Load || enode->Instr->getOpcode() == Instruction::Store) {
-                name += "in1:32 in2:32";
+            //if (enode->Instr->getOpcode() == Instruction::Load || enode->Instr->getOpcode() == Instruction::Store) {
+            //    name += "in1:32 in2:32";
+            // }
+	    // Lana 7.6.2021. Load and store sizes
+            if (enode->Instr->getOpcode() == Instruction::Load) {
+                // Data input (from memory)
+                name += "in1:";
+                name += to_string(getOutPortSize_withOB(enode, 0)) + " ";
+                // Address input (from predecessor)
+                name += "in2:";
+                name += to_string(getInPortSize_withOB(enode, 0)) + " ";
+            }
+            else if (enode->Instr->getOpcode() == Instruction::Store) {
+                // Data input (from predecessor)
+                name += "in1:";
+                name += to_string(getInPortSize_withOB(enode, 0)) + " ";
+                // Address input (from predecessor)
+                name += "in2:";
+                name += to_string(getInPortSize_withOB(enode, 1)) + " ";
             }
             else {
                 for (unsigned i = 0 ; i < enode->CntrlPreds->size() + enode->JustCntrlPreds->size() ; ++i) {
@@ -909,7 +1030,10 @@ std::string getNodeDotInputs_withOB(ENode* enode) {
         case LSQ_:
         case MC_:
             name += ", in = \"";
+            mem_addr_size = getMemAddrSize(enode);
+            mem_data_size = getMemDataSize(enode);
 
+            // Lana 9.6.2021 For MC constants, keep max size (input constants are sized)
             for (int i = 0; i < (int)enode->JustCntrlPreds->size(); i++) {
                 name += "in" + to_string(i + 1) + ":" +
                         to_string(enode->type == MC_ ? DATA_SIZE : CONTROL_SIZE);
@@ -920,13 +1044,13 @@ std::string getNodeDotInputs_withOB(ENode* enode) {
                 if (pred->type != Cst_ && pred->type !=LSQ_) {
 
                     name +=
-                        "in" + to_string(getDotAdrIndex(pred, enode)) + ":" + to_string(ADDR_SIZE);
+                        "in" + to_string(getDotAdrIndex(pred, enode)) + ":" + to_string(mem_addr_size);
                     name += (pred->Instr->getOpcode() == Instruction::Load) ? "*l" : "*s";
                     name += to_string(pred->memPortId) + "a ";
 
                     if (pred->Instr->getOpcode() == Instruction::Store) {
                         name += "in" + to_string(getDotDataIndex(pred, enode)) + ":" +
-                                to_string(DATA_SIZE);
+                                to_string(mem_data_size);
                         name += "*s" + to_string(pred->memPortId) + "d ";
                     }
                 }
@@ -934,15 +1058,15 @@ std::string getNodeDotInputs_withOB(ENode* enode) {
                 	int inputs = getMemInputCount(enode);
                 	int pred_ld_id = pred->lsqMCLoadId;
                     int pred_st_id = pred->lsqMCStoreId;
-                    name += "in" + to_string (inputs + 1) + ":" + to_string(ADDR_SIZE) + "*l" + to_string(pred_ld_id) + "a ";
-                    name += "in" + to_string (inputs + 2) + ":" + to_string(ADDR_SIZE)+ "*s" + to_string(pred_st_id) + "a ";
-                    name += "in" + to_string (inputs + 3) + ":" + to_string(DATA_SIZE)+ "*s" + to_string(pred_st_id) + "d ";
+                    name += "in" + to_string (inputs + 1) + ":" + to_string(mem_addr_size) + "*l" + to_string(pred_ld_id) + "a ";
+                    name += "in" + to_string (inputs + 2) + ":" + to_string(mem_addr_size)+ "*s" + to_string(pred_st_id) + "a ";
+                    name += "in" + to_string (inputs + 3) + ":" + to_string(mem_data_size)+ "*s" + to_string(pred_st_id) + "d ";
 
                 }
             }
             if (enode->type == LSQ_ && enode->lsqToMC == true) {
             	int inputs = getMemInputCount(enode);
-                name += "in" + to_string (inputs + 1) + ":" + to_string(DATA_SIZE) + "*x0d ";
+                name += "in" + to_string (inputs + 1) + ":" + to_string(mem_data_size) + "*x0d ";
             }
             name += "\"";
             break;
@@ -995,58 +1119,11 @@ std::string outputSuffix (ENode* enode, unsigned idx) {
     }
     return "";
 }
-int getOutPortSize_withOB(ENode* enode, unsigned index) {
-    switch (enode->type) {
-        case Phi_c: // CMerge? 
-            if (enode->isCntrlMg) {
-                bool isCondition = index == CMERGE_CONDITION_OUT;
-                
-                unsigned i = 0;
-                for (const ENode* succ : *enode->CntrlSuccs) {
-                    if (isCMergeConditionEdge(enode, succ) == isCondition)
-                        return enode->sizes_succs.at(i);
-                    i += 1;
-                }
-                for (const ENode* succ : *enode->JustCntrlSuccs) {
-                    if (isCMergeConditionEdge(enode, succ) == isCondition)
-                        return enode->sizes_succs.at(i);
-                    i += 1;
-                }
 
-                assert (false && "Illegal state : CMerges must have both a condition and non-condition output");
-            }
-            // else:
-        case Buffera_: // 1 output node
-        case Bufferi_:
-        case Branch_:
-        case Phi_:
-        case Phi_n:
-        case Start_:
-        case Source_:
-        case Cst_:
-        case End_:
-            return enode->sizes_succs.at(0);
-        case Argument_:
-            return DATA_SIZE; // force Arguments to be 32 bits
-
-        case Branch_n:
-        case Branch_c: // output sizes depend on input_size (non-condition) : they're the same anyway
-            return enode->sizes_succs.at(0);
-
-        case Fork_:
-        case Fork_c: // output sizes == input_size
-            return enode->sizes_preds.at(0);
-
-        case Inst_:
-            return enode->sizes_succs.at(index);
-        default:
-            break;
-    }
-
-    return DATA_SIZE;
-}
 std::string getNodeDotOutputs_withOB(ENode* enode) {
     string name = "";
+    int mem_addr_size;
+    int mem_data_size;
 
     switch (enode->type) {
         case Argument_: // 1 output node
@@ -1082,8 +1159,25 @@ std::string getNodeDotOutputs_withOB(ENode* enode) {
             if (!enode->CntrlSuccs->empty() || !enode->JustCntrlSuccs->empty()) {    
                 name += ", out = \"";
                 
-                if (enode->Instr->getOpcode() == Instruction::Load || enode->Instr->getOpcode() == Instruction::Store) {
-                    name += "out1:32 out2:32";
+                //if (enode->Instr->getOpcode() == Instruction::Load || enode->Instr->getOpcode() == Instruction::Store) {
+                   // name += "out1:32 out2:32";
+                //}
+                // Lana 7.6.2021. Load and store sizes
+                if (enode->Instr->getOpcode() == Instruction::Load) {
+                    // Data output
+                    name += "out1:";
+                    name += to_string(getOutPortSize_withOB(enode, 0)) + " ";
+                    // Address output (to memory)
+                    name += "out2:";
+                    name += to_string(getInPortSize_withOB(enode, 0)) + " ";
+                }
+                else if (enode->Instr->getOpcode() == Instruction::Store) {
+                    // Data output (to memory)
+                    name += "out1:";
+                    name += to_string(getInPortSize_withOB(enode, 0)) + " ";
+                    // Address output (to memory)
+                    name += "out2:";
+                    name += to_string(getInPortSize_withOB(enode, 1)) + " ";
                 }
                 else {
                     for (unsigned i = 0 ; i < enode->CntrlSuccs->size() + enode->JustCntrlSuccs->size() ; i++) {
@@ -1107,17 +1201,19 @@ std::string getNodeDotOutputs_withOB(ENode* enode) {
         case LSQ_:
         case MC_:
             name += ", out = \"";
+            mem_addr_size = getMemAddrSize(enode);
+            mem_data_size = getMemDataSize(enode);
            
             if (getMemOutputCount(enode) > 0 || enode->lsqToMC) {
                 for (auto& pred : *enode->CntrlPreds) {
                     if (pred->type != Cst_ && pred->type != LSQ_)
                         if (pred->Instr->getOpcode() == Instruction::Load) {
                             name += "out" + to_string(getDotDataIndex(pred, enode)) + ":" +
-                                    to_string(DATA_SIZE);
+                                    to_string(mem_data_size);
                             name += "*l" + to_string(pred->memPortId) + "d ";
                         }
                     if (pred->type == LSQ_)
-                        name += "out" + to_string (getMemOutputCount(enode ) + 1) + ":" + to_string(DATA_SIZE)+ "*l" + to_string(pred->lsqMCLoadId) + "d ";
+                        name += "out" + to_string (getMemOutputCount(enode ) + 1) + ":" + to_string(mem_data_size)+ "*l" + to_string(pred->lsqMCLoadId) + "d ";
                 }
             }
 
@@ -1129,9 +1225,9 @@ std::string getNodeDotOutputs_withOB(ENode* enode) {
                     to_string(CONTROL_SIZE) + "*e ";
 
             if (enode->type == LSQ_ && enode->lsqToMC == true) {
-                name += "out" + to_string (getMemOutputCount(enode) + 2) + ":" + to_string(ADDR_SIZE) + "*x0a ";
-                name += "out" + to_string (getMemOutputCount(enode) + 3) + ":" + to_string(ADDR_SIZE) + "*y0a ";
-                name += "out" + to_string (getMemOutputCount(enode) + 4) + ":" + to_string(DATA_SIZE) + "*y0d ";
+                name += "out" + to_string (getMemOutputCount(enode) + 2) + ":" + to_string(mem_addr_size) + "*x0a ";
+                name += "out" + to_string (getMemOutputCount(enode) + 3) + ":" + to_string(mem_addr_size) + "*y0a ";
+                name += "out" + to_string (getMemOutputCount(enode) + 4) + ":" + to_string(mem_data_size) + "*y0d ";
             }
             
             name += "\"";
@@ -1322,8 +1418,14 @@ void printDotNodes(std::vector<ENode*>* enode_dag, bool full, std::string serial
                 if (enode->type == Inst_)
                     dotline += getNodeDotOp(enode);
 
-                dotline += getNodeDotInputs(enode);
-                dotline += getNodeDotOutputs(enode);
+                if (OptimizeBitwidth::isEnabled()) {
+                    dotline += getNodeDotInputs_withOB(enode);
+                    dotline += getNodeDotOutputs_withOB(enode);
+                }
+                else {
+                    dotline += getNodeDotInputs(enode);
+                    dotline += getNodeDotOutputs(enode);
+                }
                 dotline += getNodeDotParams(enode, serial_number);
                 if (enode->type == MC_ || enode->type == LSQ_)
                     dotline += getNodeDotMemParams(enode);
@@ -1560,7 +1662,7 @@ std::string printDataflowEdges(std::vector<ENode*>* enode_dag, std::vector<BBNod
                                 str += printColor(enode, enode_succ);
                                 str += ", from = \"out" + to_string(enode_index) + "\"";
                                 str += ", to = \"in1\""; // data Branch or Fork input
-                                str += printEdgeWidth(enode, enode_succ);
+                                //str += printEdgeWidth(enode, enode_succ);
                                 str += "];\n";
                             }
                             if (enode_succ->JustCntrlSuccs->size() > 0) {
@@ -1579,7 +1681,7 @@ std::string printDataflowEdges(std::vector<ENode*>* enode_dag, std::vector<BBNod
                                 str += printColor(enode, enode_succ);
                                 str += ", from = \"out" + to_string(enode_index) + "\"";
                                 str += ", to = \"in2\""; /// Branch condition
-                                str += printEdgeWidth(enode, enode_succ);
+                                //str += printEdgeWidth(enode, enode_succ);
                                 str += "];\n";
                             }
                         } else if (enode->type == Branch_ &&
@@ -1606,7 +1708,7 @@ std::string printDataflowEdges(std::vector<ENode*>* enode_dag, std::vector<BBNod
                                 else if (enode_succ->type == Branch_)
                                     str += ", to = \"in2\"";
 
-                                str += printEdgeWidth(enode, enode_succ);
+                                //str += printEdgeWidth(enode, enode_succ);
                                 str += "];\n";
                             }
                         } else {
@@ -1662,7 +1764,7 @@ std::string printDataflowEdges(std::vector<ENode*>* enode_dag, std::vector<BBNod
                                     str += ", to = \"in" + to_string(toInd) + "\"";
                                 }
                             }
-                            str += printEdgeWidth(enode, enode_succ);
+                            //str += printEdgeWidth(enode, enode_succ);
                             str += "];\n";
                         }
                         enode_index++;
@@ -1690,7 +1792,7 @@ std::string printDataflowEdges(std::vector<ENode*>* enode_dag, std::vector<BBNod
                             toInd = indexOf(enode_csucc->JustCntrlPreds, enode) + enode_csucc->CntrlPreds->size() + 1;
                         }
                         str += ", to = \"in" + to_string(toInd) + "\"";
-                        str += printEdgeWidth(enode, enode_csucc);
+                        //str += printEdgeWidth(enode, enode_csucc);
                         str += "];\n";
                     }
 
@@ -1701,7 +1803,7 @@ std::string printDataflowEdges(std::vector<ENode*>* enode_dag, std::vector<BBNod
                         str += ", from = \"out" + to_string(enode_index) + "\"";
                         int toInd = indexOf(enode_csucc->JustCntrlPreds, enode) + 1;
                         str += ", to = \"in" + to_string(toInd) + "\"";
-                        str += printEdgeWidth(enode, enode_csucc);
+                        //str += printEdgeWidth(enode, enode_csucc);
                         str += "];\n";
                     }
 
@@ -1758,7 +1860,7 @@ std::string printDataflowEdges(std::vector<ENode*>* enode_dag, std::vector<BBNod
                             str += ", from = \"out" + to_string(fromInd) + "\"";
                             str += ", to = \"in" + to_string(toInd) + "\"";
                         }
-                        str += printEdgeWidth(enode, enode_succ);
+                        //str += printEdgeWidth(enode, enode_succ);
                         str += "];\n";
                     }
                 }
@@ -1786,7 +1888,7 @@ std::string printDataflowEdges(std::vector<ENode*>* enode_dag, std::vector<BBNod
                         }
                         str += ", from = \"out" + to_string(fromInd) + "\"";
                         str += ", to = \"in" + to_string(toInd) + "\"";
-                        str += printEdgeWidth(enode, enode_csucc);
+                        //str += printEdgeWidth(enode, enode_csucc);
                         str += "];\n";
                     }
                 }

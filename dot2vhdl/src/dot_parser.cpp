@@ -748,7 +748,8 @@ void parse_components ( string v_0, string v_1 )
                     nodes[components_in_netlist].inputs.size += 1;
                     nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].type = "l";
                     nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].info_type = "a";
-                    nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].bit_size = 32;
+                    //Lana 9.6.2021 change to address bitwidth
+                    nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].bit_size = nodes[components_in_netlist].address_size;
                     nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].port = 0; //Andrea 20200424
 //                     nodes[components_in_netlist].inputs.size += 1;
 //                     nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].type = "l";
@@ -757,8 +758,9 @@ void parse_components ( string v_0, string v_1 )
                     
                     nodes[components_in_netlist].outputs.size += 1;
                     nodes[components_in_netlist].outputs.output[nodes[components_in_netlist].outputs.size-1].type = "l";
-                    nodes[components_in_netlist].outputs.output[nodes[components_in_netlist].outputs.size-1].info_type = "a";
-                    nodes[components_in_netlist].outputs.output[nodes[components_in_netlist].outputs.size-1].bit_size = 32;
+                    //Lana 9.6.2021 change to data and data bitwidth
+                    nodes[components_in_netlist].outputs.output[nodes[components_in_netlist].outputs.size-1].info_type = "d";
+                    nodes[components_in_netlist].outputs.output[nodes[components_in_netlist].outputs.size-1].bit_size = nodes[components_in_netlist].data_size;
                     nodes[components_in_netlist].outputs.output[nodes[components_in_netlist].outputs.size-1].port = 0; //Andrea 20200424
 
                     
@@ -775,14 +777,16 @@ void parse_components ( string v_0, string v_1 )
                     nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].type = "s";
                     nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].info_type = "a";
                     nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].port = 0; //Andrea 20200424
-                    nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].bit_size = 32; //Andrea 20200424
+                    //Lana 9.6.2021 change to address bitwidth
+                    nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].bit_size = nodes[components_in_netlist].address_size;//32; //Andrea 20200424
 
                     
                     nodes[components_in_netlist].inputs.size += 1;
                     nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].type = "s";
                     nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].info_type = "d";
                     nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].port = 0; //Andrea 20200424
-                    nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].bit_size = 32; //Andrea 20200424
+                    //Lana 9.6.2021 change to data bitwidth
+                    nodes[components_in_netlist].inputs.input[nodes[components_in_netlist].inputs.size-1].bit_size = nodes[components_in_netlist].data_size; //32; //Andrea 20200424
 
 
                 }

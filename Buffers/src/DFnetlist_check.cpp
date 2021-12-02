@@ -246,13 +246,13 @@ bool DFnetlist_Impl::checkConstant(blockID b)
     //    setError("Non-control port for Constant block " + getBlockName(b) + ".");
     //    return false;
     //}
-
+    // Lana 9.6.2021. Axel resource sharing update
     // Normalize the value with sign extension
-    int width = getPortWidth(getOutPort(b));
-    int sign_location = 1 << (width - 1);
-    longValueType v = getValue(b);
-    if ((v & sign_location) != 0) v += ((longValueType) -1) << width;
-    setValue(b, v);
+    // int width = getPortWidth(getOutPort(b));
+    // int sign_location = 1 << (width - 1);
+    // longValueType v = getValue(b);
+    // if ((v & sign_location) != 0) v += ((longValueType) -1) << width;
+    // setValue(b, v);
     return true;
 }
 

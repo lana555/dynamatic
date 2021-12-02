@@ -1,0 +1,525 @@
+OptimizeBitwidth:START OF NEW FUNCTION ANALYSIS
+OptimizeBitwidth:Inside associatePHI
+OptimizeBitwidth:START OF LOOP PROCESSING
+OptimizeBitwidth:Inside process loop
+OptimizeBitwidth:Inside process block
+OptimizeBitwidth:processBlock: The size of PHI SET is: 1
+OptimizeBitwidth:Inside process block
+OptimizeBitwidth:processBlock: The size of PHI SET is: 1
+OptimizeBitwidth:PROCESS INSTRUCTION:
+  %i.01 = phi i32 [ 0, %entry ], [ %inc, %for.body ]
+OptimizeBitwidth:CHECK COMPARE CONDITION
+  %i.01 = phi i32 [ 0, %entry ], [ %inc, %for.body ]
+OptimizeBitwidth:conditions size: 1
+OptimizeBitwidth:SECOND IF
+OptimizeBitwidth:CHECK BINARY
+  %inc = add nuw nsw i32 %i.01, 1
+OptimizeBitwidth:casted to binary operator
+OptimizeBitwidth:Appropriate operand
+OptimizeBitwidth:UP BINARY INSTR
+OptimizeBitwidth:condition : 1
+OptimizeBitwidth:Pattern: 1
+OptimizeBitwidth:compare condition: 1
+OptimizeBitwidth:loop_map size : 1
+OptimizeBitwidth:END OF LOOP PROCESSING
+OptimizeBitwidth:Inside initialize argument
+i32* %x
+OptimizeBitwidth:INITIALIZE STATS
+OptimizeBitwidth:Value was not found
+OptimizeBitwidth:Inside initialize argument
+i32* %w
+OptimizeBitwidth:INITIALIZE STATS
+OptimizeBitwidth:Value was not found
+OptimizeBitwidth:Inside initialize argument
+i32* %a
+OptimizeBitwidth:INITIALIZE STATS
+OptimizeBitwidth:Value was not found
+OptimizeBitwidth:Instruction opcode name : br 
+OptimizeBitwidth:S_MAX : 64
+OptimizeBitwidth:Operand number: 0
+
+for.body:                                         ; preds = %for.body, %entry
+  %i.01 = phi i32 [ 0, %entry ], [ %inc, %for.body ]
+  %inc = add nuw nsw i32 %i.01, 1
+  %cmp = icmp ult i32 %inc, 100
+  br i1 %cmp, label %for.body, label %for.end
+
+label
+OptimizeBitwidth:Operand type is void
+OptimizeBitwidth:INITIALIZE STATS
+OptimizeBitwidth:Value was not found
+  br label %for.body
+OptimizeBitwidth:Instruction void type
+OptimizeBitwidth:INITIALIZE STATS
+OptimizeBitwidth:Value was not found
+  br label %for.body
+OptimizeBitwidth:Instruction opcode name : phi 
+OptimizeBitwidth:S_MAX : 64
+OptimizeBitwidth:Operand number: 0
+OptimizeBitwidth:INITIALIZE STATS
+OptimizeBitwidth:Value was not found
+OptimizeBitwidth:ELIMINATING BITS IN VAL
+OptimizeBitwidth:Operand number: 1
+  %inc = add nuw nsw i32 %i.01, 1
+i32
+OptimizeBitwidth:Operand type is non-void
+OptimizeBitwidth:INITIALIZE STATS
+OptimizeBitwidth:Value was not found
+  %inc = add nuw nsw i32 %i.01, 1
+  %i.01 = phi i32 [ 0, %entry ], [ %inc, %for.body ]
+OptimizeBitwidth:Instruction non-void type
+OptimizeBitwidth:instruction operand 0 type: 32
+OptimizeBitwidth:INITIALIZE STATS
+OptimizeBitwidth:Value was not found
+  %i.01 = phi i32 [ 0, %entry ], [ %inc, %for.body ]
+OptimizeBitwidth:Instruction opcode name : add 
+OptimizeBitwidth:S_MAX : 64
+OptimizeBitwidth:This operand number % was already processed
+OptimizeBitwidth:Operand number: 1
+OptimizeBitwidth:INITIALIZE STATS
+OptimizeBitwidth:Value was not found
+OptimizeBitwidth:ELIMINATING BITS IN VAL
+OptimizeBitwidth:Instruction opcode name : icmp 
+OptimizeBitwidth:S_MAX : 64
+OptimizeBitwidth:This operand number % was already processed
+OptimizeBitwidth:Operand number: 1
+OptimizeBitwidth:INITIALIZE STATS
+OptimizeBitwidth:Value was not found
+OptimizeBitwidth:ELIMINATING BITS IN VAL
+  %cmp = icmp ult i32 %inc, 100
+OptimizeBitwidth:Instruction non-void type
+OptimizeBitwidth:instruction operand 0 type: 32
+OptimizeBitwidth:INITIALIZE STATS
+OptimizeBitwidth:Value was not found
+  %cmp = icmp ult i32 %inc, 100
+OptimizeBitwidth:Instruction opcode name : br 
+OptimizeBitwidth:S_MAX : 64
+OptimizeBitwidth:This operand number % was already processed
+OptimizeBitwidth:Operand number: 1
+
+for.end:                                          ; preds = %for.body
+  ret void
+
+label
+OptimizeBitwidth:Operand type is void
+OptimizeBitwidth:INITIALIZE STATS
+OptimizeBitwidth:Value was not found
+OptimizeBitwidth:This operand number % was already processed
+  br i1 %cmp, label %for.body, label %for.end
+OptimizeBitwidth:Instruction void type
+OptimizeBitwidth:INITIALIZE STATS
+OptimizeBitwidth:Value was not found
+  br i1 %cmp, label %for.body, label %for.end
+OptimizeBitwidth:Instruction opcode name : ret 
+OptimizeBitwidth:S_MAX : 64
+  ret void
+OptimizeBitwidth:Instruction void type
+OptimizeBitwidth:INITIALIZE STATS
+OptimizeBitwidth:Value was not found
+  ret void
+OptimizeBitwidth:UPDATE PHI VALUES
+OptimizeBitwidth:normal order
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:Checking sanity condition
+OptimizeBitwidth:AFTER update PHI
+0 0 1 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:Bit info: m_left: 6, m_right: 2, m_bitwidth: 32
+OptimizeBitwidth:New cycle of forward iterations
+OptimizeBitwidth:Inside forwardIterate
+OptimizeBitwidth:Inside forwardIterate
+OptimizeBitwidth:FORWARD PHI
+  %i.01 = phi i32 [ 0, %entry ], [ %inc, %for.body ]
+OptimizeBitwidth:Inside loop map
+OptimizeBitwidth:UPDATE PHI VALUES
+OptimizeBitwidth:normal order
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:Checking sanity condition
+OptimizeBitwidth:AFTER update PHI
+0 0 1 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:Bit info: m_left: 6, m_right: 2, m_bitwidth: 32
+OptimizeBitwidth:COUNT STATS
+OptimizeBitwidth:phi
+OptimizeBitwidth:AFTER COUNT STATS :
+  %i.01 = phi i32 [ 0, %entry ], [ %inc, %for.body ]
+OptimizeBitwidth:change : 25
+OptimizeBitwidth:Inside forwardIterate
+OptimizeBitwidth:FORWARD ADD
+OptimizeBitwidth:i is equal to : 0
+OptimizeBitwidth:known carry: 1
+OptimizeBitwidth:cur_val val:0
+OptimizeBitwidth:Both known
+OptimizeBitwidth:cur_val VAL
+1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:cur_val DYN
+0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+OptimizeBitwidth:i is equal to : 1
+OptimizeBitwidth:known carry: 1
+OptimizeBitwidth:cur_val val:0
+OptimizeBitwidth:Both known
+OptimizeBitwidth:cur_val VAL
+1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:cur_val DYN
+0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+OptimizeBitwidth:i is equal to : 2
+OptimizeBitwidth:known carry: 1
+OptimizeBitwidth:cur_val val:0
+OptimizeBitwidth:Both known
+OptimizeBitwidth:cur_val VAL
+1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:cur_val DYN
+0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+OptimizeBitwidth:i is equal to : 3
+OptimizeBitwidth:known carry: 1
+OptimizeBitwidth:cur_val val:0
+OptimizeBitwidth:Both known
+OptimizeBitwidth:cur_val VAL
+1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:cur_val DYN
+0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+OptimizeBitwidth:i is equal to : 4
+OptimizeBitwidth:known carry: 1
+OptimizeBitwidth:cur_val val:0
+OptimizeBitwidth:Both known
+OptimizeBitwidth:cur_val VAL
+1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:cur_val DYN
+0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+OptimizeBitwidth:i is equal to : 5
+OptimizeBitwidth:known carry: 1
+OptimizeBitwidth:cur_val val:0
+OptimizeBitwidth:Both known
+OptimizeBitwidth:cur_val VAL
+1 0 1 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:cur_val DYN
+0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+OptimizeBitwidth:i is equal to : 6
+OptimizeBitwidth:known carry: 1
+OptimizeBitwidth:cur_val val:0
+OptimizeBitwidth:Both known
+OptimizeBitwidth:cur_val VAL
+1 0 1 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:cur_val DYN
+0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+OptimizeBitwidth:i is equal to : 7
+OptimizeBitwidth:known carry: 1
+OptimizeBitwidth:cur_val val:0
+OptimizeBitwidth:Both known
+OptimizeBitwidth:cur_val VAL
+1 0 1 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:cur_val DYN
+0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+OptimizeBitwidth:AFTER ADD
+1 0 1 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:Bit info: m_left: 6, m_right: 0, m_bitwidth: 32
+OptimizeBitwidth:COUNT STATS
+OptimizeBitwidth:add
+OptimizeBitwidth:AFTER COUNT STATS :
+  %inc = add nuw nsw i32 %i.01, 1
+OptimizeBitwidth:change : 25
+OptimizeBitwidth:Inside forwardIterate
+OptimizeBitwidth:Inside forwardIterate
+OptimizeBitwidth:Inside forwardIterate
+OptimizeBitwidth:New cycle of forward iterations
+OptimizeBitwidth:Inside forwardIterate
+OptimizeBitwidth:Inside forwardIterate
+OptimizeBitwidth:FORWARD PHI
+  %i.01 = phi i32 [ 0, %entry ], [ %inc, %for.body ]
+OptimizeBitwidth:Inside loop map
+OptimizeBitwidth:UPDATE PHI VALUES
+OptimizeBitwidth:normal order
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:Checking sanity condition
+OptimizeBitwidth:AFTER update PHI
+0 0 1 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:Bit info: m_left: 6, m_right: 2, m_bitwidth: 32
+OptimizeBitwidth:COUNT STATS
+OptimizeBitwidth:phi
+OptimizeBitwidth:AFTER COUNT STATS :
+  %i.01 = phi i32 [ 0, %entry ], [ %inc, %for.body ]
+OptimizeBitwidth:change : 0
+OptimizeBitwidth:Inside forwardIterate
+OptimizeBitwidth:FORWARD ADD
+OptimizeBitwidth:i is equal to : 0
+OptimizeBitwidth:known carry: 1
+OptimizeBitwidth:cur_val val:0
+OptimizeBitwidth:Both known
+OptimizeBitwidth:cur_val VAL
+1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:cur_val DYN
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:i is equal to : 1
+OptimizeBitwidth:known carry: 1
+OptimizeBitwidth:cur_val val:0
+OptimizeBitwidth:Both known
+OptimizeBitwidth:cur_val VAL
+1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:cur_val DYN
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:i is equal to : 2
+OptimizeBitwidth:known carry: 1
+OptimizeBitwidth:cur_val val:0
+OptimizeBitwidth:Both known
+OptimizeBitwidth:cur_val VAL
+1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:cur_val DYN
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:i is equal to : 3
+OptimizeBitwidth:known carry: 1
+OptimizeBitwidth:cur_val val:0
+OptimizeBitwidth:Both known
+OptimizeBitwidth:cur_val VAL
+1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:cur_val DYN
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:i is equal to : 4
+OptimizeBitwidth:known carry: 1
+OptimizeBitwidth:cur_val val:0
+OptimizeBitwidth:Both known
+OptimizeBitwidth:cur_val VAL
+1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:cur_val DYN
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:i is equal to : 5
+OptimizeBitwidth:known carry: 1
+OptimizeBitwidth:cur_val val:0
+OptimizeBitwidth:Both known
+OptimizeBitwidth:cur_val VAL
+1 0 1 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:cur_val DYN
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:i is equal to : 6
+OptimizeBitwidth:known carry: 1
+OptimizeBitwidth:cur_val val:0
+OptimizeBitwidth:Both known
+OptimizeBitwidth:cur_val VAL
+1 0 1 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:cur_val DYN
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:i is equal to : 7
+OptimizeBitwidth:known carry: 1
+OptimizeBitwidth:cur_val val:0
+OptimizeBitwidth:Both known
+OptimizeBitwidth:cur_val VAL
+1 0 1 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:cur_val DYN
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:AFTER ADD
+1 0 1 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:Bit info: m_left: 6, m_right: 0, m_bitwidth: 32
+OptimizeBitwidth:COUNT STATS
+OptimizeBitwidth:add
+OptimizeBitwidth:AFTER COUNT STATS :
+  %inc = add nuw nsw i32 %i.01, 1
+OptimizeBitwidth:change : 0
+OptimizeBitwidth:Inside forwardIterate
+OptimizeBitwidth:Inside forwardIterate
+OptimizeBitwidth:Inside forwardIterate
+OptimizeBitwidth:Inside backwardIterate
+OptimizeBitwidth:INSTRUCTION:
+  ret void
+OptimizeBitwidth:End of backward iterate
+OptimizeBitwidth:New i_info dump
+  ret void
+OptimizeBitwidth:to m_left : 63, to m_right: 0, to m_bit: 64
+OptimizeBitwidth:Inside backwardIterate
+OptimizeBitwidth:INSTRUCTION:
+  br i1 %cmp, label %for.body, label %for.end
+OptimizeBitwidth:End of backward iterate
+OptimizeBitwidth:New i_info dump
+  br i1 %cmp, label %for.body, label %for.end
+OptimizeBitwidth:to m_left : 63, to m_right: 0, to m_bit: 64
+OptimizeBitwidth:Inside backwardIterate
+OptimizeBitwidth:INSTRUCTION:
+  %cmp = icmp ult i32 %inc, 100
+OptimizeBitwidth:INSTRUCTION USER DUMP:
+  br i1 %cmp, label %for.body, label %for.end
+OptimizeBitwidth:INSIDE SET MIN
+OptimizeBitwidth:to m_left : 0, to m_right: 0, to m_bit: 1
+0 
+1 
+OptimizeBitwidth:END OF SET MIN
+OptimizeBitwidth:End of backward iterate
+OptimizeBitwidth:New i_info dump
+  %cmp = icmp ult i32 %inc, 100
+OptimizeBitwidth:to m_left : 0, to m_right: 0, to m_bit: 1
+OptimizeBitwidth:Inside backwardIterate
+OptimizeBitwidth:INSTRUCTION:
+  %inc = add nuw nsw i32 %i.01, 1
+OptimizeBitwidth:INSTRUCTION USER DUMP:
+  %cmp = icmp ult i32 %inc, 100
+OptimizeBitwidth:INSTRUCTION USER DUMP:
+  %i.01 = phi i32 [ 0, %entry ], [ %inc, %for.body ]
+OptimizeBitwidth:INSIDE SET MAX
+OptimizeBitwidth:to m_left : 6, to m_right: 0, to m_bit: 64
+1 0 1 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:END OF SET MAX
+OptimizeBitwidth:INSIDE SET MIN
+OptimizeBitwidth:to m_left : 6, to m_right: 0, to m_bit: 32
+1 0 1 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:END OF SET MIN
+OptimizeBitwidth:End of backward iterate
+OptimizeBitwidth:New i_info dump
+  %inc = add nuw nsw i32 %i.01, 1
+OptimizeBitwidth:to m_left : 6, to m_right: 0, to m_bit: 32
+OptimizeBitwidth:Inside backwardIterate
+OptimizeBitwidth:INSTRUCTION:
+  %i.01 = phi i32 [ 0, %entry ], [ %inc, %for.body ]
+OptimizeBitwidth:INSTRUCTION USER DUMP:
+  %inc = add nuw nsw i32 %i.01, 1
+OptimizeBitwidth:Backward add
+OptimizeBitwidth:BACKWARD ADD
+OptimizeBitwidth:AFTER BACKWARD ADD
+0 0 1 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:Bit info: m_left: 6, m_right: 2, m_bitwidth: 64
+OptimizeBitwidth:INSIDE SET MIN
+OptimizeBitwidth:to m_left : 6, to m_right: 2, to m_bit: 32
+0 0 1 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:END OF SET MIN
+OptimizeBitwidth:End of backward iterate
+OptimizeBitwidth:New i_info dump
+  %i.01 = phi i32 [ 0, %entry ], [ %inc, %for.body ]
+OptimizeBitwidth:to m_left : 6, to m_right: 2, to m_bit: 32
+OptimizeBitwidth:STATS PRINTING
+
+for.body:                                         ; preds = %for.body, %entry
+  %i.01 = phi i32 [ 0, %entry ], [ %inc, %for.body ]
+  %inc = add nuw nsw i32 %i.01, 1
+  %cmp = icmp ult i32 %inc, 100
+  br i1 %cmp, label %for.body, label %for.end
+
+i32 0
+  %inc = add nuw nsw i32 %i.01, 1
+  %i.01 = phi i32 [ 0, %entry ], [ %inc, %for.body ]
+i32 1
+  %inc = add nuw nsw i32 %i.01, 1
+i32 100
+  %cmp = icmp ult i32 %inc, 100
+
+for.end:                                          ; preds = %for.body
+  ret void
+
+
+for.body:                                         ; preds = %for.body, %entry
+  %i.01 = phi i32 [ 0, %entry ], [ %inc, %for.body ]
+  %inc = add nuw nsw i32 %i.01, 1
+  %cmp = icmp ult i32 %inc, 100
+  br i1 %cmp, label %for.body, label %for.end
+
+OptimizeBitwidth:Function name : example
+OptimizeBitwidth:Print mapped stats
+OptimizeBitwidth:Statistics on most significant bits eliminated
+OptimizeBitwidth:***********
+  %inc = add nuw nsw i32 %i.01, 1
+Bits before: 31
+Bits after: 6
+Opcode: 11
+Opname: add
+OptimizeBitwidth:left val: 6, right val: 0
+1 0 1 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:***********
+OptimizeBitwidth:***********
+  br label %for.body
+Bits before: 63
+Bits after: 63
+Opcode: 2
+Opname: br
+OptimizeBitwidth:left val: 63, right val: 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+OptimizeBitwidth:***********
+OptimizeBitwidth:***********
+i32 0
+Bits before: 31
+Bits after: 0
+Opcode: -1
+Opname: 
+OptimizeBitwidth:left val: 0, right val: 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:***********
+OptimizeBitwidth:***********
+i32 100
+Bits before: 31
+Bits after: 6
+Opcode: -1
+Opname: 
+OptimizeBitwidth:left val: 6, right val: 2
+0 0 1 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:***********
+OptimizeBitwidth:***********
+  %i.01 = phi i32 [ 0, %entry ], [ %inc, %for.body ]
+Bits before: 31
+Bits after: 6
+Opcode: 53
+Opname: phi
+OptimizeBitwidth:left val: 6, right val: 2
+0 0 1 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:***********
+OptimizeBitwidth:***********
+i32 1
+Bits before: 31
+Bits after: 0
+Opcode: -1
+Opname: 
+OptimizeBitwidth:left val: 0, right val: 0
+1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+OptimizeBitwidth:***********
+OptimizeBitwidth:***********
+  %cmp = icmp ult i32 %inc, 100
+Bits before: 0
+Bits after: 0
+Opcode: 51
+Opname: icmp
+OptimizeBitwidth:left val: 0, right val: 0
+0 
+1 
+OptimizeBitwidth:***********
+OptimizeBitwidth:***********
+  br i1 %cmp, label %for.body, label %for.end
+Bits before: 63
+Bits after: 63
+Opcode: 2
+Opname: br
+OptimizeBitwidth:left val: 63, right val: 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+OptimizeBitwidth:***********
+OptimizeBitwidth:***********
+  ret void
+Bits before: 63
+Bits after: 63
+Opcode: 1
+Opname: ret
+OptimizeBitwidth:left val: 63, right val: 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+OptimizeBitwidth:***********
+OptimizeBitwidth:OVERALL STATISTICS
+OptimizeBitwidth:START OF NEW FUNCTION ANALYSIS
+OptimizeBitwidth:Inside associatePHI
+OptimizeBitwidth:START OF LOOP PROCESSING
+OptimizeBitwidth:Inside process loop
+OptimizeBitwidth:Inside process block
+OptimizeBitwidth:processBlock: The size of PHI SET is: 1
+OptimizeBitwidth:Inside process block
+OptimizeBitwidth:processBlock: The size of PHI SET is: 1
+OptimizeBitwidth:PROCESS INSTRUCTION:
+  %i31.01 = phi i32 [ 0, %for.end30 ], [ %inc44, %for.body34 ]
+OptimizeBitwidth:CHECK COMPARE CONDITION
+  %i31.01 = phi i32 [ 0, %for.end30 ], [ %inc44, %for.body34 ]

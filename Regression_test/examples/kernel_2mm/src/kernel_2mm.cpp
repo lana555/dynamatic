@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void kernel_2mm(in_int_t alpha, in_int_t beta, inout_int_t tmp[N][N], in_int_t A[N][N], in_int_t B[N][N], in_int_t C[N][N], out_int_t D[N][N])
+void kernel_2mm(in_int_t alpha, in_int_t beta, inout_int_t tmp[N][N], in_int_t A[N][N], in_int_t B[N][N], in_int_t C[N][N], inout_int_t D[N][N])
 {
   int i, j, k;
 
@@ -41,7 +41,7 @@ int main(void){
     in_int_t A[AMOUNT_OF_TEST][N][N];
     in_int_t B[AMOUNT_OF_TEST][N][N];
     in_int_t C[AMOUNT_OF_TEST][N][N];
-    out_int_t D[AMOUNT_OF_TEST][N][N];
+    inout_int_t D[AMOUNT_OF_TEST][N][N];
     
 
     for(int i = 0; i < AMOUNT_OF_TEST; ++i){

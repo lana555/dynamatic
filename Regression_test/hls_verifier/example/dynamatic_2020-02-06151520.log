@@ -1,0 +1,94 @@
+
+
+******************************************************************
+******Dynamic High-Level Synthesis Compiler***********************
+******Andrea Guerrieri - Lana Josipovic - EPFL-LAP 2019 **********
+******Version 0.2 - Build 0.1 ************************************
+******************************************************************
+
+synthesis.tcl
+Done 
+set input file: example.c
+current input filename: ./src/example.c
+Done 
+Synthesize
+compile example.c . -use-lsq=false -simple-buffers=true 
+Done 
+Display Data Control Flow Graph
+dcfg ./reports/example.dot &Done 
+Write hdl
+write_hdl  . ./reports/example
+
+******************************************************************
+******Dynamic High-Level Synthesis Compiler **********************
+******Andrea Guerrieri - Lana Josipovic - EPFL-LAP 2019 **********
+******Dot to VHDL Generator***************************************
+******************************************************************
+Parsing ./reports/example.dot
+MC_x inputs.size 2
+MC_a inputs.size 4
+MC_w inputs.size 2
+**Warning**: Node[18] Node_Name:MC_x input 2 has no predecessor -- signals connections will be omitted in the netlist
+**Warning**: Node[18] Node_Name:MC_x input 3 has no predecessor -- signals connections will be omitted in the netlist
+**Warning**: Node[18] Node_Name:MC_x input 4 has no predecessor -- signals connections will be omitted in the netlist
+**Warning**: Node[20] Node_Name:MC_w input 2 has no predecessor -- signals connections will be omitted in the netlist
+**Warning**: Node[20] Node_Name:MC_w input 3 has no predecessor -- signals connections will be omitted in the netlist
+**Warning**: Node[20] Node_Name:MC_w input 4 has no predecessor -- signals connections will be omitted in the netlist
+**Warning**: Node[22] Node_Name:end_0 output 1 has no successor -- signals connections will be omitted in the netlist
+**Warning**: Node[23] Node_Name:start_0 input 1 has no predecessor -- signals connections will be omitted in the netlist
+
+Report Modules 
++--------------------------------------------------------------------------+
+|   Node_ID|                Name|         Module_type|    Inputs|   Outputs|
++--------------------------------------------------------------------------+
+|         0|        brCst_block1|            Constant|         1|         1|
+|         1|               cst_0|            Constant|         1|         1|
+|         2|               phi_1|                 Mux|         3|         1|
+|         3|              load_4|            Operator|         2|         2|
+|         4|              load_7|            Operator|         2|         2|
+|         5|             load_10|            Operator|         2|         2|
+|         6|              mul_11|            Operator|         2|         1|
+|         7|             store_0|            Operator|         2|         2|
+|         8|               cst_1|            Constant|         1|         1|
+|         9|              add_14|            Operator|         2|         1|
+|        10|               cst_2|            Constant|         1|         1|
+|        11|             icmp_15|            Operator|         2|         1|
+|        12|               ret_0|            Operator|         1|         1|
+|        13|              fork_0|                Fork|         1|         3|
+|        14|              fork_1|                Fork|         1|         2|
+|        15|              fork_2|                Fork|         1|         2|
+|        16|            branch_0|              Branch|         2|         2|
+|        17|            branch_1|              Branch|         2|         2|
+|        18|                MC_x|                  MC|         4|         2|
+|        19|                MC_a|                  MC|         4|         2|
+|        20|                MC_w|                  MC|         4|         2|
+|        21|               cst_3|            Constant|         1|         1|
+|        22|               end_0|                Exit|         4|         1|
+|        23|             start_0|               Entry|         1|         1|
+|        24|             forkC_6|                Fork|         1|         3|
+|        25|           branchC_2|              Branch|         2|         2|
+|        26|              fork_7|                Fork|         1|         2|
+|        27|              phiC_0|          CntrlMerge|         2|         2|
+|        28|             forkC_8|                Fork|         1|         2|
+|        29|           branchC_3|              Branch|         2|         2|
+|        30|              fork_9|                Fork|         1|         2|
+|        31|              phiC_1|               Merge|         1|         1|
+|        32|              sink_0|                Sink|         1|         0|
+|        33|              sink_1|                Sink|         1|         0|
+|        34|              sink_2|                Sink|         1|         0|
+|        35|            source_0|              Source|         0|         1|
+|        36|            source_1|              Source|         0|         1|
+|        37|             buffI_0|              Buffer|         1|         1|
+|        38|             buffA_1|              Buffer|         1|         1|
++--------------------------------------------------------------------------+
+Generating ./reports/example.vhd
+
+Done
+
+
+
+Done 
+Exit...
+Goodbye!
+
+

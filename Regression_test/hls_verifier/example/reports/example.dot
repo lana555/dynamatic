@@ -1,0 +1,76 @@
+Digraph G {
+	splines=spline;
+//DHLS version: 0.1.1" [shape = "none" pos = "20,20!"]
+		"brCst_block1" [type = "Constant", bbID= 1, in = "in1:1", out = "out1:1", value = "0x1"];
+		"cst_0" [type = "Constant", bbID= 1, in = "in1:32", out = "out1:32", value = "0x00000000"];
+		"phi_1" [type = "Mux", bbID= 2, in = "in1?:1 in2:32 in3:32 ", out = "out1:32", delay=0.366];
+		"cst_1" [type = "Constant", bbID= 2, in = "in1:32", out = "out1:32", value = "0x00000001"];
+		"add_2" [type = "Operator", bbID= 2, op = "add_op", in = "in1:32 in2:32 ", out = "out1:32 ", delay=1.693, latency=0, II=1];
+		"cst_2" [type = "Constant", bbID= 2, in = "in1:32", out = "out1:32", value = "0x00000064"];
+		"icmp_3" [type = "Operator", bbID= 2, op = "icmp_ult_op", in = "in1:32 in2:32 ", out = "out1:1 ", delay=1.530, latency=0, II=1];
+		"ret_0" [type = "Operator", bbID= 3, op = "ret_op", in = "in1:0 ", out = "out1:0 ", delay=0.000, latency=0, II=1];
+		"fork_0" [type = "Fork", bbID= 2, in = "in1:32", out = "out1:32 out2:32 "];
+		"branch_0" [type = "Branch", bbID= 1,  in = "in1:32 in2?:1", out = "out1+:32 out2-:32"];
+		"branch_1" [type = "Branch", bbID= 2,  in = "in1:32 in2?:1", out = "out1+:32 out2-:32"];
+		"end_0" [type = "Exit", bbID= 0, in = "in1:0", out = "out1:0"];
+		"start_0" [type = "Entry", control= "true", bbID= 1, in = "in1:0", out = "out1:0"];
+		"forkC_4" [type = "Fork", bbID= 1, in = "in1:0", out = "out1:0 out2:0 out3:0 "];
+		"branchC_2" [type = "Branch", bbID= 1,  in = "in1:0 in2?:1", out = "out1+:0 out2-:0"];
+		"fork_5" [type = "Fork", bbID= 1, in = "in1:1", out = "out1:1 out2:1 "];
+		"phiC_0" [type = "CntrlMerge", bbID= 2, in = "in1:0 in2:0 ", out = "out1:0 out2?:1", delay=0.166];
+		"branchC_3" [type = "Branch", bbID= 2,  in = "in1:0 in2?:1", out = "out1+:0 out2-:0"];
+		"fork_7" [type = "Fork", bbID= 2, in = "in1:1", out = "out1:1 out2:1 "];
+		"phiC_1" [type = "Merge", bbID= 3, in = "in1:0 ", out = "out1:0", delay=0.166];
+		"sink_0" [type = "Sink", bbID= 0, in = "in1:32"];
+		"sink_1" [type = "Sink", bbID= 0, in = "in1:32"];
+		"sink_2" [type = "Sink", bbID= 0, in = "in1:0"];
+		"source_0" [type = "Source", bbID= 2, out = "out1:32"];
+		"source_1" [type = "Source", bbID= 2, out = "out1:32"];
+		"buffI_0" [type = "Buffer", bbID= 2, in = "in1:32", out = "out1:32"];
+		"buffA_1" [type = "Buffer", bbID= 2, in = "in1:0", out = "out1:0"];
+	subgraph cluster_0 {
+	color = "darkgreen";
+		label = "block1";
+		"brCst_block1" -> "fork_5" [color = "magenta", from = "out1", to = "in1"];
+		"cst_0" -> "branch_0" [color = "red", from = "out1", to = "in1"];
+		"start_0" -> "forkC_4" [color = "gold3", from = "out1", to = "in1"];
+		"forkC_4" -> "cst_0" [color = "gold3", from = "out1", to = "in1"];
+		"forkC_4" -> "branchC_2" [color = "gold3", from = "out2", to = "in1"];
+		"forkC_4" -> "brCst_block1" [color = "gold3", from = "out3", to = "in1"];
+		"fork_5" -> "branch_0" [color = "red", from = "out1", to = "in2"];
+		"fork_5" -> "branchC_2" [color = "gold3", from = "out2", to = "in2"];
+	}
+		"branch_0" -> "phi_1" [color = "blue", minlen = 3, from = "out1", to = "in2"];
+		"branch_0" -> "sink_0" [color = "blue", minlen = 3, from = "out2", to = "in1"];
+		"branchC_2" -> "phiC_0" [color = "gold3", minlen = 3, from = "out1", to = "in1"];
+		"branchC_2" -> "sink_2" [color = "gold3", minlen = 3, from = "out2", to = "in1"];
+	subgraph cluster_1 {
+	color = "darkgreen";
+		label = "block2";
+		"phi_1" -> "buffI_0" [color = "red", from = "out1", to = "in1"];
+		"cst_1" -> "add_2" [color = "red", from = "out1", to = "in2"];
+		"add_2" -> "fork_0" [color = "red", from = "out1", to = "in1"];
+		"cst_2" -> "icmp_3" [color = "red", from = "out1", to = "in2"];
+		"icmp_3" -> "fork_7" [color = "magenta", from = "out1", to = "in1"];
+		"fork_0" -> "icmp_3" [color = "red", from = "out1", to = "in1"];
+		"fork_0" -> "branch_1" [color = "red", from = "out2", to = "in1"];
+		"phiC_0" -> "phi_1" [color = "green", from = "out2", to = "in1"];
+		"phiC_0" -> "buffA_1" [color = "gold3", from = "out1", to = "in1"];
+		"fork_7" -> "branch_1" [color = "red", from = "out1", to = "in2"];
+		"fork_7" -> "branchC_3" [color = "gold3", from = "out2", to = "in2"];
+		"source_0" -> "cst_1" [color = "red", from = "out1", to = "in1"];
+		"source_1" -> "cst_2" [color = "red", from = "out1", to = "in1"];
+		"buffI_0" -> "add_2" [color = "red", from = "out1", to = "in1"];
+		"buffA_1" -> "branchC_3" [color = "gold3", from = "out1", to = "in1"];
+	}
+		"branch_1" -> "phi_1" [color = "blue", minlen = 3, from = "out1", to = "in3"];
+		"branch_1" -> "sink_1" [color = "blue", minlen = 3, from = "out2", to = "in1"];
+		"branchC_3" -> "phiC_0" [color = "gold3", minlen = 3, from = "out1", to = "in2"];
+		"branchC_3" -> "phiC_1" [color = "gold3", minlen = 3, from = "out2", to = "in1"];
+	subgraph cluster_2 {
+	color = "darkgreen";
+		label = "block3";
+		"ret_0" -> "end_0" [color = "gold3", from = "out1", to = "in1"];
+		"phiC_1" -> "ret_0" [color = "gold3", from = "out1", to = "in1"];
+	}
+}

@@ -9,26 +9,29 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 entity mul_4_stage is
+Generic (
+  INPUTS: integer; OUTPUTS: integer; DATA_SIZE_IN: integer; DATA_SIZE_OUT: integer
+);
 port (
     clk: in std_logic;
     ce: in std_logic;
-    a: in std_logic_vector(31 downto 0);
-    b: in std_logic_vector(31 downto 0);
-    p: out std_logic_vector(31 downto 0));
+    a: in std_logic_vector(DATA_SIZE_IN-1 downto 0);
+    b: in std_logic_vector(DATA_SIZE_IN-1 downto 0);
+    p: out std_logic_vector(DATA_SIZE_OUT-1 downto 0));
 end entity;
 
 architecture behav of mul_4_stage is
     
-    signal a_reg : std_logic_vector(31 downto 0);
-    signal b_reg : std_logic_vector(31 downto 0);
-    signal q0 : std_logic_vector(31 downto 0);
-    signal q1 : std_logic_vector(31 downto 0);
-    signal q2 : std_logic_vector(31 downto 0);
-    signal mul : std_logic_vector(31 downto 0);
+    signal a_reg : std_logic_vector(DATA_SIZE_OUT-1 downto 0);
+    signal b_reg : std_logic_vector(DATA_SIZE_OUT-1 downto 0);
+    signal q0 : std_logic_vector(DATA_SIZE_OUT-1 downto 0);
+    signal q1 : std_logic_vector(DATA_SIZE_OUT-1 downto 0);
+    signal q2 : std_logic_vector(DATA_SIZE_OUT-1 downto 0);
+    signal mul : std_logic_vector(DATA_SIZE_OUT-1 downto 0);
 
 begin
 
-    mul <= std_logic_vector(resize(unsigned(std_logic_vector(signed(a_reg) * signed(b_reg))), 32));
+    mul <= std_logic_vector(resize(unsigned(std_logic_vector(signed(a_reg) * signed(b_reg))), DATA_SIZE_OUT));
 
     process(clk)
     begin
@@ -53,30 +56,33 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 entity mul_8_stage is
+Generic (
+  INPUTS: integer; OUTPUTS: integer; DATA_SIZE_IN: integer; DATA_SIZE_OUT: integer
+);
 port (
     clk: in std_logic;
     ce: in std_logic;
-    a: in std_logic_vector(31 downto 0);
-    b: in std_logic_vector(31 downto 0);
-    p: out std_logic_vector(31 downto 0));
+    a: in std_logic_vector(DATA_SIZE_IN-1 downto 0);
+    b: in std_logic_vector(DATA_SIZE_IN-1 downto 0);
+    p: out std_logic_vector(DATA_SIZE_OUT-1 downto 0));
 end entity;
 
 architecture behav of mul_8_stage is
     
-    signal a_reg : std_logic_vector(31 downto 0);
-    signal b_reg : std_logic_vector(31 downto 0);
-    signal q0 : std_logic_vector(31 downto 0);
-    signal q1 : std_logic_vector(31 downto 0);
-    signal q2 : std_logic_vector(31 downto 0);
-    signal q3 : std_logic_vector(31 downto 0);
-    signal q4 : std_logic_vector(31 downto 0);
-    signal q5 : std_logic_vector(31 downto 0);
-    signal q6 : std_logic_vector(31 downto 0);
-    signal mul : std_logic_vector(31 downto 0);
+    signal a_reg : std_logic_vector(DATA_SIZE_OUT-1 downto 0);
+    signal b_reg : std_logic_vector(DATA_SIZE_OUT-1 downto 0);
+    signal q0 : std_logic_vector(DATA_SIZE_OUT-1 downto 0);
+    signal q1 : std_logic_vector(DATA_SIZE_OUT-1 downto 0);
+    signal q2 : std_logic_vector(DATA_SIZE_OUT-1 downto 0);
+    signal q3 : std_logic_vector(DATA_SIZE_OUT-1 downto 0);
+    signal q4 : std_logic_vector(DATA_SIZE_OUT-1 downto 0);
+    signal q5 : std_logic_vector(DATA_SIZE_OUT-1 downto 0);
+    signal q6 : std_logic_vector(DATA_SIZE_OUT-1 downto 0);
+    signal mul : std_logic_vector(DATA_SIZE_OUT-1 downto 0);
 
 begin
 
-    mul <= std_logic_vector(resize(unsigned(std_logic_vector(signed(a_reg) * signed(b_reg))), 32));
+    mul <= std_logic_vector(resize(unsigned(std_logic_vector(signed(a_reg) * signed(b_reg))), DATA_SIZE_OUT));
 
     process(clk)
     begin

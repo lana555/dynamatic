@@ -144,8 +144,14 @@ void CircuitGenerator::setSizes() {
         //an output ("out1:0") is still expected to be printed
         if (node->sizes_preds.empty())
             node->sizes_preds.push_back(CONTROL_SIZE);
-        if (node->sizes_succs.empty())
-            node->sizes_succs.push_back(CONTROL_SIZE);
+        if (node->sizes_succs.empty()){
+            //node->sizes_succs.push_back(CONTROL_SIZE);
+            // Lana (6.6.2021): fix for End_ (in case of data predecessor (data return), take pred size)
+            if (node->CntrlPreds->empty())
+                node->sizes_succs.push_back(CONTROL_SIZE);
+            else
+                node->sizes_succs.push_back(getInputSize(*OB, node, node->CntrlPreds->front()));
+        }
     }
 }
 

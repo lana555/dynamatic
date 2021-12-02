@@ -1674,7 +1674,7 @@ end arch;
 
 --------------------------------------------------------------  read port
 -------------------------------------------------------------------------
--- TODO add support for different address/data sizes!
+
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
@@ -1689,12 +1689,14 @@ port (
     --- interface to previous
     pValidArray : in std_logic_vector(INPUTS - 1 downto 0);
     readyArray : out std_logic_vector(INPUTS - 1 downto 0);
-    dataInArray: in data_array (INPUTS - 1 downto 0)(ADDRESS_SIZE -1 downto 0);
+    dataInArray: in data_array (0 downto 0)(DATA_SIZE -1 downto 0);
+    input_addr: in std_logic_vector(ADDRESS_SIZE -1 downto 0);
 
     ---interface to next
     nReadyArray : in std_logic_vector(OUTPUTS - 1 downto 0); 
     validArray : out std_logic_vector(OUTPUTS - 1 downto 0);
-    dataOutArray : out data_array (OUTPUTS - 1 downto 0)(DATA_SIZE-1 downto 0)
+    dataOutArray : out data_array (0 downto 0)(DATA_SIZE-1 downto 0);
+    output_addr: out std_logic_vector(ADDRESS_SIZE -1 downto 0)
     );
 
 end entity;
@@ -1703,7 +1705,7 @@ architecture arch of lsq_load_op is
 
 begin
 
-    dataOutArray(1) <= dataInArray(1); -- address request goes to LSQ
+    output_addr <= input_addr; -- address request goes to LSQ
     validArray(1) <= pValidArray(1);
     readyArray(1) <= nReadyArray(1);
 
@@ -1711,14 +1713,13 @@ begin
     dataOutArray(0) <= dataInArray(0); -- data from LSQ to load output
     validArray(0) <= pValidArray(0);
     readyArray(0) <= nReadyArray(0);
-
         
 end architecture;
 
 
 --------------------------------------------------------------  store port
 -------------------------------------------------------------------------
--- TODO add support for different address/data sizes!
+
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
@@ -1738,7 +1739,8 @@ port (
     readyArray : OUT std_logic_vector(1 downto 0);
 
     ---interface to next
-    dataOutArray : out data_array (OUTPUTS-1 downto 0)(DATA_SIZE -1 downto 0);
+    dataOutArray : out data_array (0 downto 0)(DATA_SIZE -1 downto 0);
+    output_addr: out std_logic_vector(ADDRESS_SIZE -1 downto 0);
     nReadyArray: in std_logic_vector(OUTPUTS-1 downto 0);
     validArray: out std_logic_vector(OUTPUTS-1 downto 0)
     );
@@ -1753,11 +1755,9 @@ begin
     validArray(0) <= pValidArray(0);
     readyArray(0) <= nReadyArray(0);
 
-    dataOutArray(1) <= input_addr; -- address to LSQ
+    output_addr <= input_addr; -- address to LSQ
     validArray(1) <= pValidArray(1);
     readyArray(1) <= nReadyArray(1);
-
-
         
 end architecture;
 

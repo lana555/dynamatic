@@ -562,10 +562,19 @@ static bool readValue(DFnetlist_Impl& DF, blockID id, Agnode_t* v)
 
         string str_attr(attr);
         size_t sz;
-        longValueType v = stoll(str_attr, &sz, 0);
-        if (sz != str_attr.size()) {
-            DF.setError("Block " + block_name + ": wrong value for constant.");
-            return false;
+        // Lana 9.6.2021. Axel resource sharing update
+        unsigned long long MSB = (1LL << sizeof(unsigned long long) * 8 -1);
+        unsigned long long unsigned_v;
+        longValueType v;
+
+        std::stringstream ss;
+        ss << std::hex << str_attr;
+        ss >> unsigned_v;
+
+        if(unsigned_v & MSB){
+            v = (unsigned_v & ~MSB) - MSB;
+        }else{
+            v = unsigned_v;
         }
 
         DF.setValue(id, v);
@@ -595,9 +604,9 @@ static bool readBufferAttributes(DFnetlist_Impl& DF, blockID id, Agnode_t* v)
             DF.setError("Block " + block_name + ": slots can only be defined for elastic buffers.");
             return false;
         }
-        cout << "SHAB: attr for buffer " << DF.getBlockName(id) << ": " << attr << endl;
+        //cout << "SHAB: attr for buffer " << DF.getBlockName(id) << ": " << attr << endl;
         int slots = getPositiveInteger(attr);
-        cout << "SHAB: slots for buffer " << DF.getBlockName(id) << ": " << slots << endl;
+        //cout << "SHAB: slots for buffer " << DF.getBlockName(id) << ": " << slots << endl;
         if (slots <= 0) {
             DF.setError("Block " + block_name + ": wrong value for slots.");
             return false;

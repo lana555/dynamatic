@@ -716,11 +716,11 @@ entity MemCont is generic( DATA_SIZE: natural; ADDRESS_SIZE: natural; BB_COUNT: 
 port (
     rst: in std_logic;
     clk: in std_logic;
-    io_storeDataOut    : out std_logic_vector(DATA_SIZE-1 downto 0);
-    io_storeAddrOut    : out std_logic_vector(ADDRESS_SIZE-1 downto 0);
+    io_storeDataOut    : out std_logic_vector(31 downto 0);
+    io_storeAddrOut    : out std_logic_vector(31 downto 0);
     io_storeEnable : out std_logic;
-    io_loadDataIn : in std_logic_vector(DATA_SIZE-1 downto 0);
-    io_loadAddrOut : out std_logic_vector(ADDRESS_SIZE-1 downto 0);
+    io_loadDataIn : in std_logic_vector(31 downto 0);
+    io_loadAddrOut : out std_logic_vector(31 downto 0);
     io_loadEnable : out std_logic;
 
     io_bbpValids : in std_logic_vector(BB_COUNT - 1 downto 0);
@@ -755,8 +755,20 @@ signal counter1 : std_logic_vector(31 downto 0);
 signal valid_WR: std_logic_vector(STORE_COUNT - 1 downto 0);
 constant zero: std_logic_vector(BB_COUNT - 1 downto 0) := (others=>'0');
 
+signal mcStoreDataOut : std_logic_vector(DATA_SIZE-1 downto 0);
+signal mcStoreAddrOut :  std_logic_vector(ADDRESS_SIZE-1 downto 0);
+signal mcLoadDataIn : std_logic_vector(DATA_SIZE-1 downto 0);
+signal mcLoadAddrOut : std_logic_vector(ADDRESS_SIZE-1 downto 0);
+
 begin
  io_wrDataPorts_ready<= io_wrAddrPorts_ready;
+
+
+
+ io_storeDataOut <= std_logic_vector (resize(unsigned(mcStoreDataOut),io_storeDataOut'length));
+ io_storeAddrOut <= std_logic_vector (resize(unsigned(mcStoreAddrOut),io_storeDataOut'length));
+ mcLoadDataIn <= std_logic_vector (resize(unsigned(io_loadDataIn),mcLoadDataIn'length));
+ io_loadAddrOut <= std_logic_vector (resize(unsigned(mcLoadAddrOut),io_loadAddrOut'length));
 
     read_arbiter : entity work.read_memory_arbiter
         generic map(
@@ -774,8 +786,8 @@ begin
             valid            => io_rdPortsNext_valid,
             data_out         => io_rdPortsNext_bits,
             read_enable      => io_loadEnable,
-            read_address     => io_loadAddrOut,
-            data_from_memory => io_loadDataIn
+            read_address     => mcLoadAddrOut,
+            data_from_memory =>  mcLoadDataIn
         );
 
     write_arbiter : entity work.write_memory_arbiter
@@ -795,8 +807,8 @@ begin
             valid          => valid_WR, -- unconnected
             write_enable   => io_storeEnable,
             --enable         => io_storeEnable,
-            write_address  => io_storeAddrOut,
-            data_to_memory => io_storeDataOut
+            write_address  => mcStoreAddrOut,
+            data_to_memory => mcStoreDataOut
         );
 
         Counter: process (CLK)

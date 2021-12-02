@@ -8,8 +8,8 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include "Dataflow.h"
-#include "DFnetlist.h"
+#include <DFnetlist/Dataflow.h>
+#include <DFnetlist/DFnetlist.h>
 
 #include <set>
 #include <algorithm>

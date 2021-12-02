@@ -341,7 +341,7 @@ bool DFnetlist_Impl::addElasticBuffers(double Period, double BufferDelay, bool M
         cout << "************************" << endl;
     }
 
-    //dumpMilpSolution(milp, milpVars);
+    // dumpMilpSolution(milp, milpVars);
 
     // Add channels
     vector<channelID> buffers;
@@ -608,7 +608,7 @@ bool DFnetlist_Impl::addElasticBuffersBB_sc(double Period, double BufferDelay, b
             }
         }
 
-         //dumpMilpSolution(milp, milpVars_sc[i]);
+        // dumpMilpSolution(milp, milpVars_sc[i]);
 
         // Add channels
         vector<channelID> buffers;
@@ -1338,8 +1338,11 @@ bool DFnetlist_Impl::createThroughputConstraints(Milp_Model& milp, milpVarsEB& V
             int out_ret_tok = Vars.out_retime_tokens[mg][b];
 
             double maxTokens = lat/getInitiationInterval(b);
-            milp.newRow( {{1, out_ret_tok}, {-1, in_ret_tok}}, '<', maxTokens);
-            milp.newRow( {{1, out_ret_tok}, {-1, in_ret_tok}, {-lat, th_mg}}, '>', 0);
+            // milp.newRow( {{1, out_ret_tok}, {-1, in_ret_tok}}, '<', maxTokens);
+            // milp.newRow( {{1, out_ret_tok}, {-1, in_ret_tok}, {-lat, th_mg}}, '>', 0);
+
+            // Lana 24.7.21. Fix pipeline unit occupancy to exactly lat*th_mg
+            milp.newRow( {{1, out_ret_tok}, {-1, in_ret_tok}, {-lat, th_mg}}, '=', 0);
         }
 
         if (first_MG) break;
@@ -1412,9 +1415,12 @@ bool DFnetlist_Impl::createThroughputConstraints_sc(Milp_Model &milp, milpVarsEB
 
             double maxTokens = lat/getInitiationInterval(b);
             // rout_tok-rin_tok <= Lat/II
-            milp.newRow( {{1, out_ret_tok}, {-1, in_ret_tok}}, '<', maxTokens);
+            // milp.newRow( {{1, out_ret_tok}, {-1, in_ret_tok}}, '<', maxTokens);
             // Th*Lat <= rout-rin:   rout-rin-Th*lat >= 0
-            milp.newRow( {{1, out_ret_tok}, {-1, in_ret_tok}, {-lat, th_mg}}, '>', 0);
+            // milp.newRow( {{1, out_ret_tok}, {-1, in_ret_tok}, {-lat, th_mg}}, '>', 0);
+
+            // Lana 24.7.21. Fix pipeline unit occupancy to exactly lat*th_mg
+            milp.newRow( {{1, out_ret_tok}, {-1, in_ret_tok}, {-lat, th_mg}}, '=', 0);
         }
 
         if (first_MG) break;

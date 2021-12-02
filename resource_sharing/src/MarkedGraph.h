@@ -9,8 +9,7 @@
 #define MARKEDGRAPH_H_
 
 #include <set>
-#include "DFnetlist/Dataflow.h"
-//#include "Dataflow.h"
+#include "Dataflow.h"
 
 using namespace std;
 using namespace Dataflow;

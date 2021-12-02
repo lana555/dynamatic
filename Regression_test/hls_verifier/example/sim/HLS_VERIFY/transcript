@@ -1,0 +1,895 @@
+# do simulation.do
+# ** Warning: (vlib-34) Library already exists at "work".
+# Model Technology ModelSim - Intel FPGA Edition vmap 10.5b Lib Mapping Utility 2016.10 Oct  5 2016
+# vmap work work 
+# Modifying modelsim.ini
+# Loading project simulation
+# Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+# Start time: 15:18:00 on Feb 06,2020
+# vcom -work work -2008 -explicit /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/delay_buffer.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Compiling entity delay_buffer
+# -- Compiling architecture arch of delay_buffer
+# End time: 15:18:00 on Feb 06,2020, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+# Compile of delay_buffer.vhd was successful.
+# Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+# Start time: 15:18:00 on Feb 06,2020
+# vcom -work work -2008 -explicit /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/arithmetic_units.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Loading package customTypes
+# -- Compiling entity ret_op
+# -- Compiling architecture arch of ret_op
+# -- Compiling entity add_op
+# -- Compiling architecture arch of add_op
+# -- Loading entity join
+# -- Compiling entity sub_op
+# -- Compiling architecture arch of sub_op
+# -- Compiling entity mul_op
+# -- Compiling architecture arch of mul_op
+# -- Compiling architecture arch_with_delay_buffer of mul_op
+# -- Loading entity mul_op
+# -- Loading entity delay_buffer
+# -- Compiling entity and_op
+# -- Compiling architecture arch of and_op
+# -- Compiling entity or_op
+# -- Compiling architecture arch of or_op
+# -- Compiling entity xor_op
+# -- Compiling architecture arch of xor_op
+# -- Compiling entity sext_op
+# -- Compiling architecture arch of sext_op
+# -- Compiling entity zext_op
+# -- Compiling architecture arch of zext_op
+# -- Compiling entity shl_op
+# -- Compiling architecture arch of shl_op
+# -- Compiling entity ashr_op
+# -- Compiling architecture arch of ashr_op
+# -- Compiling entity lshr_op
+# -- Compiling architecture arch of lshr_op
+# -- Compiling entity antitokens
+# -- Compiling architecture arch of antitokens
+# -- Compiling entity select_op
+# -- Compiling architecture arch of select_op
+# -- Loading entity antitokens
+# -- Compiling entity icmp_eq_op
+# -- Compiling architecture arch of icmp_eq_op
+# -- Compiling entity icmp_ne_op
+# -- Compiling architecture arch of icmp_ne_op
+# -- Compiling entity icmp_ugt_op
+# -- Compiling architecture arch of icmp_ugt_op
+# -- Compiling entity icmp_uge_op
+# -- Compiling architecture arch of icmp_uge_op
+# -- Compiling entity icmp_sgt_op
+# -- Compiling architecture arch of icmp_sgt_op
+# -- Compiling entity icmp_sge_op
+# -- Compiling architecture arch of icmp_sge_op
+# -- Compiling entity icmp_ult_op
+# -- Compiling architecture arch of icmp_ult_op
+# -- Compiling entity icmp_ule_op
+# -- Compiling architecture arch of icmp_ule_op
+# -- Compiling entity icmp_slt_op
+# -- Compiling architecture arch of icmp_slt_op
+# -- Compiling entity icmp_sle_op
+# -- Compiling architecture arch of icmp_sle_op
+# -- Compiling entity getelementptr_op_generic
+# -- Compiling architecture arch of getelementptr_op_generic
+# -- Compiling entity getelementptr_op
+# -- Compiling architecture arch of getelementptr_op
+# -- Compiling entity fcmp_oeq_op
+# -- Compiling architecture arch of fcmp_oeq_op
+# -- Compiling entity fcmp_ogt_op
+# -- Compiling architecture arch of fcmp_ogt_op
+# -- Compiling entity fcmp_oge_op
+# -- Compiling architecture arch of fcmp_oge_op
+# -- Compiling entity fcmp_olt_op
+# -- Compiling architecture arch of fcmp_olt_op
+# -- Compiling entity fcmp_ole_op
+# -- Compiling architecture arch of fcmp_ole_op
+# -- Compiling entity fcmp_one_op
+# -- Compiling architecture arch of fcmp_one_op
+# -- Compiling entity fcmp_ord_op
+# -- Compiling architecture arch of fcmp_ord_op
+# -- Compiling entity fcmp_uno_op
+# -- Compiling architecture arch of fcmp_uno_op
+# -- Compiling entity fcmp_ueq_op
+# -- Compiling architecture arch of fcmp_ueq_op
+# -- Compiling entity fcmp_uge_op
+# -- Compiling architecture arch of fcmp_uge_op
+# -- Compiling entity fcmp_ult
+# -- Compiling architecture arch of fcmp_ult
+# -- Compiling entity fcmp_ule
+# -- Compiling architecture arch of fcmp_ule
+# -- Compiling entity fcmp_une
+# -- Compiling architecture arch of fcmp_une
+# -- Compiling entity fcmp_ugt
+# -- Compiling architecture arch of fcmp_ugt
+# -- Compiling entity fadd_op
+# -- Compiling architecture arch of fadd_op
+# -- Compiling entity fsub_op
+# -- Compiling architecture arch of fsub_op
+# -- Compiling entity fmul_op
+# -- Compiling architecture arch of fmul_op
+# -- Compiling entity fneg_op
+# -- Compiling architecture arch of fneg_op
+# -- Compiling entity udiv_op
+# -- Compiling architecture arch of udiv_op
+# -- Compiling entity sdiv_op
+# -- Compiling architecture arch of sdiv_op
+# -- Compiling entity fdiv_op
+# -- Compiling architecture arch of fdiv_op
+# -- Compiling entity srem_op
+# -- Compiling architecture arch of srem_op
+# -- Compiling entity urem_op
+# -- Compiling architecture arch of urem_op
+# -- Compiling entity frem_op
+# -- Compiling architecture arch of frem_op
+# -- Compiling entity sinf_op
+# -- Compiling architecture arch of sinf_op
+# -- Compiling entity cosf_op
+# -- Compiling architecture arch of cosf_op
+# -- Compiling entity sqrtf_op
+# -- Compiling architecture arch of sqrtf_op
+# -- Compiling entity expf_op
+# -- Compiling architecture arch of expf_op
+# -- Compiling entity exp2f_op
+# -- Compiling architecture arch of exp2f_op
+# -- Compiling entity logf_op
+# -- Compiling architecture arch of logf_op
+# -- Compiling entity log2f_op
+# -- Compiling architecture arch of log2f_op
+# -- Compiling entity log10f_op
+# -- Compiling architecture arch of log10f_op
+# -- Compiling entity fabsf_op
+# -- Compiling architecture arch of fabsf_op
+# -- Compiling entity trunc_op
+# -- Compiling architecture arch of trunc_op
+# -- Compiling entity floorf_op
+# -- Compiling architecture arch of floorf_op
+# -- Compiling entity ceilf_op
+# -- Compiling architecture arch of ceilf_op
+# -- Compiling entity roundf_op
+# -- Compiling architecture arch of roundf_op
+# -- Compiling entity fminf_op
+# -- Compiling architecture arch of fminf_op
+# -- Compiling entity fmaxf_op
+# -- Compiling architecture arch of fmaxf_op
+# -- Compiling entity powf_op
+# -- Compiling architecture arch of powf_op
+# -- Compiling entity fabsf_op
+# -- Compiling architecture arch of fabsf_op
+# -- Compiling entity copysignf_op
+# -- Compiling architecture arch of copysignf_op
+# -- Compiling entity sitofp_op
+# -- Compiling architecture arch of sitofp_op
+# End time: 15:18:01 on Feb 06,2020, Elapsed time: 0:00:01
+# Errors: 0, Warnings: 0
+# Compile of arithmetic_units.vhd was successful.
+# Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+# Start time: 15:18:01 on Feb 06,2020
+# vcom -work work -2008 -explicit /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/elastic_components.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Compiling package customTypes
+# -- Loading package customTypes
+# -- Compiling entity andN
+# -- Compiling architecture vanilla of andn
+# -- Compiling entity nandN
+# -- Compiling architecture arch of nandn
+# -- Compiling entity orN
+# -- Compiling architecture vanilla of orN
+# -- Compiling entity norN
+# -- Compiling architecture arch of norN
+# -- Compiling entity join
+# -- Compiling architecture arch of join
+# -- Loading entity andN
+# -- Loading package NUMERIC_STD
+# -- Compiling entity TEHB
+# -- Compiling architecture arch of TEHB
+# -- Compiling entity OEHB
+# -- Compiling architecture arch of OEHB
+# -- Compiling entity elasticBuffer
+# -- Compiling architecture arch of elasticBuffer
+# -- Loading entity TEHB
+# -- Loading entity OEHB
+# -- Compiling entity end_node
+# -- Compiling architecture arch of end_node
+# -- Loading entity join
+# -- Compiling entity branchSimple
+# -- Compiling architecture arch of branchSimple
+# -- Compiling entity branch
+# -- Compiling architecture arch of branch
+# -- Loading entity branchSimple
+# -- Compiling entity eagerFork_RegisterBLock
+# -- Compiling architecture arch of eagerFork_RegisterBLock
+# -- Compiling entity fork
+# -- Compiling architecture arch of fork
+# -- Loading entity orN
+# -- Loading entity eagerFork_RegisterBLock
+# -- Compiling entity merge
+# -- Compiling architecture arch of merge
+# -- Compiling entity start_node_new
+# -- Compiling architecture arch of start_node_new
+# -- Loading entity elasticBuffer
+# -- Compiling entity start_node
+# -- Compiling architecture arch of start_node
+# -- Compiling entity sink
+# -- Compiling architecture arch of sink
+# -- Compiling entity source
+# -- Compiling architecture arch of source
+# -- Compiling entity elasticFifoInner
+# -- Compiling architecture arch of elasticFifoInner
+# -- Compiling entity elasticFifo
+# -- Compiling architecture arch of elasticFifo
+# -- Loading entity elasticFifoInner
+# -- Compiling entity load_op
+# -- Compiling architecture arch of load_op
+# -- Compiling entity Const
+# -- Compiling architecture arch of Const
+# -- Compiling entity write_memory_single_inside
+# -- Compiling architecture arch of write_memory_single_inside
+# -- Compiling entity store_op
+# -- Compiling architecture arch of store_op
+# -- Loading entity write_memory_single_inside
+# -- Loading package MATH_REAL
+# -- Compiling entity mux
+# -- Compiling architecture arch of mux
+# -- Compiling entity cntrlMerge
+# -- Compiling architecture arch of cntrlMerge
+# -- Loading entity merge
+# -- Loading entity fork
+# -- Compiling entity lsq_load_op
+# -- Compiling architecture arch of lsq_load_op
+# -- Compiling entity lsq_store_op
+# -- Compiling architecture arch of lsq_store_op
+# End time: 15:18:01 on Feb 06,2020, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+# Compile of elastic_components.vhd was successful.
+# Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+# Start time: 15:18:01 on Feb 06,2020
+# vcom -work work -2008 -explicit /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/example.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Loading package customTypes
+# -- Compiling entity example
+# -- Compiling architecture behavioral of example
+# -- Loading entity Const
+# -- Loading package MATH_REAL
+# -- Loading entity mux
+# -- Loading entity mc_load_op
+# -- Loading entity mul_op
+# -- Loading entity mc_store_op
+# -- Loading entity add_op
+# -- Loading entity icmp_ult_op
+# -- Loading entity ret_op
+# -- Loading entity fork
+# -- Loading entity branch
+# -- Loading entity MemCont
+# -- Loading entity end_node
+# -- Loading entity start_node
+# -- Loading entity cntrlMerge
+# -- Loading entity merge
+# -- Loading entity sink
+# -- Loading entity source
+# -- Loading entity elasticBuffer
+# End time: 15:18:01 on Feb 06,2020, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+# Compile of example.vhd was successful.
+# Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+# Start time: 15:18:01 on Feb 06,2020
+# vcom -work work -2008 -explicit /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/hls_verify_example_tb.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package std_logic_arith
+# -- Loading package STD_LOGIC_UNSIGNED
+# -- Loading package std_logic_textio
+# -- Loading package NUMERIC_STD
+# -- Loading package sim_package
+# -- Compiling entity example_tb
+# -- Compiling architecture behav of example_tb
+# ** Warning: /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/hls_verify_example_tb.vhd(88): (vcom-1236) Shared variables must be of a protected type.
+# -- Loading package customTypes
+# -- Loading entity example
+# -- Loading entity two_port_RAM
+# End time: 15:18:01 on Feb 06,2020, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 1
+# Compile of hls_verify_example_tb.vhd was successful.
+# Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+# Start time: 15:18:01 on Feb 06,2020
+# vcom -work work -2008 -explicit /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/MemCont.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Loading package customTypes
+# -- Compiling entity read_priority
+# -- Compiling architecture arch of read_priority
+# -- Compiling entity read_address_mux
+# -- Compiling architecture arch of read_address_mux
+# -- Compiling entity read_address_ready
+# -- Compiling architecture arch of read_address_ready
+# -- Compiling entity read_data_signals
+# -- Compiling architecture arch of read_data_signals
+# -- Compiling entity read_memory_arbiter
+# -- Compiling architecture arch of read_memory_arbiter
+# -- Loading entity read_priority
+# -- Loading entity read_address_mux
+# -- Loading entity read_address_ready
+# -- Loading entity read_data_signals
+# -- Compiling entity write_priority
+# -- Compiling architecture arch of write_priority
+# -- Compiling entity write_address_mux
+# -- Compiling architecture arch of write_address_mux
+# -- Compiling entity write_address_ready
+# -- Compiling architecture arch of write_address_ready
+# -- Compiling entity write_data_signals
+# -- Compiling architecture arch of write_data_signals
+# -- Compiling entity write_memory_arbiter
+# -- Compiling architecture arch of write_memory_arbiter
+# -- Loading entity write_priority
+# -- Loading entity write_address_mux
+# -- Loading entity write_address_ready
+# -- Loading entity write_data_signals
+# -- Compiling entity elasticBufferDummy
+# -- Compiling architecture arch of elasticBufferDummy
+# -- Compiling entity mc_load_op
+# -- Compiling architecture arch of mc_load_op
+# -- Loading entity TEHB
+# -- Compiling entity mc_store_op
+# -- Compiling architecture arch of mc_store_op
+# -- Loading entity join
+# -- Compiling entity MemCont
+# -- Compiling architecture arch of MemCont
+# -- Loading entity read_memory_arbiter
+# -- Loading entity write_memory_arbiter
+# ** Warning: /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/MemCont.vhd(810): (vcom-1514) Range choice direction (downto) does not determine aggregate index range direction (to).
+# End time: 15:18:01 on Feb 06,2020, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 1
+# Compile of MemCont.vhd was successful.
+# Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+# Start time: 15:18:01 on Feb 06,2020
+# vcom -work work -2008 -explicit /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/simpackage.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package std_logic_arith
+# -- Loading package NUMERIC_STD
+# -- Loading package STD_LOGIC_UNSIGNED
+# -- Loading package std_logic_textio
+# -- Compiling package sim_package
+# -- Compiling package body sim_package
+# -- Loading package sim_package
+# End time: 15:18:02 on Feb 06,2020, Elapsed time: 0:00:01
+# Errors: 0, Warnings: 0
+# Compile of simpackage.vhd was successful.
+# Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+# Start time: 15:18:02 on Feb 06,2020
+# vcom -work work -2008 -explicit /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/two_port_RAM.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package std_logic_arith
+# -- Loading package STD_LOGIC_UNSIGNED
+# -- Loading package NUMERIC_STD
+# -- Loading package std_logic_textio
+# -- Loading package sim_package
+# -- Compiling entity two_port_RAM
+# -- Compiling architecture behav of two_port_RAM
+# ** Warning: /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/two_port_RAM.vhd(41): (vcom-1236) Shared variables must be of a protected type.
+# End time: 15:18:02 on Feb 06,2020, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 1
+# Compile of two_port_RAM.vhd was successful.
+# Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+# Start time: 15:18:02 on Feb 06,2020
+# vcom -work work -2008 -explicit /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/array_RAM_mul_32sbkb.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Compiling entity array_RAM_mul_32sbkb_MulnS_0
+# -- Compiling architecture behav of array_RAM_mul_32sbkb_MulnS_0
+# -- Compiling entity array_RAM_mul_32sbkb
+# -- Compiling architecture arch of array_RAM_mul_32sbkb
+# End time: 15:18:02 on Feb 06,2020, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+# Compile of array_RAM_mul_32sbkb.vhd was successful.
+# Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+# Start time: 15:18:02 on Feb 06,2020
+# vcom -work work -2008 -explicit /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/single_argument.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package std_logic_arith
+# -- Loading package STD_LOGIC_UNSIGNED
+# -- Loading package NUMERIC_STD
+# -- Loading package std_logic_textio
+# -- Loading package sim_package
+# -- Compiling entity single_argument
+# -- Compiling architecture behav of single_argument
+# ** Warning: /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/single_argument.vhd(34): (vcom-1236) Shared variables must be of a protected type.
+# End time: 15:18:02 on Feb 06,2020, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 1
+# Compile of single_argument.vhd was successful.
+# All compile dependencies have been resolved.vcom -work work -2008 -explicit -stats=none /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/delay_buffer.vhd
+# Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Compiling entity delay_buffer
+# -- Compiling architecture arch of delay_buffer
+# vcom -work work -2008 -explicit -stats=none /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/arithmetic_units.vhd
+# Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Loading package customTypes
+# -- Compiling entity ret_op
+# -- Compiling architecture arch of ret_op
+# -- Compiling entity add_op
+# -- Compiling architecture arch of add_op
+# -- Loading entity join
+# -- Compiling entity sub_op
+# -- Compiling architecture arch of sub_op
+# -- Compiling entity mul_op
+# -- Compiling architecture arch of mul_op
+# -- Compiling architecture arch_with_delay_buffer of mul_op
+# -- Loading entity mul_op
+# -- Loading entity delay_buffer
+# -- Compiling entity and_op
+# -- Compiling architecture arch of and_op
+# -- Compiling entity or_op
+# -- Compiling architecture arch of or_op
+# -- Compiling entity xor_op
+# -- Compiling architecture arch of xor_op
+# -- Compiling entity sext_op
+# -- Compiling architecture arch of sext_op
+# -- Compiling entity zext_op
+# -- Compiling architecture arch of zext_op
+# -- Compiling entity shl_op
+# -- Compiling architecture arch of shl_op
+# -- Compiling entity ashr_op
+# -- Compiling architecture arch of ashr_op
+# -- Compiling entity lshr_op
+# -- Compiling architecture arch of lshr_op
+# -- Compiling entity antitokens
+# -- Compiling architecture arch of antitokens
+# -- Compiling entity select_op
+# -- Compiling architecture arch of select_op
+# -- Loading entity antitokens
+# -- Compiling entity icmp_eq_op
+# -- Compiling architecture arch of icmp_eq_op
+# -- Compiling entity icmp_ne_op
+# -- Compiling architecture arch of icmp_ne_op
+# -- Compiling entity icmp_ugt_op
+# -- Compiling architecture arch of icmp_ugt_op
+# -- Compiling entity icmp_uge_op
+# -- Compiling architecture arch of icmp_uge_op
+# -- Compiling entity icmp_sgt_op
+# -- Compiling architecture arch of icmp_sgt_op
+# -- Compiling entity icmp_sge_op
+# -- Compiling architecture arch of icmp_sge_op
+# -- Compiling entity icmp_ult_op
+# -- Compiling architecture arch of icmp_ult_op
+# -- Compiling entity icmp_ule_op
+# -- Compiling architecture arch of icmp_ule_op
+# -- Compiling entity icmp_slt_op
+# -- Compiling architecture arch of icmp_slt_op
+# -- Compiling entity icmp_sle_op
+# -- Compiling architecture arch of icmp_sle_op
+# -- Compiling entity getelementptr_op_generic
+# -- Compiling architecture arch of getelementptr_op_generic
+# -- Compiling entity getelementptr_op
+# -- Compiling architecture arch of getelementptr_op
+# -- Compiling entity fcmp_oeq_op
+# -- Compiling architecture arch of fcmp_oeq_op
+# -- Compiling entity fcmp_ogt_op
+# -- Compiling architecture arch of fcmp_ogt_op
+# -- Compiling entity fcmp_oge_op
+# -- Compiling architecture arch of fcmp_oge_op
+# -- Compiling entity fcmp_olt_op
+# -- Compiling architecture arch of fcmp_olt_op
+# -- Compiling entity fcmp_ole_op
+# -- Compiling architecture arch of fcmp_ole_op
+# -- Compiling entity fcmp_one_op
+# -- Compiling architecture arch of fcmp_one_op
+# -- Compiling entity fcmp_ord_op
+# -- Compiling architecture arch of fcmp_ord_op
+# -- Compiling entity fcmp_uno_op
+# -- Compiling architecture arch of fcmp_uno_op
+# -- Compiling entity fcmp_ueq_op
+# -- Compiling architecture arch of fcmp_ueq_op
+# -- Compiling entity fcmp_uge_op
+# -- Compiling architecture arch of fcmp_uge_op
+# -- Compiling entity fcmp_ult
+# -- Compiling architecture arch of fcmp_ult
+# -- Compiling entity fcmp_ule
+# -- Compiling architecture arch of fcmp_ule
+# -- Compiling entity fcmp_une
+# -- Compiling architecture arch of fcmp_une
+# -- Compiling entity fcmp_ugt
+# -- Compiling architecture arch of fcmp_ugt
+# -- Compiling entity fadd_op
+# -- Compiling architecture arch of fadd_op
+# -- Compiling entity fsub_op
+# -- Compiling architecture arch of fsub_op
+# -- Compiling entity fmul_op
+# -- Compiling architecture arch of fmul_op
+# -- Compiling entity fneg_op
+# -- Compiling architecture arch of fneg_op
+# -- Compiling entity udiv_op
+# -- Compiling architecture arch of udiv_op
+# -- Compiling entity sdiv_op
+# -- Compiling architecture arch of sdiv_op
+# -- Compiling entity fdiv_op
+# -- Compiling architecture arch of fdiv_op
+# -- Compiling entity srem_op
+# -- Compiling architecture arch of srem_op
+# -- Compiling entity urem_op
+# -- Compiling architecture arch of urem_op
+# -- Compiling entity frem_op
+# -- Compiling architecture arch of frem_op
+# -- Compiling entity sinf_op
+# -- Compiling architecture arch of sinf_op
+# -- Compiling entity cosf_op
+# -- Compiling architecture arch of cosf_op
+# -- Compiling entity sqrtf_op
+# -- Compiling architecture arch of sqrtf_op
+# -- Compiling entity expf_op
+# -- Compiling architecture arch of expf_op
+# -- Compiling entity exp2f_op
+# -- Compiling architecture arch of exp2f_op
+# -- Compiling entity logf_op
+# -- Compiling architecture arch of logf_op
+# -- Compiling entity log2f_op
+# -- Compiling architecture arch of log2f_op
+# -- Compiling entity log10f_op
+# -- Compiling architecture arch of log10f_op
+# -- Compiling entity fabsf_op
+# -- Compiling architecture arch of fabsf_op
+# -- Compiling entity trunc_op
+# -- Compiling architecture arch of trunc_op
+# -- Compiling entity floorf_op
+# -- Compiling architecture arch of floorf_op
+# -- Compiling entity ceilf_op
+# -- Compiling architecture arch of ceilf_op
+# -- Compiling entity roundf_op
+# -- Compiling architecture arch of roundf_op
+# -- Compiling entity fminf_op
+# -- Compiling architecture arch of fminf_op
+# -- Compiling entity fmaxf_op
+# -- Compiling architecture arch of fmaxf_op
+# -- Compiling entity powf_op
+# -- Compiling architecture arch of powf_op
+# -- Compiling entity fabsf_op
+# -- Compiling architecture arch of fabsf_op
+# -- Compiling entity copysignf_op
+# -- Compiling architecture arch of copysignf_op
+# -- Compiling entity sitofp_op
+# -- Compiling architecture arch of sitofp_op
+# vcom -work work -2008 -explicit -stats=none /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/elastic_components.vhd
+# Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Compiling package customTypes
+# -- Loading package customTypes
+# -- Compiling entity andN
+# -- Compiling architecture vanilla of andn
+# -- Compiling entity nandN
+# -- Compiling architecture arch of nandn
+# -- Compiling entity orN
+# -- Compiling architecture vanilla of orN
+# -- Compiling entity norN
+# -- Compiling architecture arch of norN
+# -- Compiling entity join
+# -- Compiling architecture arch of join
+# -- Loading entity andN
+# -- Loading package NUMERIC_STD
+# -- Compiling entity TEHB
+# -- Compiling architecture arch of TEHB
+# -- Compiling entity OEHB
+# -- Compiling architecture arch of OEHB
+# -- Compiling entity elasticBuffer
+# -- Compiling architecture arch of elasticBuffer
+# -- Loading entity TEHB
+# -- Loading entity OEHB
+# -- Compiling entity end_node
+# -- Compiling architecture arch of end_node
+# -- Loading entity join
+# -- Compiling entity branchSimple
+# -- Compiling architecture arch of branchSimple
+# -- Compiling entity branch
+# -- Compiling architecture arch of branch
+# -- Loading entity branchSimple
+# -- Compiling entity eagerFork_RegisterBLock
+# -- Compiling architecture arch of eagerFork_RegisterBLock
+# -- Compiling entity fork
+# -- Compiling architecture arch of fork
+# -- Loading entity orN
+# -- Loading entity eagerFork_RegisterBLock
+# -- Compiling entity merge
+# -- Compiling architecture arch of merge
+# -- Compiling entity start_node_new
+# -- Compiling architecture arch of start_node_new
+# -- Loading entity elasticBuffer
+# -- Compiling entity start_node
+# -- Compiling architecture arch of start_node
+# -- Compiling entity sink
+# -- Compiling architecture arch of sink
+# -- Compiling entity source
+# -- Compiling architecture arch of source
+# -- Compiling entity elasticFifoInner
+# -- Compiling architecture arch of elasticFifoInner
+# -- Compiling entity elasticFifo
+# -- Compiling architecture arch of elasticFifo
+# -- Loading entity elasticFifoInner
+# -- Compiling entity load_op
+# -- Compiling architecture arch of load_op
+# -- Compiling entity Const
+# -- Compiling architecture arch of Const
+# -- Compiling entity write_memory_single_inside
+# -- Compiling architecture arch of write_memory_single_inside
+# -- Compiling entity store_op
+# -- Compiling architecture arch of store_op
+# -- Loading entity write_memory_single_inside
+# -- Loading package MATH_REAL
+# -- Compiling entity mux
+# -- Compiling architecture arch of mux
+# -- Compiling entity cntrlMerge
+# -- Compiling architecture arch of cntrlMerge
+# -- Loading entity merge
+# -- Loading entity fork
+# -- Compiling entity lsq_load_op
+# -- Compiling architecture arch of lsq_load_op
+# -- Compiling entity lsq_store_op
+# -- Compiling architecture arch of lsq_store_op
+# vcom -work work -2008 -explicit -stats=none /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/example.vhd
+# Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Loading package customTypes
+# -- Compiling entity example
+# -- Compiling architecture behavioral of example
+# -- Loading entity Const
+# -- Loading package MATH_REAL
+# -- Loading entity mux
+# -- Loading entity mc_load_op
+# -- Loading entity mul_op
+# -- Loading entity mc_store_op
+# -- Loading entity add_op
+# -- Loading entity icmp_ult_op
+# -- Loading entity ret_op
+# -- Loading entity fork
+# -- Loading entity branch
+# -- Loading entity MemCont
+# -- Loading entity end_node
+# -- Loading entity start_node
+# -- Loading entity cntrlMerge
+# -- Loading entity merge
+# -- Loading entity sink
+# -- Loading entity source
+# -- Loading entity elasticBuffer
+# vcom -work work -2008 -explicit -stats=none /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/hls_verify_example_tb.vhd
+# Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package std_logic_arith
+# -- Loading package STD_LOGIC_UNSIGNED
+# -- Loading package std_logic_textio
+# -- Loading package NUMERIC_STD
+# -- Loading package sim_package
+# -- Compiling entity example_tb
+# -- Compiling architecture behav of example_tb
+# ** Warning: /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/hls_verify_example_tb.vhd(88): (vcom-1236) Shared variables must be of a protected type.
+# -- Loading package customTypes
+# -- Loading entity example
+# -- Loading entity two_port_RAM
+# vcom -work work -2008 -explicit -stats=none /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/MemCont.vhd
+# Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Loading package customTypes
+# -- Compiling entity read_priority
+# -- Compiling architecture arch of read_priority
+# -- Compiling entity read_address_mux
+# -- Compiling architecture arch of read_address_mux
+# -- Compiling entity read_address_ready
+# -- Compiling architecture arch of read_address_ready
+# -- Compiling entity read_data_signals
+# -- Compiling architecture arch of read_data_signals
+# -- Compiling entity read_memory_arbiter
+# -- Compiling architecture arch of read_memory_arbiter
+# -- Loading entity read_priority
+# -- Loading entity read_address_mux
+# -- Loading entity read_address_ready
+# -- Loading entity read_data_signals
+# -- Compiling entity write_priority
+# -- Compiling architecture arch of write_priority
+# -- Compiling entity write_address_mux
+# -- Compiling architecture arch of write_address_mux
+# -- Compiling entity write_address_ready
+# -- Compiling architecture arch of write_address_ready
+# -- Compiling entity write_data_signals
+# -- Compiling architecture arch of write_data_signals
+# -- Compiling entity write_memory_arbiter
+# -- Compiling architecture arch of write_memory_arbiter
+# -- Loading entity write_priority
+# -- Loading entity write_address_mux
+# -- Loading entity write_address_ready
+# -- Loading entity write_data_signals
+# -- Compiling entity elasticBufferDummy
+# -- Compiling architecture arch of elasticBufferDummy
+# -- Compiling entity mc_load_op
+# -- Compiling architecture arch of mc_load_op
+# -- Loading entity TEHB
+# -- Compiling entity mc_store_op
+# -- Compiling architecture arch of mc_store_op
+# -- Loading entity join
+# -- Compiling entity MemCont
+# -- Compiling architecture arch of MemCont
+# -- Loading entity read_memory_arbiter
+# -- Loading entity write_memory_arbiter
+# ** Warning: /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/MemCont.vhd(810): (vcom-1514) Range choice direction (downto) does not determine aggregate index range direction (to).
+# vcom -work work -2008 -explicit -stats=none /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/simpackage.vhd
+# Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package std_logic_arith
+# -- Loading package NUMERIC_STD
+# -- Loading package STD_LOGIC_UNSIGNED
+# -- Loading package std_logic_textio
+# -- Compiling package sim_package
+# -- Compiling package body sim_package
+# -- Loading package sim_package
+# vcom -work work -2008 -explicit -stats=none /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/two_port_RAM.vhd
+# Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package std_logic_arith
+# -- Loading package STD_LOGIC_UNSIGNED
+# -- Loading package NUMERIC_STD
+# -- Loading package std_logic_textio
+# -- Loading package sim_package
+# -- Compiling entity two_port_RAM
+# -- Compiling architecture behav of two_port_RAM
+# ** Warning: /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/two_port_RAM.vhd(41): (vcom-1236) Shared variables must be of a protected type.
+# vcom -work work -2008 -explicit -stats=none /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/array_RAM_mul_32sbkb.vhd
+# Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Compiling entity array_RAM_mul_32sbkb_MulnS_0
+# -- Compiling architecture behav of array_RAM_mul_32sbkb_MulnS_0
+# -- Compiling entity array_RAM_mul_32sbkb
+# -- Compiling architecture arch of array_RAM_mul_32sbkb
+# vcom -work work -2008 -explicit -stats=none /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/single_argument.vhd
+# Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package std_logic_arith
+# -- Loading package STD_LOGIC_UNSIGNED
+# -- Loading package NUMERIC_STD
+# -- Loading package std_logic_textio
+# -- Loading package sim_package
+# -- Compiling entity single_argument
+# -- Compiling architecture behav of single_argument
+# ** Warning: /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/single_argument.vhd(34): (vcom-1236) Shared variables must be of a protected type.
+# 10 compiles, 0 failed with no errors.
+# vsim example_tb 
+# Start time: 15:18:04 on Feb 06,2020
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading ieee.std_logic_arith(body)
+# Loading ieee.std_logic_unsigned(body)
+# Loading ieee.std_logic_textio(body)
+# Loading ieee.numeric_std(body)
+# Loading work.sim_package(body)
+# Loading work.customtypes
+# Loading work.example_tb(behav)
+# Loading ieee.math_real(body)
+# Loading work.example(behavioral)
+# Loading work.const(arch)
+# Loading work.mux(arch)
+# Loading work.tehb(arch)
+# Loading work.mc_load_op(arch)
+# Loading work.mul_op(arch)
+# Loading work.join(arch)
+# Loading work.andn(vanilla)
+# Loading work.array_ram_mul_32sbkb_mulns_0(behav)
+# Loading work.mc_store_op(arch)
+# Loading work.add_op(arch)
+# Loading work.icmp_ult_op(arch)
+# Loading work.ret_op(arch)
+# Loading work.fork(arch)
+# Loading work.orn(vanilla)
+# Loading work.eagerfork_registerblock(arch)
+# Loading work.branch(arch)
+# Loading work.branchsimple(arch)
+# Loading work.memcont(arch)
+# Loading work.read_memory_arbiter(arch)
+# Loading work.read_priority(arch)
+# Loading work.read_address_mux(arch)
+# Loading work.read_address_ready(arch)
+# Loading work.read_data_signals(arch)
+# Loading work.write_memory_arbiter(arch)
+# Loading work.write_priority(arch)
+# Loading work.write_address_mux(arch)
+# Loading work.write_address_ready(arch)
+# Loading work.write_data_signals(arch)
+# Loading work.end_node(arch)
+# Loading work.start_node(arch)
+# Loading work.elasticbuffer(arch)
+# Loading work.oehb(arch)
+# Loading work.cntrlmerge(arch)
+# Loading work.merge(arch)
+# Loading work.sink(arch)
+# Loading work.source(arch)
+# Loading work.two_port_ram(behav)
+# ** Warning: (vsim-8683) Uninitialized out port /example_tb/duv/end_0/eReadyArray(2) has no driver.
+# This port will contribute value (U) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /example_tb/duv/end_0/eReadyArray(1) has no driver.
+# This port will contribute value (U) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /example_tb/duv/end_0/eReadyArray(0) has no driver.
+# This port will contribute value (U) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /example_tb/duv/phiC_0/dataOutArray(0)(0) has no driver.
+# This port will contribute value (U) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /example_tb/duv/source_0/dataOutArray(0)(31 downto 0) has no driver.
+# This port will contribute value (32'hXXXXXXXX) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /example_tb/duv/source_1/dataOutArray(0)(31 downto 0) has no driver.
+# This port will contribute value (32'hXXXXXXXX) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /example_tb/duv/x_we1 has no driver.
+# This port will contribute value (U) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /example_tb/duv/x_dout1(31 downto 0) has no driver.
+# This port will contribute value (32'hXXXXXXXX) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /example_tb/duv/a_we1 has no driver.
+# This port will contribute value (U) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /example_tb/duv/a_dout1(31 downto 0) has no driver.
+# This port will contribute value (32'hXXXXXXXX) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /example_tb/duv/w_we1 has no driver.
+# This port will contribute value (U) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /example_tb/duv/w_dout1(31 downto 0) has no driver.
+# This port will contribute value (32'hXXXXXXXX) to the signal network.
+# ** Warning: (vsim-3116) Problem reading symbols from linux-gate.so.1 : can not open ELF file.
+# ** Warning: NUMERIC_STD."<": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 0  Instance: /example_tb/duv/icmp_15
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 0  Instance: /example_tb/duv/phi_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 0  Instance: /example_tb/duv/phi_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 0  Instance: /example_tb/duv/phi_1
+# ** Warning: NUMERIC_STD."=": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 0  Instance: /example_tb/duv/phi_1
+# ** Warning: NUMERIC_STD."<": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 3  Instance: /example_tb/duv/icmp_15
+# ** Warning: NUMERIC_STD."<": metavalue detected, returning FALSE
+#    Time: 0 ps  Iteration: 4  Instance: /example_tb/duv/icmp_15
+# ** Note: simulation done!
+#    Time: 2450 ns  Iteration: 1  Instance: /example_tb
+# ** Failure: NORMAL EXIT (note: failure is to force the simulator to stop)
+#    Time: 2450 ns  Iteration: 1  Process: /example_tb/generate_sim_done_proc File: /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/hls_verify_example_tb.vhd
+# Break in Process generate_sim_done_proc at /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/hls_verify_example_tb.vhd line 255
+# Stopped at /home/dynamatic/hls_verifier/example/sim/VHDL_SRC/hls_verify_example_tb.vhd line 255
+# End time: 15:18:04 on Feb 06,2020, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 20

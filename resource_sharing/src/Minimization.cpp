@@ -5,7 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include "Dataflow.h"
+#include <DFnetlist/Dataflow.h>
 #include <set>
 #include <algorithm>
 #include <list>
@@ -252,7 +252,7 @@ MyBlock createDistributor(DFnetlist& df, int width, list<MyChannel> outputChanne
 }
 
 
-pair<MyBlock, MyPort> createSelector(DFnetlist& df, map<string, list<MyChannel>>& inputs, vector<MyPort> dstPorts, string name, map<bbID, vector<pair<int, blockID>>> orderings, bbID bbId)
+pair<MyBlock, MyPort> createSelector(DFnetlist& df, map<string, list<MyChannel>>& inputs, vector<MyPort> dstPorts, string name, map<bbID, vector<blockID>> orderings, bbID bbId)
 {
 	MyBlock selGen;
 	selGen.type = BlockType ::SELECTOR;
@@ -316,7 +316,7 @@ pair<MyBlock, MyPort> createSelector(DFnetlist& df, map<string, list<MyChannel>>
 	for(auto mapping : orderings){
 		selGen.orderings[mapping.first] = vector<int>{};
 		for(auto pair : mapping.second){
-			selGen.orderings[mapping.first].push_back(blockId_to_index[pair.second]);
+			selGen.orderings[mapping.first].push_back(blockId_to_index[pair]);
 		}
 	}
 
@@ -461,7 +461,7 @@ int minimizeNBlocks(DFnetlist& df, MergeGroup merge_group){
 
 	for(auto mapping : merge_group.blocks){
 		for(auto block : mapping.second){
-			blocks.push_back(MyBlock(df, block.second));
+			blocks.push_back(MyBlock(df, block));
 		}
 	}
 
@@ -513,8 +513,8 @@ int minimizeNBlocks(DFnetlist& df, MergeGroup merge_group){
 	} 
 
 	for(auto bbMapping : merge_group.blocks){
-		for(auto orderIdPair : bbMapping.second){
-			df.removeBlock(orderIdPair.second);
+		for(auto blockIds : bbMapping.second){
+			df.removeBlock(blockIds);
 		}
 	}
 
