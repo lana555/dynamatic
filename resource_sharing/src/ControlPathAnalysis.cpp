@@ -126,9 +126,6 @@ vector<blockID> findControlPath(DFnetlist &df, set<blockID> blocks_in_bb) {
 	return correct_order;
 }
 
-// Phi -> F           -> BR  becomes  Phi -> F -> Buffer -> F           -> BR
-// Phi -> F -> Buffer -> BR  becomes  Phi -> F -> Buffer -> F -> Buffer -> BR
-
 void addStageToControlPath(DFnetlist &df, vector<blockID> &control_path) {
 	blockID blockBeforeBranch = *(control_path.end() - 2);
 	cout << "block before branch is of type " + block_type_to_string(df.DFI->getBlockType(blockBeforeBranch)) << endl;
@@ -138,66 +135,48 @@ void addStageToControlPath(DFnetlist &df, vector<blockID> &control_path) {
 	blockID branch = *(control_path.end() - 1);
 	assert(df.DFI->getBlockType(branch) == BRANCH);
 
-	assert(df.DFI->getBlockType(blockBeforeBranch) == ELASTIC_BUFFER ||
-		   df.DFI->getBlockType(blockBeforeBranch) == FORK || 
-		   df.DFI->getBlockType(blockBeforeBranch) == OPERATOR);
-
-	portID portOfBranch = -1;
-	for(auto port : df.DFI->getPorts(branch, INPUT_PORTS)){
+	portID portOfBlockBeforeBranch = -1;
+	for (portID port : df.DFI->getPorts(blockBeforeBranch, OUTPUT_PORTS)) {
 		if(df.DFI->getPortWidth(port) == 0){
-			assert(portOfBranch == -1); //only one port should have a width of 0
-			portOfBranch = port;
+			assert(portOfBlockBeforeBranch == -1); //only one port should have a width of 0
+			portOfBlockBeforeBranch = port;
 		}
 	}
-	channelID channel_id = df.DFI->getConnectedChannel(portOfBranch);
-	portID portOfBlockBeforeBranch = df.DFI->getSrcPort(channel_id);
 
 	bbID bbId = df.DFI->getBasicBlock(blockBeforeBranch);
+
+	portID inputPortOfBranch = -1;
+	for (auto port : df.DFI->getPorts(branch, INPUT_PORTS)) {
+		if (df.DFI->getPortWidth(port) == 0) {
+			inputPortOfBranch = port;
+		}
+	}
 
 	//create the two new blocks
 	MyBlock newBuffer = MyBlock::createBufferForCP(df, bbId,
 			"additional_buffer_cp_" + to_string(my_buffer_cnt++));
 	MyBlock newFork = MyBlock::createFork(df, bbId,
 			"additional_fork_cp" + to_string(my_fork_cnt++), 0);
-	
-	if(df.DFI->getBlockType(blockBeforeBranch) == FORK){
-		//link the newly created blocks together
-		MyChannel new_buf_to_new_fork(df, newBuffer.outPorts[0].portId, newFork.inPorts[0].portId);
 
-		//undo the channel last fork -> branch to create last buffer -> new buffer
-		MyChannel old_fork_to_new_buf(df,
-				df.DFI->getConnectedChannel(portOfBlockBeforeBranch));
-		old_fork_to_new_buf.dstPort = newBuffer.inPorts[0].portId;
-		df.DFI->removeChannel(old_fork_to_new_buf.id);
-		old_fork_to_new_buf.id = df.createChannel(old_fork_to_new_buf.srcPort, old_fork_to_new_buf.dstPort);
-		old_fork_to_new_buf.writeToDF(df);
+	//link the newly created blocks together
+	MyChannel new_fork_to_new_buf(df, newFork.outPorts[0].portId,
+			newBuffer.inPorts[0].portId);
 
-		MyChannel new_fork_to_branch(df, newFork.outPorts[0].portId,
-				portOfBranch);
+	//undo the channel last buffer -> branch to create last buffer -> new fork
+	MyChannel old_buf_to_new_fork(df,
+			df.DFI->getConnectedChannel(portOfBlockBeforeBranch));
+	old_buf_to_new_fork.dstPort = newFork.inPorts[0].portId;
+	df.DFI->removeChannel(old_buf_to_new_fork.id);
+	old_buf_to_new_fork.id = df.createChannel(old_buf_to_new_fork.srcPort,
+			old_buf_to_new_fork.dstPort);
+	old_buf_to_new_fork.writeToDF(df);
 
-		control_path.insert(control_path.end() - 1, newBuffer.id);
-		control_path.insert(control_path.end() - 1, newFork.id);
+	MyChannel new_buf_to_branch(df, newBuffer.outPorts[0].portId,
+			inputPortOfBranch);
 
-	}else{
-		//link the newly created blocks together
-		MyChannel new_fork_to_new_buf(df, newFork.outPorts[0].portId,
-				newBuffer.inPorts[0].portId);
-	
-		//undo the channel last buffer -> branch to create last buffer -> new fork
-		MyChannel old_buf_to_new_fork(df,
-				df.DFI->getConnectedChannel(portOfBlockBeforeBranch));
-		old_buf_to_new_fork.dstPort = newFork.inPorts[0].portId;
-		df.DFI->removeChannel(old_buf_to_new_fork.id);
-		old_buf_to_new_fork.id = df.createChannel(old_buf_to_new_fork.srcPort,
-				old_buf_to_new_fork.dstPort);
-		old_buf_to_new_fork.writeToDF(df);
-	
-		MyChannel new_buf_to_branch(df, newBuffer.outPorts[0].portId,
-				portOfBranch);
-	
-		control_path.insert(control_path.end() - 1, newFork.id);
-		control_path.insert(control_path.end() - 1, newBuffer.id);
-	}
+	control_path.insert(control_path.end() - 1, newFork.id);
+	control_path.insert(control_path.end() - 1, newBuffer.id);
+
 }
 
 void connectForkToBlock(DFnetlist &df, blockID fork, blockID to_be_connected) {

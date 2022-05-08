@@ -5,7 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <DFnetlist/Dataflow.h>
+#include "Dataflow.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <cstring>
@@ -16,7 +16,6 @@
 #include "DFnetlist.h"
 #include "MyBlock.h"
 #include "resource_sharing.h"
-#include "BuffersUtil.h"
 
 using namespace std;
 using namespace Dataflow;
@@ -27,7 +26,7 @@ using vecParams = vector<string>;
 int main_help()
 {
 	cerr << "Available commands:" << endl;
-	cerr << "  min filename [timeout duration for MILP]: Execute the minimization of the component graph." << endl;
+	cerr << "  min:      Execute the minimization of the component graph." << endl;
 	cerr << "  help:     Print tool help." << endl;
 
 	return 0;
@@ -50,8 +49,6 @@ int min(vecParams& params)
 	string filename = params[0];
 	cout<<filename<<endl;
 
-	int timeout = params.size() > 1 ? stoi(params[1]) : DEFAULT_MILP_TIMEOUT;
-
 	DFnetlist DF("./_input/"+filename+"_graph.dot");
 	try {
 		BB_graph bbGraph("./_input/"+filename+"_bbgraph.dot");
@@ -67,16 +64,24 @@ int min(vecParams& params)
 		}
 		vector<DisjointSet> sets = extractSets(DF, bbGraph);
 
-		 resource_sharing2(DF, sets, nodes, filename, timeout);
+		resource_sharing2(DF, sets, nodes, filename);
 
-		//example for gsum
-		//try_suggestion(DF, {{"fadd_11", "fadd_14"}, 
-		//{"fmul_10", "fmul_12", "fmul_13", "fmul_15"}}, sets, nodes, filename);
-		//try_suggestion(DF, {{"fadd_9", "fadd_11"}}, sets, nodes, filename);
+		//example for bicg_float
+		//try_suggestion(DF, {{"fadd_19", "fadd_26"}, {"fmul_18", "fmul_25"}}, sets, nodes, filename);
 
 	} catch (std::exception&) {
 		return EXIT_FAILURE;
 	}
+
+	// if (!DF.writeDot("./_output/"+filename+"_graph.dot"))
+	// {
+	// 	char* cwd = new char[2000];
+	// 	cwd = getcwd(cwd, 2000);
+	// 	cout<<cwd<<endl;
+	// 	delete [] cwd;
+
+	// 	cout<<"**********Failed to save file"<<endl;
+	// }
 
 	string cmd_str = "dot -Tpng ./_output/"+filename+"_graph.dot > ./_output/"+filename+"_graph.png";
 	system(cmd_str.c_str());

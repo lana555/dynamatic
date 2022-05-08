@@ -8,7 +8,6 @@
 #include <iomanip>
 #include <list>
 #include <map>
-#include <set>
 
 #include "BuffersUtil.h"
 #include "ControlPathAnalysis.h"
@@ -145,60 +144,44 @@ bool inSet(set<int> group, int item) {
 }
 
 vector<string> getThroughputs(vector<MergeGroup> merge_groups, string filename,
-		bool verbose, int timeout) {
+		bool verbose = false) {
 	DFnetlist tmp("./_input/" + filename + "_graph.dot",
 			"./_input/" + filename + "_bbgraph.dot");
 	map<bbID, set<blockID>> nodesPerBB = getNodesPerBBs(tmp);
 	map<bbID, vector<blockID>> controlPathsPerBB { };
 
 	for (auto merge_group : merge_groups) {
-
-		merge_group.print(tmp);
-
 		for (auto bb_to_blocks_ordering : merge_group.blocks) {
 			int bbId = bb_to_blocks_ordering.first;
-			vector<blockID> ordering = bb_to_blocks_ordering.second;
+			vector<pair<int, blockID>> ordering = bb_to_blocks_ordering.second;
 
 			if (controlPathsPerBB.find(bbId) == controlPathsPerBB.end()) {
 				controlPathsPerBB.insert(
 						{ bbId, findControlPath(tmp, nodesPerBB[bbId]) });
 			}
 
-			vector<blockID> & controlPath = controlPathsPerBB[bbId];
-			set<blockID> forks_visited {};
+			vector<blockID> &controlPath = controlPathsPerBB[bbId];
 
 			int index = 0;
-			for (auto blockId : ordering) {
-				set<blockID> setControlPath (controlPath.begin(), controlPath.end());
-				int number_of_blocks = getCpBlock(tmp, setControlPath, FORK).size();
-				if (index >= number_of_blocks) {
+			for (auto order_id_pair : ordering) {
+				if (index >= controlPath.size() - 1) {
 					addStageToControlPath(tmp, controlPath);
 				}
-				blockID forkID = -1;
-				for(auto id : controlPath){
-					if(tmp.DFI->getBlockType(id) == FORK && forks_visited.find(id) == forks_visited.end()){
-						forkID = id;
-						break;
-					}
-				}
-				assert(forkID != -1);
-
-				connectForkToBlock(tmp, forkID,
-						blockId);
-				forks_visited.insert(forkID);
-				index += 1;
+				connectForkToBlock(tmp, controlPath[index],
+						order_id_pair.second);
+				index += 2;
 			}
 		}
 	}
 
 	tmp.writeDot("./_tmp/out.dot");
-	return getThroughputFromFile("./_tmp/out", verbose, timeout);
+	return getThroughputFromFile("./_tmp/out", verbose);
 }
 
 bool checkThroughput(vector<MergeGroup> merge_groups, vector<string> &expected,
-		string filename, bool verbose, int timeout) {
+		string filename, bool verbose = false) {
 	cout << "checking throughput" << endl;
-	vector<string> results = getThroughputs(merge_groups, filename, verbose, timeout);
+	vector<string> results = getThroughputs(merge_groups, filename, verbose);
 	if (verbose) {
 		for (auto result : results)
 			cout << result << endl;
@@ -221,29 +204,25 @@ MergeGroup combine_groups(MergeGroup mg_1, MergeGroup mg_2) {
 	MergeGroup new_merge_group { };
 	new_merge_group.blocks = mg_1.blocks;
 	for (auto mapping : mg_2.blocks) {
-		for (auto blockId : mg_2.blocks[mapping.first]) {
-			new_merge_group.insert(mapping.first, blockId);
+		for (auto unit : mg_2.blocks[mapping.first]) {
+			new_merge_group.insert(mapping.first, unit.second);
 		}
 	}
 	return new_merge_group;
 }
 
-bool try_combine_groups(DFnetlist &df, vector<MergeGroup> &merge_groups,
-		vector<string> &initial_throughputs, string filename, int timeout) {
+bool try_combine_groups(vector<MergeGroup> &merge_groups,
+		vector<string> &initial_throughputs, string filename) {
 	for (auto it_1 = merge_groups.begin(); it_1 != merge_groups.end(); ++it_1) {
 		for (auto it_2 = it_1 + 1; it_2 != merge_groups.end(); ++it_2) {
-			vector<MergeGroup> possible_merge_groups {combine_groups(*it_1, *it_2).get_all_orderings()};
-			for(auto mg : possible_merge_groups){
-				cout << "attempting to combine new group : " << endl;
-				mg.print(df);
-				vector<MergeGroup> copy = {mg};
-				copy.insert(copy.end(), merge_groups.begin(), it_1);
-				copy.insert(copy.end(), it_1 + 1, it_2);
-				copy.insert(copy.end(), it_2 + 1, merge_groups.end());
-				if (checkThroughput(copy, initial_throughputs, filename, false, timeout)) {
-					merge_groups = copy;
-					return true;
-				}
+			vector<MergeGroup> copy { combine_groups(*it_1, *it_2) };
+			copy.insert(copy.end(), merge_groups.begin(), it_1);
+			copy.insert(copy.end(), it_1 + 1, it_2);
+			copy.insert(copy.end(), it_2 + 1, merge_groups.end());
+
+			if (checkThroughput(copy, initial_throughputs, filename)) {
+				merge_groups = copy;
+				return true;
 			}
 		}
 	}
@@ -252,7 +231,7 @@ bool try_combine_groups(DFnetlist &df, vector<MergeGroup> &merge_groups,
 
 vector<MergeGroup> intra_set_sharing(DFnetlist &df, DisjointSet disjoint_set,
 		map<int, MyBlock> &nodes, vector<string> &initial_throughputs,
-		string merged_operation, string filename, int timeout) {
+		string merged_operation, string filename) {
 	vector<MergeGroup> merge_groups { };
 
 	set<blockID> flattened_set = { };
@@ -266,22 +245,21 @@ vector<MergeGroup> intra_set_sharing(DFnetlist &df, DisjointSet disjoint_set,
 		if (test_node_type(df, blockId, merged_operation)) {
 			MergeGroup singleton { };
 			bbID key = df.DFI->getBasicBlock(blockId);
-			vector<blockID> value = { blockId };
+			vector<pair<int, blockID>> value = { { 0, blockId } };
 			singleton.blocks[key] = value;
 			merge_groups.push_back(singleton);
 		}
 
 	}
-	while (try_combine_groups(df, merge_groups, initial_throughputs, filename, timeout))
+	while (try_combine_groups(merge_groups, initial_throughputs, filename))
 		;
 	return merge_groups;
 }
 
 void resource_sharing2(DFnetlist &df, vector<DisjointSet> disjoint_sets,
-		map<int, MyBlock> &nodes, string filename, int timeout) {
+		map<int, MyBlock> &nodes, string filename) {
 	vector<string> initial_throughputs = getThroughputs(vector<MergeGroup> { },
-			filename, false, timeout);
-
+			filename);
 	// intra set
 	map<string, vector<vector<MergeGroup>>> merge_groups_per_set { };
 	for (auto merge_op : mergeable_operation) {
@@ -290,7 +268,7 @@ void resource_sharing2(DFnetlist &df, vector<DisjointSet> disjoint_sets,
 		for (auto set : disjoint_sets) {
 			merge_group_for_op.push_back(
 					intra_set_sharing(df, set, nodes, initial_throughputs,
-							merge_op, filename, timeout));
+							merge_op, filename));
 		}
 		merge_groups_per_set[merge_op] = merge_group_for_op;
 	}
@@ -316,23 +294,14 @@ void resource_sharing2(DFnetlist &df, vector<DisjointSet> disjoint_sets,
 		flattened_merge_groups.insert(flattened_merge_groups.end(),
 				merge_group_per_op.begin(), merge_group_per_op.end());
 	}
-
 	// once we have shared all components in the same sets we run buffers one
 	// last time to obtain ideal buffer placement when considering the sharing
 	cout << "checking final throughputs == initial throughputs" << endl;
-
-	//empirically observed that a bigger timeout is necessary for the final check
-	if(!checkThroughput(flattened_merge_groups, initial_throughputs, filename, false, 3*timeout)){
-		cout << "final throughputs not equal to initial throughput, try with longer MILP timeout" << endl;
-	}
-			
-	
+	assert(
+			checkThroughput(flattened_merge_groups, initial_throughputs, filename));
 	DFnetlist newDf("./_tmp/out_graph_buf.dot",
 			"./_input/" + filename + "_bbgraph.dot");
 	removeAdditionToCp(newDf);
-
-	// because we read a new df (with optimized buffer placement when considering sharing) the blockIds are probably different
-	// thus we find the new blockIDs by using the fact that the name will not have changed
 	map<string, blockID> names_to_ids { };
 	for (auto id : newDf.DFI->allBlocks) {
 		if (newDf.DFI->getBlockType(id) == OPERATOR) {
@@ -340,14 +309,16 @@ void resource_sharing2(DFnetlist &df, vector<DisjointSet> disjoint_sets,
 		}
 	}
 
-
 	vector<MergeGroup> new_merge_groups { };
 	for (auto merge_group : flattened_merge_groups) {
 		MergeGroup new_merge_group { };
 		for (auto bb_to_set : merge_group.blocks) {
-			vector<blockID> new_ordering { };
-			for (auto old_id : merge_group.blocks[bb_to_set.first]){
-				new_ordering.push_back(names_to_ids[df.DFI->getBlockName(old_id)]);
+			vector<pair<int, blockID>> new_ordering { };
+			for (auto it = merge_group.blocks[bb_to_set.first].begin();
+					it != merge_group.blocks[bb_to_set.first].end(); ++it) {
+				new_ordering.push_back(
+						{ it->first, names_to_ids[df.DFI->getBlockName(
+								it->second)] });
 			}
 			new_merge_group.blocks.insert( { bb_to_set.first, new_ordering });
 		}
@@ -356,8 +327,8 @@ void resource_sharing2(DFnetlist &df, vector<DisjointSet> disjoint_sets,
 
 	// actual merging
 	for (auto merge_group : new_merge_groups) {
-		merge_group.print(newDf);
 		if (merge_group.size() > 1) {
+			merge_group.print(newDf);
 			minimizeNBlocks(newDf, merge_group);
 		}
 	}
@@ -381,7 +352,7 @@ void try_suggestion(DFnetlist &df, vector<vector<string>> suggestion,
 
 	cout << "getting initial throughputs" << endl;
 	vector<string> initial_throughputs = getThroughputs(vector<MergeGroup> { },
-			filename, false, 300);
+			filename);
 
 	vector<MergeGroup> merge_groups = { };
 	for (auto suggested_merge_group : suggestion) {
@@ -400,15 +371,11 @@ void try_suggestion(DFnetlist &df, vector<vector<string>> suggestion,
 	}
 
 	cout << "checking final throughputs == initial throughputs" << endl;
-	//assert(
-	checkThroughput(merge_groups, initial_throughputs, filename, false, 200);//);
+	assert(checkThroughput(merge_groups, initial_throughputs, filename));
 
 	DFnetlist newDf("./_tmp/out_graph_buf.dot",
 			"./_input/" + filename + "_bbgraph.dot");
 	removeAdditionToCp(newDf);
-
-	// because we read a new df (with optimized buffer placement when considering sharing) the blockIds are probably different
-	// thus we find the new blockIDs by using the fact that the name will not have changed
 	map<string, blockID> names_to_ids { };
 	for (auto id : newDf.DFI->allBlocks) {
 		if (newDf.DFI->getBlockType(id) == OPERATOR) {
@@ -416,14 +383,16 @@ void try_suggestion(DFnetlist &df, vector<vector<string>> suggestion,
 		}
 	}
 
-
 	vector<MergeGroup> new_merge_groups { };
 	for (auto merge_group : merge_groups) {
 		MergeGroup new_merge_group { };
 		for (auto bb_to_set : merge_group.blocks) {
-			vector<blockID> new_ordering { };
-			for (auto old_id : merge_group.blocks[bb_to_set.first]){
-				new_ordering.push_back(names_to_ids[df.DFI->getBlockName(old_id)]);
+			vector<pair<int, blockID>> new_ordering { };
+			for (auto it = merge_group.blocks[bb_to_set.first].begin();
+					it != merge_group.blocks[bb_to_set.first].end(); ++it) {
+				new_ordering.push_back(
+						{ it->first, names_to_ids[df.DFI->getBlockName(
+								it->second)] });
 			}
 			new_merge_group.blocks.insert( { bb_to_set.first, new_ordering });
 		}
@@ -432,8 +401,8 @@ void try_suggestion(DFnetlist &df, vector<vector<string>> suggestion,
 
 	// actual merging
 	for (auto merge_group : new_merge_groups) {
-		merge_group.print(newDf);
 		if (merge_group.size() > 1) {
+			merge_group.print(newDf);
 			minimizeNBlocks(newDf, merge_group);
 		}
 	}

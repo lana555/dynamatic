@@ -9,7 +9,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <DFnetlist/Dataflow.h>
+#include "Dataflow.h"
 #include <set>
 #include <algorithm>
 #include <list>

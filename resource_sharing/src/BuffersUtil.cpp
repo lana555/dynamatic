@@ -37,10 +37,9 @@ string exec(string command) {
 }
 
 
-vector<string> getThroughputFromFile(std::string filename, bool verbose, int timeout){
-	cout << "running MILP with timeout : " << to_string(timeout) << endl;
-	string res = verbose ? exec("buffers buffers -filename=" + filename + " -period=5 -timeout=" + to_string(timeout)) :
-			exec("buffers buffers -filename=" + filename + " -period=5 -timeout="  + to_string(timeout) + " | grep \"Throughput ach\"");
+vector<string> getThroughputFromFile(std::string filename, bool verbose){
+	string res = verbose ? exec("buffers buffers -filename=" + filename + " -period=4 -timeout=100") :
+			exec("buffers buffers -filename=" + filename + " -period=4 -timeout=100 | grep \"Throughput ach\"");
 	stringstream ss(res);
 	string token;
 	vector<string> throughputs{};
