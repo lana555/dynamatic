@@ -1,7 +1,7 @@
 #!/bin/bash
 exampleLocation=/home/dynamatic/Dynamatic/etc/dynamatic/Regression_test/examples
 bufferExec=/home/dynamatic/Dynamatic/etc/dynamatic/Buffers/bin/buffers
-ressourceMinExec=/home/dynamatic/Dynamatic/etc/dynamatic/resource_sharing/resource_minimization
+ressourceMinExec=/home/dynamatic/Dynamatic/etc/dynamatic/resource_sharing/bin/resource_minimization
 dot2vhdlExec=/home/dynamatic/Dynamatic/etc/dynamatic/dot2vhdl/bin/dot2vhdl
 verifierExec=/home/dynamatic/Dynamatic/etc/dynamatic/Regression_test/hls_verifier/HlsVerifier/build/hlsverifier
 compFolder=/home/dynamatic/Dynamatic/etc/dynamatic/components

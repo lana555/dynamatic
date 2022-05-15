@@ -17,8 +17,13 @@ mkdir bin
 ```bash
 make
 ```
+## To run the code:
+To synthesis_optimize.tcl script, optimize command, add flag -area: 
+```bash
+optimize -area
+```
 
-## To run the code (temporary):
+## To run the code (old):
 
 Use the regression test to create the optimized version of an example in its regular folder. 
 Add the example to filelist.lst in the resource_sharing folder.
