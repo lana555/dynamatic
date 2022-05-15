@@ -26,6 +26,8 @@ void removeAdditionToCp(DFnetlist & df);
 blockID getSingletonCpBlock(DFnetlist &df, set<blockID> &blocks,
 		BlockType type);
 
+set<blockID> getCpBlock(DFnetlist &df, set<blockID> &blocks, BlockType type);
+
 blockID addForkAfterPhi(DFnetlist &df, set<blockID> blocks_in_bb);
 
 #endif /* CONTROLPATHANALYSIS_H_ */

@@ -6,10 +6,15 @@
 ln -s /home/dynamatic/Dynamatic/etc/dynamatic/Buffers/src src/DFnetlist
 ```
 
+## Create the bin directory
+
+```bash
+mkdir bin
+```
+
 ## From resource_sharing, compile the code:
 
 ```bash
-cmake /home/dynamatic/Dynamatic/etc/dynamatic/resource_sharing
 make
 ```
 

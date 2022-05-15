@@ -17,6 +17,9 @@
 using namespace std;
 using namespace Dataflow;
 
-vector<string> getThroughputFromFile(std::string filename, bool verbose=false);
+const int DEFAULT_MILP_TIMEOUT = 100;
+
+vector<string> getThroughputFromFile(std::string filename, bool verbose, int timeout=100);
+
 
 #endif /* BUFFERSUTIL_H_ */
