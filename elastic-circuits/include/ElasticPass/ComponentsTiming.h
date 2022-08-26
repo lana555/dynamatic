@@ -20,6 +20,21 @@
 #define FCMP_NAME "fcmp"
 #define PHIC_NAME "phiC"
 #define ZDC_NAME "zdc" // zero-delay component, fake component to force the delay to 0
+
+#define MC_NAME "mc"
+#define FORK_NAME "fork"
+#define RET_NAME "ret"
+#define BRANCH_NAME "branch"
+#define END_NAME "end"
+
+#define AND_NAME "and"
+#define OR_NAME "or"
+#define XOR_NAME "xor"
+#define SHL_NAME "shl"
+#define ASHR_NAME "ashr"
+#define LSHR_NAME "lshr"
+#define SELECT_NAME "select"
+
 #include <string>
 
 enum {
@@ -43,7 +58,19 @@ enum {
     FCMP_INDX,
     PHIC_INDX,
     ZDL_INDX,
-    CMP_MAX
+ //   MEMC_INDX,
+    FORK_INDX,
+    RET_INDX, 
+    BRANCH_INDX,
+    END_INDX,
+    AND_INDX,
+    OR_INDX,
+    XOR_INDX,
+    SHL_INDX,
+    ASHR_INDX,
+    LSHR_INDX,
+    SELECT_INDX,
+    CMP_MAX,
 };
 
 enum {
@@ -56,11 +83,37 @@ enum {
     BITSIZE_64_INDX,
 };
 
+enum{
+	DATA,
+	VALID,
+	READY,
+	VR,
+	CV,
+	CR,
+	VC,
+	VD,
+};
+
 static const std::string components_name[] = {
     ICMP_NAME,  ADD_NAME,   SUB_NAME,    MUL_NAME,  SEXT_NAME, LOAD_NAME,
     STORE_NAME, LSQ_LOAD_NAME, LSQ_STORE_NAME, MERGE_NAME, GETPTR_NAME,
     FADD_NAME, FSUB_NAME, FMUL_NAME, UDIV_NAME,  SDIV_NAME,
-    FDIV_NAME,   FCMP_NAME, PHIC_NAME, ZDC_NAME};
+    FDIV_NAME,   FCMP_NAME, PHIC_NAME, ZDC_NAME, 
+//MC_NAME, 
+FORK_NAME, 
+RET_NAME, 
+BRANCH_NAME, 
+END_NAME,
+
+AND_NAME,
+OR_NAME,
+XOR_NAME,
+SHL_NAME,
+ASHR_NAME,
+LSHR_NAME,
+SELECT_NAME
+
+};
 
 static const float datapath_delay[CMP_MAX + 1][10] = {
     {0.784, 0.966, 1.485, 1.342, 1.410, 1.530, 1.770}, // ICMP
@@ -82,6 +135,18 @@ static const float datapath_delay[CMP_MAX + 1][10] = {
     {0.966, 0.966, 0.966, 0.966, 0.966, 0.966, 0.966}, // fdiv
     {0.966, 0.966, 0.966, 0.966, 0.966, 0.966, 0.966}, // fcmp
     {0.166, 0.166, 0.166, 0.166, 0.166, 0.166, 0.166}, // phic
+//    {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // Memc
+    {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // Fork
+    {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // Ret
+    {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // Branch
+    {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // End
+    {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // 
+    {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // 
+    {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // 
+    {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // 
+    {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // 
+    {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // 
+    {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // 
     {0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000}, // cmp_none
 };
 
@@ -105,6 +170,18 @@ static const int datapath_latency[CMP_MAX + 1][10] = {
     {30, 30, 30, 30, 30, 30, 30}, // fdiv
     {2, 2, 2, 2, 2, 2, 2},        // fcmp
     {0, 0, 0, 0, 0, 0, 0},        // phic
+// {0, 0, 0, 0, 0, 0, 0},// Memc
+ {0, 0, 0, 0, 0, 0, 0},// Fork
+ {0, 0, 0, 0, 0, 0, 0},// Ret
+ {0, 0, 0, 0, 0, 0, 0},// Branch
+ {0, 0, 0, 0, 0, 0, 0},// End
+ {0, 0, 0, 0, 0, 0, 0},//
+ {0, 0, 0, 0, 0, 0, 0},//
+ {0, 0, 0, 0, 0, 0, 0},//
+ {0, 0, 0, 0, 0, 0, 0},//
+ {0, 0, 0, 0, 0, 0, 0},//
+ {0, 0, 0, 0, 0, 0, 0},//
+ {0, 0, 0, 0, 0, 0, 0},//
     {0, 0, 0, 0, 0, 0, 0},        // cmp_none
 };
 
@@ -114,5 +191,5 @@ static const int datapath_latency[CMP_MAX + 1][10] = {
 #define ROUTING_DELAY_30 1.3
 #define ROUTING_DELAY_40 1.4
 
-extern float get_component_delay(std::string component, int datasize, std::string serial_number);
+extern float get_component_delay(std::string component, int datasize, std::string serial_number, int mode);
 extern int get_component_latency(std::string component, int datasize, std::string serial_number);

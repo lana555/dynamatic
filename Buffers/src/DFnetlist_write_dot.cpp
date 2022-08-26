@@ -241,8 +241,8 @@ void DFnetlist_Impl::writeBlockDot(ostream& s, blockID b)
 
     bool only_block_delay = true;
     bool first_delay = true;
-    if (getBlockDelay(b) > 0) {
-        delay << getBlockDelay(b);
+    if (getBlockDelay(b, -1) > 0) {
+        delay << getBlockDelay(b, -1);
         first_delay = false;
     }
 
@@ -502,7 +502,7 @@ void DFnetlist_Impl::writeChannelDot(ostream& s, channelID id)
 
     // Is is a back-edge inside a basic block (branch->merge)? Do not constrain
 
-    if (getBlockType(b_src) == BRANCH or getBlockType(b_dst) == MERGE) {
+    if (getBlockType(b_src) == BRANCH or getBlockType(b_dst) == MERGE or getChannelMerge(id)) {
         // If the same BB
         if (bb_src == bb_dst and bb_src >= 0) s << ", constraint=false";
     }

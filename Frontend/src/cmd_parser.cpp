@@ -61,6 +61,11 @@ bool set_filename = FALSE;
 bool is_target_set = FALSE;
 string target;
 
+//string milp_mode = "default";
+string milp_mode = "mixed";
+string milp_solver = "gurobi_cl";
+//string milp_solver = "cbc";
+
 string vendor = "xilinx";
 
 void string_split(const string& s, char c, vector<string>& v)
@@ -186,7 +191,8 @@ int synth ( string input_cmp )
         cout << "This command perform synthesis. " << endl;
         cout << "Available options are: " << endl;
         cout << "-use-lsq={true|false} : enable/disable LSQ insertion in the design. Default value = true." << endl;
-        cout << "-simple-buffers={true|false} : enable/dispable placement of naive buffers. Default value = false." << endl;
+        cout << "-simple-buffers={true|false} : enable/disable placement of naive buffers. Default value = false." << endl;
+        cout << "-fast-token={true|false} : enable/disable fast token delivery. Default value = false." << endl;
         cout << "-target={part-number} : part number of the targeted FPGA. Default value = 7k160tfbg484" << endl;
         return OK;
     }
@@ -533,6 +539,7 @@ int optimize ( string input_cmp )
     string source_file2;
     std::cout << "Optimize" << endl;
     bool area_opt = 0;
+    bool fast_token_opt = 0;
     
     if ( input_cmp.find("-area") != std::string::npos )
     {
@@ -540,6 +547,11 @@ int optimize ( string input_cmp )
         area_opt = 1;
     }
 
+    if ( input_cmp.find("-fast-token") != std::string::npos )
+    {
+        eraseAllSubStr(input_cmp, "-fast-token");
+        fast_token_opt = 1;
+    }
     
     string command;
     if ( set_filename )
@@ -614,7 +626,14 @@ int optimize ( string input_cmp )
 
         //New version 20200128
         
-        command = "buffers buffers";
+        //If Aya's version use the custom buffer placement
+	if (fast_token_opt )
+	{
+	  command = "buffers-fast-token buffers";
+	}
+	else
+          command = "buffers buffers";
+
         command += " -filename=";
         command += project_dir;
         command += OUTPUT_DIR;
@@ -625,6 +644,15 @@ int optimize ( string input_cmp )
         command += " -period=";
         command += to_string ( period );
         }
+
+	if ( !fast_token_opt )
+	{
+        	command += " -model_mode=";     //Carmine 23.02.22 adding the functionality of milp mode to dynamatic basic code
+        	command += milp_mode;
+	}
+        command += " -solver=";     //Carmine 25.02.22 set milp solver
+        command += milp_solver;
+
         command += " ";
         command += input_cmp;
         
@@ -913,7 +941,19 @@ int set_target ( string input_cmp )
     return OK;
 }
 
+int set_milp_mode ( string input_cmp )  //Carmine 23.02.22 adding the functionality of milp mode to dynamatic basic code
+{
+    milp_mode = input_cmp;
+    cout << "MILP mode set to: " << input_cmp << endl;
+    return OK;
+}
 
+int set_milp_solver ( string input_cmp )  //Carmine 25.02.22
+{
+    milp_solver = input_cmp;
+    cout << "MILP solver set to: " << input_cmp << endl;
+    return OK;
+}
 
 void cmd_parser_init ( void )
 {
@@ -932,6 +972,8 @@ void cmd_parser_init ( void )
     ui_cmds[CMD_SOURCE].function = &source_script;
     ui_cmds[CMD_SET_PERIOD].function = &set_period;
     ui_cmds[CMD_SET_TARGET].function = &set_target;
+    ui_cmds[CMD_SET_MILP_MODE].function = &set_milp_mode;  //Carmine 23.02.22 adding the functionality of milp mode to dynamatic basic code
+    ui_cmds[CMD_SET_MILP_SOLVER].function = &set_milp_solver;  //Carmine 25.02.22
     //ui_cmds[CMD_REPORTS].function = &reports;
     //ui_cmds[CMD_SIMULATE].function = &simulate;
     ui_cmds[CMD_CDFG].function = &cdfg;

@@ -61,6 +61,7 @@
 #define ENTITY_SEL				"SEL"
 #define ENTITY_DISTRIBUTOR      "Distributor"
 #define ENTITY_SELECTOR			"Selector"
+#define ENTITY_INJECTOR			"Inj"
 
 #define COMPONENT_MERGE         "Merge"
 #define COMPONENT_READ_MEMORY   "load"
@@ -91,6 +92,7 @@
 #define COMPONENT_SEL			"SEL"
 #define COMPONENT_DISTRIBUTOR   "Distributor"
 #define COMPONENT_SELECTOR		"Selector"
+#define COMPONENT_INJECTOR		"Inj"
 
 
 #define UNDERSCORE  "_"

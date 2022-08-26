@@ -168,14 +168,14 @@ public:
      * @param id Identifier of the block.
      * @return The delay of the block.
      */
-    double getBlockDelay(blockID id) const;
+    double getBlockDelay(blockID id, int indx) const;
 
     /**
      * @brief Sets the delay of a block.
      * @param id Identifier of the block.
      * @param d Delay of the block.
      */
-    void setBlockDelay(blockID id, double d);
+    void setBlockDelay(blockID id, double d, int indx);
 
     double getBlockRetimingDiff(blockID id) const;
 
@@ -470,6 +470,13 @@ public:
     std::string getChannelName(channelID id, bool full=true) const;
 
     /**
+     * @brief Returns the channel ID.
+     * @param id Identifier of the port.
+     * @return The ID representing the channel connected to that port
+     */
+    channelID getChannelID(portID id); //Carmine 09.03.22 new function
+
+    /**
     * @brief Returns the number of slots of the elastic buffer in the channel.
     * @param id Identifier of the channel.
     * @return The number of slots of the buffer.
@@ -497,6 +504,18 @@ public:
       */
     void setChannelTransparency(channelID id, bool value);
 
+    /** //Carmine 21.02.22
+      * @brief Sets the presence of an EB on the channel
+      * @param id Identifier of the channel.
+      */
+    void setChannelEB(channelID id);
+
+    /** //Carmine 21.02.22
+      * @brief Gets the presence of an EB on the channel
+      * @param id Identifier of the channel.
+      */
+    bool getChannelEB(channelID id);
+
     void setChannelFrequency(channelID id, double value);
 
     double getChannelFrequency(channelID id);
@@ -517,6 +536,17 @@ public:
      * @return The block identifier.
      */
     blockID insertBuffer(channelID c, int slots, bool transparent);
+
+    /**
+     * @brief Inserts a buffer in a channel. The insertion removes
+     * the previous channel and creates two new channels.
+     * @param c The channel identifier.
+     * @param slots Number of slots of the buffer.
+     * @param transparent True if the channel must be transparent and false if opaque.
+     * @param EB True if an elastic buffer needs to be placed.
+     * @return The block identifier.
+     */
+    blockID insertBuffer(channelID c, int slots, bool transparent, bool EB);
 
     /**
      * @brief Removes a buffer and reconnects the input and output channels.
@@ -582,6 +612,11 @@ public:
     bool validChannel(channelID id) const;
 
     /**
+     * @brief Reduce the number of merges since 1 input merges can be reduced to a wire.
+     */
+    void reduceMerges(); //Carmine 09.03.22 new function
+
+    /**
      * @brief Writes the dataflow netlist in dot format.
      * @param filename The name of the file. In case the filename is empty,
      * it is written into cout.
@@ -629,13 +664,18 @@ public:
 
     bool addElasticBuffersBB(double Period = 0, double BufferDelay = 0, bool maxThroughput = false, double coverage = 0, int timeout = -1, bool first_MG = false);
 
-    bool addElasticBuffersBB_sc(double Period = 0, double BufferDelay = 0, bool maxThroughput = false, double coverage = 0, int timeout = -1, bool first_MG = false);
+    bool addElasticBuffersBB_sc(double Period = 0, double BufferDelay = 0, bool maxThroughput = false, double coverage = 0, int timeout = -1, bool first_MG = false, const std::string& model_mode = "default", const std::string& lib_path="");
 
     /**
      * @brief Creates buffers for all those channels annotated with buffers.
      * The information in the channels is deleted.
      */
     void instantiateElasticBuffers();
+
+    /**
+     * @brief Creates buffers for all those channels annotated inside input file.  // Carmine 09.02.22
+     */
+    void instantiateAdditionalElasticBuffers(const std::string& filename);
 
     /**
      * @brief Removes the elastic buffers and transfers the information to the channels.

@@ -209,13 +209,16 @@ bool DFnetlist_Impl::checkFunc(blockID b)
 
 bool DFnetlist_Impl::checkFuncEntry(blockID b)
 {
+    // Lana 04.02.22 Commented check (to support all 32 bits) // to go from normal to 32 bits comment from line 214 to 219 and uncomment line 220
     if (not checkNumPorts(b, 0, 1)) return false;
     if(isControlPort(getOutPort(b))) {
         if (entryControl != invalidDataflowID) {
             setError("There is more than one entry control block.");
             return false;
         } else entryControl = b;
-    } else parameters.insert(b);
+    } else 
+    //entryControl = b; // Carmine 04.02.22 32 bits control signal
+    parameters.insert(b);
 
     return checkGenericPorts(b);
 }
@@ -308,6 +311,7 @@ bool DFnetlist_Impl::checkBranch(blockID b)
         return false;
     }
 
+    // Lana 04.02.22 Commented check (to support all 32 bits) // to go from normal to 32 bits comment from line 316 to 319
     // Check that the condition port is Boolean
     if (not isBooleanPort(B.portCond)) {
         setError("Block " + getBlockName(b) + ": the condition port is not Boolean.");

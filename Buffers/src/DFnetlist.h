@@ -492,12 +492,17 @@ public:
 
     bool isInnerChannel(channelID c);
 
+    bool getChannelMerge(channelID c); //Carmine 09.03.22 these two functions are used to preserve 
+    void setChannelMerge(channelID c); //Carmine 09.03.22 the information for writing the dot after reduceMerges function
+
+
     /**
      * @brief Returns the delay of a block.
      * @param id Identifier of the block.
      * @return The delay of the block.
      */
-    double getBlockDelay(blockID id) const;
+    double getBlockDelay(blockID id, int indx) const;
+
 
     /**
      * @brief Defines the basic block of a block.
@@ -517,7 +522,7 @@ public:
      * @param id Identifier of the block.
      * @param d Delay of the block.
      */
-    void setBlockDelay(blockID id, double d);
+    void setBlockDelay(blockID id, double d, int indx);
 
     /**
      * @brief Returns the latency of a block.
@@ -960,6 +965,14 @@ public:
     string getChannelName(channelID id, bool full=true) const;
 
     /**
+     * @brief Returns the channel ID.
+     * @param id Identifier of the port.
+     * @return The ID representing the channel connected to that port
+     */
+    channelID getChannelID(portID id); //Carmine 09.03.22 new function
+
+
+    /**
     * @brief Returns the number of slots of the elastic buffer in the channel.
     * @param id Identifier of the channel.
     * @return The number of slots of the buffer.
@@ -987,6 +1000,19 @@ public:
       */
     void setChannelTransparency(channelID id, bool value);
 
+
+    /** //Carmine 21.02.22
+      * @brief Sets the presence of an EB on the channel
+      * @param id Identifier of the channel.
+      */
+    void setChannelEB(channelID id);
+
+    /** //Carmine 21.02.22
+      * @brief Gets the presence of an EB on the channel
+      * @param id Identifier of the channel.
+      */
+    bool getChannelEB(channelID id);
+
     void setChannelFrequency(channelID id, double value);
 
     double getChannelFrequency(channelID id);
@@ -1007,6 +1033,17 @@ public:
      * @return The block identifier.
      */
     blockID insertBuffer(channelID c, int slots, bool transparent);
+
+    /**
+     * @brief Inserts a buffer in a channel. The insertion removes
+     * the previous channel and creates two new channels.
+     * @param c The channel identifier.
+     * @param slots Number of slots of the buffer.
+     * @param transparent True if the channel must be transparent and false if opaque.
+     * @param EB True if an elastic buffer needs to be placed.
+     * @return The block identifier.
+     */
+    blockID insertBuffer(channelID c, int slots, bool transparent, bool EB);
 
     /**
      * @brief Removes a buffer and reconnects the input and output channels.
@@ -1078,6 +1115,13 @@ public:
     bool validChannel(channelID id) const;
 
     /**
+     * @brief Reduce the number of merges since 1 input merges can be reduced to a wire.
+     */
+    void reduceMerges(); //Carmine 09.03.22 new function
+
+    void execute_reduction(blockID b);  //Carmine 09.03.22 function to eliminate  a block
+
+    /**
      * @brief Writes the dataflow netlist in dot format.
      * @param filename The name of the file. In case the filename is empty,
      * it is written into cout.
@@ -1136,7 +1180,7 @@ public:
      * been extracted.
      */
     bool addElasticBuffersBB(double Period = 0, double BufferDelay = 0, bool MaxThroughput = false, double coverage = 0, int timeout = -1, bool first_MG = false);
-    bool addElasticBuffersBB_sc(double Period = 0, double BufferDelay = 0, bool MaxThroughput = false, double coverage = 0, int timeout = -1, bool first_MG = false);
+    bool addElasticBuffersBB_sc(double Period = 0, double BufferDelay = 0, bool MaxThroughput = false, double coverage = 0, int timeout = -1, bool first_MG = false, const std::string& model_mode = "default", const std::string& lib_path="");
 
     void addBorderBuffers();
     void findMCLSQ_load_channels();
@@ -1145,6 +1189,12 @@ public:
      * The information in the channels is deleted.
      */
     void instantiateElasticBuffers();
+
+    /**
+     * @brief Creates buffers for all those channels annotated inside input file.  // Carmine 09.02.22
+     */
+    void instantiateAdditionalElasticBuffers(const std::string& filename);
+
 
     /**
      * @brief Removes the elastic buffers and transfers the information to the channels.
@@ -1232,6 +1282,7 @@ private:
         blockID nextFree;           // Next free block in the vector of blocks
         bbID basicBlock;            // Basic block to which the block belongs to
         double delay;               // Delay of the block
+        double delays[8];           // Delays of the block //Andrea
         int latency;                // Latency of the block (only for Operators)
         int II;                     // Initiation interval of the block (only for Operators)
         int slots;                  // Number of slots (only for EBs)
@@ -1298,6 +1349,8 @@ private:
         channelID nextFree;         // Next free slot in the vector of channels
         bool mark;                  // Flag used for traversals
         double freq;                // number of times this channels is executed
+        bool EB = false;            // boolean to set the presence of an elastic buffer on the channel // Carmine 21.02.22 
+        bool channelMerge = false;  // boolean to set the presence of merge after channel during reduceMerges function // Carmine 09.03.22
     };
 
     // Structure to represent a fragment of a netlist.
@@ -1526,6 +1579,8 @@ private:
 
     double total_freq;
 
+    //double delays [250][8];
+
     int freeBlock;      // Next free Block in the vector of blocks
     int freePort;       // Next free Port in the vector of ports
     int freeChannel;    // Next free Channel in the vector of channels
@@ -1584,9 +1639,13 @@ private:
     // Note: the out_retime variables are only used for pipelined units (latency > 0)
     struct milpVarsEB {
         vector<int> buffer_flop;        // Elastic buffer to cut combinational paths
+        vector<int> buffer_flop_valid;        //Carmine 17.02.22 // Elastic buffer to cut combinational valid paths
+        vector<int> buffer_flop_ready;        //Carmine 17.02.22 // Elastic buffer to cut combinational ready paths
         vector<int> buffer_slots;       // Number of slots of the elastic buffer
         vector<int> has_buffer;         // Boolean variable to indicate whether there is a buffer
         vector<int> time_path;          // Combinational arrival time for ports
+        vector<int> time_valid_path;    //Carmine 16.02.22 // Combinational arrival time for valid ports
+        vector<int> time_ready_path;    //Carmine 17.02.22 // Combinational arrival time for ready ports
         vector<int> time_elastic;       // Arrival time for elasticity (longest rigid fragment)
         vector<vector<int>> in_retime_tokens;  // Input retiming variables for tokens (indices: [MarkedGraph,block])
         vector<vector<int>> out_retime_tokens; // Output retiming variables for tokens (indices: [MarkedGraph,block]).
@@ -1964,8 +2023,8 @@ private:
      * @param max_throughput Indicates whether the variables for throughput must be created.
      */
     void createMilpVarsEB(Milp_Model& milp, milpVarsEB& vars, bool max_throughput, bool first_MG= false);
-    void createMilpVarsEB_sc(Milp_Model& milp, milpVarsEB& vars, bool max_throughput, int mg, bool first_MG= false);
-    void createMilpVars_remaining(Milp_Model& milp, milpVarsEB& vars);
+    void createMilpVarsEB_sc(Milp_Model& milp, milpVarsEB& vars, bool max_throughput, int mg, bool first_MG= false, string model_mode="default");
+    void createMilpVars_remaining(Milp_Model& milp, milpVarsEB& vars, string model_mode);
 
     /**
      * @brief Creates the path constraints for the MILP model.b The constraints
@@ -1978,8 +2037,12 @@ private:
      */
     bool createPathConstraints(Milp_Model& milp, milpVarsEB& Vars, double Period, double BufferDelay);
     bool createPathConstraints_sc(Milp_Model& milp, milpVarsEB& Vars, double Period, double BufferDelay, int mg);
+    bool createPathConstraintsOthers_sc(Milp_Model& milp, milpVarsEB& Vars, double Period, double BufferDelay, int mg, string model_mode, string lib_path);
     bool createPathConstraints_remaining(Milp_Model& milp, milpVarsEB& Vars, double Period, double BufferDelay);
+    bool createPathConstraintsOthers_remaining(Milp_Model& milp, milpVarsEB& Vars, double Period, double BufferDelay, string model_mode, string lib_path);
 
+
+    vector< pair<string, vector<double>>> read_lib_file(string lib_file_path); //Carmine 18.02.22 function to read block delays values from library
     /**
      * @brief Creates the elasticity constraints for the MILP model. The constraints
      * ensure that every cycle will have one elastic buffer at least (maybe transparent).

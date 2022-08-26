@@ -80,6 +80,9 @@ struct user_input {
     double first;
     int timeout;
     bool set;
+    string add_buff_txt; //Carmine 09.02.2022 option of additional buffer - text contains where to add buffers
+    string model_mode; //Carmine 16.02.2022 option to set the model mode - default/ready/valid/all/mixed
+    string lib; //Carmine 17.02.2022 it is the path containing the libraries of delays 
 };
 
 void clear_input(user_input& input) {
@@ -89,17 +92,24 @@ void clear_input(user_input& input) {
     input.delay = 0.0;
     input.period = 5;
     input.timeout = 180;
-    input.solver = "cbc";
+    input.solver = "gurobi_cl";
+    input.add_buff_txt = ""; //Carmine 09.02.2022 option of additional buffer - null if it is not present
+    input.model_mode = "default"; //Carmine 16.02.2022 the default option means not modifying FPGA'20 MILP model
+    input.lib = "/home/dynamatic/Downloads/Carmine/results_buff_opt"; 
+    //Carmine 17.02.2022 it is the path containing the libraries of delays 
 }
 
 void print_input(const user_input& input) {
-    cout << "****************************************" << endl;
+    cout << "\n****************************************" << endl;
     cout << "dataflow graph name: " << input.graph_name << endl;
     cout << "milp solver: " << input.solver << endl;
     cout << "delay: " << input.delay << ", period: " << input.period << endl;
     cout << "timeout: " << input.timeout << endl;
     cout << "set optimization: " << (input.set ? "true" : "false") << endl;
     cout << "first MG optimization: " << (input.first ? "true" : "false") << endl;
+    cout << "milp model mode: " << input.model_mode << endl;
+    cout << "library path " << input.lib << endl;
+    cout << "text for additional buffers: " << (input.add_buff_txt == "" ? "No additional buffers is included" : input.add_buff_txt) << endl; //Carmine 09.02.2022
     cout << "****************************************" << endl;
 }
 void parse_user_input(const vecParams& params, user_input& input) {
@@ -111,6 +121,9 @@ void parse_user_input(const vecParams& params, user_input& input) {
     regex set_regex("(-set=)(.*)");
     regex solver_regex("(-solver=)(.*)");
     regex first_regex("(-first=)(.*)");
+    regex add_buff_regex("(-add_buff=)(.*)"); //Carmine 09.02.2022 option of additional buffer
+    regex model_mode_regex("(-model_mode=)(.*)"); //Carmine 16.02.2022 option of model mode
+    regex lib_regex("(-lib=)(.*)"); //Carmine 17.02.2022 option of library of delays
     for (auto param: params) {
         if (regex_match(param, period_regex)) {
             input.period = atof(param.substr(param.find("=") + 1).c_str());
@@ -128,6 +141,19 @@ void parse_user_input(const vecParams& params, user_input& input) {
         } else if (regex_match(param, first_regex)) {
             string tmp = param.substr(param.find("=") + 1);
             input.first = (tmp == "false") ? false : true;
+        } else if (regex_match(param, add_buff_regex)) {
+            string tmp = param.substr(param.find("=") + 1);
+            input.add_buff_txt = tmp;
+        } else if (regex_match(param, model_mode_regex)) {
+            string tmp = param.substr(param.find("=") + 1);
+            if(tmp.compare("default") && tmp.compare("valid") && tmp.compare("ready") && tmp.compare("all") && tmp.compare("mixed")){
+                cout << "\n*ERROR* Model mode: \"" << tmp << "\" is not accepted. default is set\nOnly default, valid, ready, all and mixed are available" << endl;
+            }else{
+                input.model_mode = tmp;
+            }
+        } else if (regex_match(param, lib_regex)) {
+            string tmp = param.substr(param.find("=") + 1);
+            input.lib = tmp;
         } else {
             cout << param << " is invalid argument" << endl;
             assert(false);
@@ -176,13 +202,24 @@ int main_shab(const vecParams& params){
 
     bool stat;
     if (input.set) {
-        stat = DF.addElasticBuffersBB_sc(input.period, input.delay, true, 1, input.timeout, input.first);
+        stat = DF.addElasticBuffersBB_sc(input.period, input.delay, true, 1, input.timeout, input.first, input.model_mode, input.lib);
     } else {
         stat = DF.addElasticBuffersBB(input.period, input.delay, true, 1, input.timeout, input.first);
     }
     if (stat) {
         DF.instantiateElasticBuffers();
+    }else{
+        cout << DF.getError() << endl;      //Carmine 03.03.22 important to find out what the problem is 
+        return -1;
     }
+
+    if (input.add_buff_txt != ""){ //Carmine 09.02.2022 additional buffers
+        DF.instantiateAdditionalElasticBuffers(input.add_buff_txt);
+    }
+
+    //DF.reduceMerges(); //Carmine 09.03.22 new function to eliminate 1-input merges // important after optimization since there are some 
+                        //  mechanisms that depend on the type of the block
+
     DF.writeDot(input.graph_name + "_graph_buf.dot");
     DF.writeDotBB(input.graph_name + "_bbgraph_buf.dot");
     return 0;

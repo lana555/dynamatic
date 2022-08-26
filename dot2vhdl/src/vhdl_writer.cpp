@@ -55,6 +55,7 @@ string entity_name[] = {
     ENTITY_LSQ,
     ENTITY_MC,
     ENTITY_DISTRIBUTOR,
+    ENTITY_INJECTOR,
     ENTITY_SELECTOR
 };
 
@@ -86,6 +87,7 @@ string component_types[] = {
     COMPONENT_LSQ,
     COMPONENT_MC,
     COMPONENT_DISTRIBUTOR,
+    COMPONENT_INJECTOR,
     COMPONENT_SELECTOR
 };
 
@@ -189,11 +191,14 @@ void write_signals (  )
                             signal += UNDERSCORE;
                             signal += to_string( indx );
                             signal += COLOUMN;
-                            if ( nodes[i].type == "Branch" && indx == 1 )
-                            {
-                                 signal +="std_logic_vector (0 downto 0);";
-                            }
-                            else if (nodes[i].type == COMPONENT_DISTRIBUTOR && indx == 1)
+                            // Lana 20.01.22 Branch condition no longer needs to be treated as a special case 
+                            // Dot specifies branch condition bitwidth correctly, so just rea value like for any other port
+                            //if ( nodes[i].type == "Branch" && indx == 1 )
+                            //{
+                                 //signal +="std_logic_vector (0 downto 0);";
+                            //}
+                            //else 
+                            if (nodes[i].type == COMPONENT_DISTRIBUTOR && indx == 1)
                         	{
                             	int cond_size = nodes[i].inputs.input[nodes[i].inputs.size - 1].bit_size;
                            		signal += "std_logic_vector (" + to_string(cond_size - 1) + " downto 0);";
@@ -878,6 +883,19 @@ void write_connections (  int indx )
                         signal_1 += components_type[0].in_ports_name_str[in_port_indx];
                         signal_1 += UNDERSCORE;
                         signal_1 += to_string( nodes[i].outputs.output[indx].next_nodes_port );
+                        
+                        
+                        //inverted
+                        string inverted;
+                        
+                        if ( nodes[nodes[i].outputs.output[indx].next_nodes_id].inputs.input[nodes[i].outputs.output[indx].next_nodes_port].type == "i" )
+                        {
+                            inverted = "not "; //inverted
+                        }
+                        else
+                        {
+                            inverted = "";
+                        }
 
                         signal_2 = nodes[i].name;
                         signal_2 += UNDERSCORE;
@@ -894,7 +912,7 @@ void write_connections (  int indx )
                     }
                         else
                         {
-                            netlist << "\t" << signal_1 << " <= std_logic_vector (resize(unsigned(" << signal_2 << ")," << signal_1 << "'length))"<<SEMICOLOUMN << endl;
+                            netlist << "\t" << signal_1 << " <= " << inverted << "std_logic_vector (resize(unsigned(" << signal_2 << ")," << signal_1 << "'length))"<<SEMICOLOUMN << endl;
                         }
                     }
                 }
@@ -1416,9 +1434,52 @@ string get_generic ( int node_id )
         generic += COMMA;
         generic += to_string(nodes[node_id].outputs.output[0].bit_size);
         generic += COMMA;
-        generic += to_string(nodes[node_id].inputs.input[0].bit_size); // condition size
+        generic += to_string(nodes[node_id].inputs.input[0].bit_size); // condition size inputs.input[input_indx].type
+        /*
+         *         
+         * generic += COMMA;
+
+        if ( nodes[node_id].inputs.input[1].type == "i" ) 
+            generic += "1"; // input is inverted
+        else
+            generic += "0"; // input is not inverted
+        generic += COMMA;
+        if ( nodes[node_id].inputs.input[2].type == "i" ) 
+            generic += "1"; // input is inverted
+        else
+            generic += "0"; // input is not inverted
+        */
+        
     }    
-    
+
+    if ( nodes[node_id].type.find("Inj") != std::string::npos )
+    {
+        generic = to_string(nodes[node_id].inputs.size);
+        generic += COMMA;
+        generic += to_string(nodes[node_id].outputs.size);
+        generic += COMMA;
+        generic += to_string(nodes[node_id].inputs.input[1].bit_size);
+        generic += COMMA;
+        generic += to_string(nodes[node_id].outputs.output[0].bit_size);
+        generic += COMMA;
+        generic += to_string(nodes[node_id].inputs.input[0].bit_size); // condition size inputs.input[input_indx].type
+        /*
+         *         
+         * generic += COMMA;
+
+        if ( nodes[node_id].inputs.input[1].type == "i" ) 
+            generic += "1"; // input is inverted
+        else
+            generic += "0"; // input is not inverted
+        generic += COMMA;
+        if ( nodes[node_id].inputs.input[2].type == "i" ) 
+            generic += "1"; // input is inverted
+        else
+            generic += "0"; // input is not inverted
+        */
+        
+    }    
+
     if ( nodes[node_id].type.find("CntrlMerge") != std::string::npos )
     {
         generic = to_string(nodes[node_id].inputs.size);
@@ -2813,7 +2874,16 @@ void write_components ( )
                         }
                         input_port += ")";
                     }
-                                            
+                    
+                    /*
+                    if ( nodes[i].inputs.input[indx].type == "i" )
+                    {
+                        input_signal = "not "; //inverted
+                        input_signal += nodes[i].name;
+                    }
+                    else
+                        input_signal = nodes[i].name;
+                    */
                     input_signal = nodes[i].name;
                     input_signal += UNDERSCORE;
                     input_signal += components_type[nodes[i].component_type].in_ports_name_str[in_port_indx];

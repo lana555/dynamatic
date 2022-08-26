@@ -10,8 +10,15 @@ std::string DHLS_VERSION("0.1.1");
 
 #define BB_MINLEN 3
 #define DATA_SIZE 32
+#if 1
 #define COND_SIZE 1
 #define CONTROL_SIZE 0
+#endif
+
+#if 0
+#define COND_SIZE 32
+#define CONTROL_SIZE 32
+#endif
 
 #define BRANCH_CONDITION_IN 1
 #define MUX_CONDITION_IN 0
@@ -1258,15 +1265,41 @@ std::string getHexValue(int x) {
 std::string getNodeDotParams(ENode* enode, std::string serial_number) {
     string name = "";
     switch (enode->type) {
+
+        case Branch_n:
+        case Branch_c:
+            name += ", delay=\"" + getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number, DATA)) + " " +  getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number, VALID)) + " " + getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,READY)) + " " +  
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,VR)) + " " + 
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,CV)) + " " + 
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,CR)) + " " + 
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,VC)) + " " + 
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number, VD)) + "\"";
+
+            break;
+
         case Branch_:
             name += ", value = \"0x1\"";
+
+            name += ", delay=\"" + getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number, DATA)) + " " +  getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number, VALID)) + " " + getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,READY)) + " " +  
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,VR)) + " " + 
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,CV)) + " " + 
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,CR)) + " " + 
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,VC)) + " " + 
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number, VD)) + "\"";
+
             break;
         case Inst_:
             if (enode->Instr->getOpcode() == Instruction::GetElementPtr)
                  name += ", constants=" + to_string(enode->JustCntrlPreds->size());
             if (enode->Instr->getOpcode() == Instruction::Select)
                  name += ", trueFrac=0.2";
-            name += ", delay=" + getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number));
+ //           name += ", delay=" + getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number, 0));
+            name += ", delay=\"" + getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number, DATA)) + " " +  getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number, VALID)) + " " + getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,READY)) + " " +  
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,VR)) + " " + 
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,CV)) + " " + 
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,CR)) + " " + 
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,VC)) + " " + 
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number, VD)) + "\"";
             
             if (isLSQport(enode))
                 name += ", latency=" + to_string(get_component_latency(("lsq_" + enode->Name), DATA_SIZE, serial_number));
@@ -1277,17 +1310,50 @@ std::string getNodeDotParams(ENode* enode, std::string serial_number) {
             break;
         case Phi_:
         case Phi_n:
-            name += ", delay=";
+            name += ", delay=\"";
             if (enode->CntrlPreds->size() == 1)
-                name += getFloatValue(get_component_delay(ZDC_NAME, DATA_SIZE, serial_number));
+                name += getFloatValue(get_component_delay(ZDC_NAME, DATA_SIZE, serial_number, 0)) + " " +  
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number, VALID)) + " " + getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,READY)) + " " +  
+
+getFloatValue(get_component_delay(ZDC_NAME, DATA_SIZE, serial_number,VR)) + " " + 
+getFloatValue(get_component_delay(ZDC_NAME, DATA_SIZE, serial_number,CV)) + " " + 
+getFloatValue(get_component_delay(ZDC_NAME, DATA_SIZE, serial_number,CR)) + " " + 
+getFloatValue(get_component_delay(ZDC_NAME, DATA_SIZE, serial_number,VC)) + " " + 
+getFloatValue(get_component_delay(ZDC_NAME, DATA_SIZE, serial_number, VD)) + "\"";
             else
-                name += getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number));
+                name += getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number, 0))+ " " +  
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number, VALID)) + " " + getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,READY)) + " " +  
+
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,VR)) + " " + 
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,CV)) + " " + 
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,CR)) + " " + 
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,VC)) + " " + 
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number, VD)) + "\"";
+
             break;
         case Phi_c:
-            name += ", delay=" + getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number));
+            name += ", delay=\"" + getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number, 0))+ " " +  
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number, VALID)) + " " + getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,READY)) + " " +  
+
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,VR)) + " " + 
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,CV)) + " " + 
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,CR)) + " " + 
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,VC)) + " " + 
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number, VD)) + "\"";
+
             break;
         case Cst_:
             name += ", value = \"0x" + getHexValue(getConstantValue(enode)) + "\"";
+        case Fork_:
+            name += ", delay=\"" + getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number, 0))+ " " +  
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number, VALID)) + " " + getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,READY)) + " " +  
+
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,VR)) + " " + 
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,CV)) + " " + 
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,CR)) + " " + 
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number,VC)) + " " + 
+getFloatValue(get_component_delay(enode->Name, DATA_SIZE, serial_number, VD)) + "\"";
+
         default:
             break;
     }

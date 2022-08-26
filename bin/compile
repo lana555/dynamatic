@@ -5,8 +5,25 @@ OPT=$OPT_DIR/opt # change depending on where your installation of opt is
 PASS_DIR=$ELASTIC_DIR
 
 
-
 echo "Andrea: arg1: " $1 "arg2:" $2 "arg3" $3 "arg4" $4
+
+#fast_token=$2
+#fast_token=$3
+fast_token=$4
+
+if [ -z "$4" ]
+  then
+     fast_token=$3
+fi
+
+
+if [ $fast_token = "-fast-token=true" ] ; then
+  echo "fast-token mode activated"
+  PASS_DIR="/home/dynamatic/Dynamatic/etc/dynamatic/elastic-circuits-fast-token"
+else
+  #$4 =" "
+  $flag2=$4
+fi
 
 BUILDDIR=$2
 #name=$1
@@ -75,7 +92,7 @@ $OPT \
 -load $PASS_DIR/_build/OptimizeBitwidth/libLLVMOptimizeBitWidth.so \
 -load $PASS_DIR/_build/MyCFGPass/libMyCFGPass.so \
 -polly-process-unprofitable -mycfgpass .$name"_mem2reg_constprop_simplifycfg_die.ll" -S \
-$3 $4
+$3 $flag2
 
 mv out.txt $REPORT_DIR/.$name"_new.txt" > /dev/null 2>&1
 mv print.txt $REPORT_DIR/.$name"_print.txt" > /dev/null 2>&1

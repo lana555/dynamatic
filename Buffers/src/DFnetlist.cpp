@@ -218,6 +218,9 @@ std::string DFnetlist_Impl::printBlockType(BlockType type) const {
     }
 }
 
+bool DFnetlist_Impl::getChannelMerge(channelID c){ return channels[c].channelMerge;} //Carmine 09.03.22 these two functions are used to preserve 
+void DFnetlist_Impl::setChannelMerge(channelID c){ channels[c].channelMerge = true;} //Carmine 09.03.22 the information for writing the dot after reduceMerges function
+
 void DFnetlist_Impl::printChannelInfo(channelID c, int slots, int transparent) {
     cout << "Adding buffer in " << getChannelName(c);
     cout << " | ";
@@ -257,16 +260,23 @@ bbID DFnetlist_Impl::getBasicBlock(blockID id) const
     return blocks[id].basicBlock;
 }
 
-double DFnetlist_Impl::getBlockDelay(blockID id) const
+double DFnetlist_Impl::getBlockDelay(blockID id, int indx) const
 {
     assert(validBlock(id));
-    return blocks[id].delay;
+    
+    if ( indx < 0 ) 
+        return blocks[id].delay;
+    else
+        return blocks[id].delays[indx];
 }
 
-void DFnetlist_Impl::setBlockDelay(blockID id, double d)
+
+void DFnetlist_Impl::setBlockDelay(blockID id, double d, int indx)
 {
     assert(validBlock(id));
-    blocks[id].delay = d;
+    if ( indx == 0 )
+        blocks[id].delay = d;
+    blocks[id].delays[indx] = d;
 }
 
 double DFnetlist_Impl::getBlockRetimingDiff(blockID id) const
@@ -790,7 +800,7 @@ double DFnetlist_Impl::getCombinationalDelay(portID inp, portID outp) const
     blockID b = getBlockFromPort(inp);
     assert (b == getBlockFromPort(outp));
     assert (getLatency(b) == 0);
-    return getPortDelay(inp) + getPortDelay(outp) + getBlockDelay(b);
+    return getPortDelay(inp) + getPortDelay(outp) + getBlockDelay(b, -1);
 }
 
 const setPorts& DFnetlist_Impl::getPorts(blockID id, PortDirection dir) const
@@ -921,6 +931,11 @@ blockID DFnetlist_Impl::getDstBlock(channelID id) const
     return getBlockFromPort(getDstPort(id));
 }
 
+channelID DFnetlist_Impl::getChannelID(portID id){ //Carmine 09.03.22 added a new function to retrieve channel ID from port ID
+    assert(validPort(id));
+    return ports[id].channel;
+}
+
 string DFnetlist_Impl::getChannelName(channelID id, bool full) const
 {
     assert(validChannel(id));
@@ -954,6 +969,18 @@ void DFnetlist_Impl::setChannelTransparency(channelID id, bool value)
 {
     assert(validChannel(id));
     channels[id].transparent = value;
+}
+
+void DFnetlist_Impl::setChannelEB(channelID id) //Carmine 21.02.22 in case both transparent and non-trans are present on the same channel
+{
+    assert(validChannel(id));
+    channels[id].EB = true;
+}
+
+bool DFnetlist_Impl::getChannelEB(channelID id) //Carmine 21.02.22 in case both transparent and non-trans are present on the same channel
+{
+    assert(validChannel(id));
+    return channels[id].EB;
 }
 
 void DFnetlist_Impl::setChannelFrequency(channelID id, double value) {

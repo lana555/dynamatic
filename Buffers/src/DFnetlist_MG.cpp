@@ -152,7 +152,7 @@ long long get_timestamp1( void )
 // If frequency of an arc is not set or set to zero or less, it will not be included in the MILP.
 DFnetlist_Impl::subNetlistBB DFnetlist_Impl::extractMarkedGraphBB(const map<bbID, double> &freq) {
     Milp_Model milp;
-    milp.init();
+    milp.init(getMilpSolver());
 
     // set the execution frequencies and calculate maximum frequency.
     double N_max = 0;
@@ -266,7 +266,7 @@ DFnetlist_Impl::subNetlist DFnetlist_Impl::extractMarkedGraph(const map<blockID,
 
     // Initialize the MILP model
     Milp_Model milp;
-    milp.init();
+    milp.init(getMilpSolver());
 
     // Boolean variables for MILP model
     vector<int> blockMG(vecBlocksSize(), -1); // Block belongs to MG

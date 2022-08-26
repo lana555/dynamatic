@@ -7,6 +7,8 @@
 using namespace Dataflow;
 using namespace std;
 
+static double delays [250][8];
+
 static string allowedChars = "_.";
 
 /**
@@ -212,17 +214,25 @@ static bool readDelays(DFnetlist_Impl& DF, blockID id, Agnode_t* v)
     vector<string> tokens {istream_iterator<string>{iss},
                            istream_iterator<string>{}
                           };
+	int i;
+
+	i = 0;
     for (auto& port: tokens) {
         // Check whether it is the delay of the block (no port specification)
         if (isdigit(port[0])) {
+		//printf("Andrea Get value of block %s\n\r", block_name);
             double v = getPositiveDouble(port);
-            if (v >= 0) {
-                DF.setBlockDelay(id, v);
+		//cout << "Andrea Get value of block " << block_name << " v " << v << " port " << port << endl;
+            //if (v >= 0) {
+                DF.setBlockDelay(id, v, i);
+		delays [id][i] = v; 
+		//cout << block_name << " id " << id << " i " << i << " delays [id][i] " << delays [id][i] << endl;  
+		i++;
                 continue;
-            } else {
-                DF.setError("Wrong delay specification for block " + block_name + ".");
-                return false;
-            }
+            //} else {
+            //    DF.setError("Wrong delay specification for block " + block_name + ".");
+            //    return false;
+            //}
         }
 
         double delay = -1;

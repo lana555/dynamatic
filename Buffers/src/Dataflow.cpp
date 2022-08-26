@@ -44,14 +44,14 @@ const string& DFnetlist::getBlockName(blockID id) const
     return DFI->getBlockName(id);
 }
 
-double DFnetlist::getBlockDelay(blockID id) const
+double DFnetlist::getBlockDelay(blockID id, int indx) const
 {
-    return DFI->getBlockDelay(id);
+    return DFI->getBlockDelay(id, indx);
 }
 
-void DFnetlist::setBlockDelay(blockID id, double d)
+void DFnetlist::setBlockDelay(blockID id, double d, int indx)
 {
-    DFI->setBlockDelay(id, d);
+    DFI->setBlockDelay(id, d, indx);
 }
 
 double DFnetlist::getBlockRetimingDiff(blockID id) const
@@ -290,6 +290,16 @@ void DFnetlist::setChannelTransparency(channelID id, bool value)
     return DFI->setChannelTransparency(id, value);
 }
 
+void DFnetlist::setChannelEB(channelID id)
+{
+    return DFI->setChannelEB(id);
+}
+
+bool DFnetlist::getChannelEB(channelID id)
+{
+    return DFI->getChannelEB(id);
+}
+
 void DFnetlist::setChannelFrequency(channelID id, double value) {
     return DFI->setChannelFrequency(id, value);
 }
@@ -306,6 +316,11 @@ bool DFnetlist::hasBuffer(channelID id) const
 blockID DFnetlist::insertBuffer(channelID c, int slots, bool transparent)
 {
     return DFI->insertBuffer(c, slots, transparent);
+}
+
+blockID DFnetlist::insertBuffer(channelID c, int slots, bool transparent, bool EB)
+{
+    return DFI->insertBuffer(c, slots, transparent, EB);
 }
 
 void DFnetlist::removeBuffer(blockID buf)
@@ -399,6 +414,10 @@ bool DFnetlist::writeBasicBlockDot(std::ostream& s)
     return DFI->writeBasicBlockDot(s);
 }
 
+void DFnetlist::reduceMerges(){ //Carmine 09.03.22 function to eliminate the merges with 1 input - they reduce to wire
+    return DFI->reduceMerges();
+}
+
 void DFnetlist::setMilpSolver(const string& solver)
 {
     return DFI->setMilpSolver(solver);
@@ -409,9 +428,9 @@ bool DFnetlist::addElasticBuffers(double Period, double BufferDelay, bool maxThr
     return DFI->addElasticBuffers(Period, BufferDelay, maxThroughput, coverage);
 }
 
-bool DFnetlist::addElasticBuffersBB_sc(double Period, double BufferDelay, bool maxThroughput, double coverage, int timeout, bool first_MG)
+bool DFnetlist::addElasticBuffersBB_sc(double Period, double BufferDelay, bool maxThroughput, double coverage, int timeout, bool first_MG, const std::string& model_mode, const std::string& lib_path)
 {
-    return DFI->addElasticBuffersBB_sc(Period, BufferDelay, maxThroughput, coverage, timeout, first_MG);
+    return DFI->addElasticBuffersBB_sc(Period, BufferDelay, maxThroughput, coverage, timeout, first_MG, model_mode, lib_path);
 }
 
 bool DFnetlist::addElasticBuffersBB(double Period, double BufferDelay, bool maxThroughput, double coverage, int timeout, bool first_MG)
@@ -422,6 +441,11 @@ bool DFnetlist::addElasticBuffersBB(double Period, double BufferDelay, bool maxT
 void DFnetlist::instantiateElasticBuffers()
 {
     DFI->instantiateElasticBuffers();
+}
+
+void DFnetlist::instantiateAdditionalElasticBuffers(const std::string& filename)
+{
+    DFI->instantiateAdditionalElasticBuffers(filename);
 }
 
 void DFnetlist::hideElasticBuffers()
