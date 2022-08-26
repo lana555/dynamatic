@@ -35,6 +35,8 @@ enum
   CMD_ADD_FILE,
   CMD_SET_PERIOD,
   CMD_SET_TARGET,
+  CMD_SET_MILP_MODE,   //Carmine 23.02.22 adding the functionality of milp mode to dynamatic basic code
+  CMD_SET_MILP_SOLVER,   //Carmine 25.02.22 setting MILP solver
   CMD_ANALYZE,
   CMD_ELABORATE,
   CMD_SYNTHESIZE,
@@ -60,6 +62,8 @@ static UI_CMD_T ui_cmds[] =
 	{"set_top_file"," : Set the top level file"},
 	{"set_period","   : Set the hardware period"},
 	{"set_target","   : Set target FPGA"},
+  {"set_milp_mode","   : Set MILP working mode"},     //Carmine 23.02.22 adding the functionality of milp mode to dynamatic basic code
+  {"set_milp_solver","   : Set MILP solver"},     //Carmine 25.02.22 setting MILP solver
     {"analyze","      : Analyze source"				},
 	{"elaborate","    : Elaborate source"				},
 	{"synthesize","   : C synthesis"				},
