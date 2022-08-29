@@ -34,6 +34,7 @@ name=$1
 SRC_DIR=src
 REPORT_DIR=reports
 HDL_DIR=hdl
+DEBUG_DIR=.debug
 
 #BUILDDIR = $(name)
 
@@ -45,6 +46,7 @@ OPTIMIZATION_FLAGS= #-fno-builtin, -fno-vectorize
 cd $BUILDDIR
 mkdir -p $REPORT_DIR
 mkdir -p $HDL_DIR
+mkdir -p $DEBUG_DIR
 
 echo "$CLANG -emit-llvm -S $OPTIMIZATION_LEVEL $OPTIMIZATION_FLAGS -c $SRC_DIR/$name -o .$name.ll"
 
@@ -109,6 +111,7 @@ func_name=$(echo "$name" | cut -f 1 -d '.')
 #rm *_bbgraph.dot
 mv *_bbgraph.dot $REPORT_DIR/$func_name"_bbgraph.dot"
 mv *.dot $REPORT_DIR/$func_name".dot"
+mv *.txt $DEBUG_DIR/
 
 dot -Tpng $REPORT_DIR/$func_name"_bbgraph.dot" > $REPORT_DIR/$func_name"_bbgraph.png"
 dot -Tpng $REPORT_DIR/$func_name".dot" > $REPORT_DIR/$func_name".png"

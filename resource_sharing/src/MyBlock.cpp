@@ -18,7 +18,7 @@ MyBlock::MyBlock(DFnetlist& df, int block_id)//: conditionPort(MyPort(df, df.get
 void MyBlock::readFromDF(DFnetlist& df, int block_id)
 {
 	id = block_id;
-	delay = df.getBlockDelay(block_id);
+	delay = df.getBlockDelay(block_id, 0);
 	latency = df.getLatency(block_id);
 	II = df.getInitiationInterval(block_id);
 	slot = df.getBufferSize(block_id);
@@ -276,7 +276,7 @@ MyBlock MyBlock::createConstant(DFnetlist & df, int bbId, string name, int value
 
 void MyBlock::writeToDF(DFnetlist &df)
 {
-	df.setBlockDelay(id, delay);
+	df.setBlockDelay(id, delay, 0);
 	df.setLatency(id, latency);
 	df.setInitiationInterval(id, II);
 	df.setBufferSize(id, slot);
