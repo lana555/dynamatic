@@ -9,7 +9,7 @@
 #define STORE_NAME "store"
 #define LSQ_LOAD_NAME "lsq_load"
 #define LSQ_STORE_NAME "lsq_store"
-#define MERGE_NAME "phi"
+#define MERGE_NAME "phi_n"
 #define GETPTR_NAME "getelementptr"
 #define FADD_NAME "fadd"
 #define FSUB_NAME "fsub"
@@ -34,6 +34,9 @@
 #define ASHR_NAME "ashr"
 #define LSHR_NAME "lshr"
 #define SELECT_NAME "select"
+
+#define MUX_NAME "phi"
+
 
 #include <string>
 
@@ -70,6 +73,7 @@ enum {
     ASHR_INDX,
     LSHR_INDX,
     SELECT_INDX,
+    MUX_INDX,
     CMP_MAX,
 };
 
@@ -111,7 +115,8 @@ XOR_NAME,
 SHL_NAME,
 ASHR_NAME,
 LSHR_NAME,
-SELECT_NAME
+SELECT_NAME,
+MUX_NAME
 
 };
 
