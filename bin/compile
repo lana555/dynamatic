@@ -22,7 +22,7 @@ if [ $fast_token = "-fast-token=true" ] ; then
   PASS_DIR="/home/dynamatic/Dynamatic/etc/dynamatic/elastic-circuits-fast-token"
 else
   #$4 =" "
-  $flag2=$4
+  flag2=$4
 fi
 
 BUILDDIR=$2
