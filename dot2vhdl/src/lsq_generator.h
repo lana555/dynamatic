@@ -39,6 +39,8 @@ typedef struct lsq_configuration
     int dataWidth;//     "dataWidth": 32,
     int addressWidth;//     "addressWidth": 10,
     int fifoDepth;    //     "fifoDepth": 4,
+    int fifoDepth_L; // "fifoDepth_L": 4,
+    int fifoDepth_S; // "fifoDepth_S": 4,
     int loadPorts;//     "loadPorts": 1,
     int storePorts;//     "storePorts": 1,
     BB_PARAMS_T bbParams;//     "bbParams": {

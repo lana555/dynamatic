@@ -776,6 +776,26 @@ int optimize ( string input_cmp )
         
         }
         
+        
+        if ( lsq_size_opt )
+        {
+            command = "lsq_sizing  -filepath=";
+            
+            command += project_dir;
+            command += OUTPUT_DIR;
+            command += current_file;
+            //command += "_optimized.dot ";
+            command += " -case=0 ";
+            
+            cout << command<< endl;
+
+            system (command.c_str());
+            
+        }
+        
+        
+        
+        
         //dot -Tpng reports/histogram_elaborated_optimized.dot > file.png
         command = "dot -Tpng ";
         command += project_dir;

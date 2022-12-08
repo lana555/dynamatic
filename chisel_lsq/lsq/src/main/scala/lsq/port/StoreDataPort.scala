@@ -18,10 +18,10 @@ class StoreDataPort(config: LsqConfigs) extends Module {
     val dataToStoreQueue = Output(UInt(config.dataWidth.W))
   })
 
-  val cnt = RegInit(0.U(log2Ceil(config.fifoDepth + 1).W))
+  val cnt = RegInit(0.U(log2Ceil(config.fifoDepth_S + 1).W))
 
   // updating counter
-  when(io.portEnable && !io.storeDataEnable && cnt =/= config.fifoDepth.U) {
+  when(io.portEnable && !io.storeDataEnable && cnt =/= config.fifoDepth_S.U) {
     cnt := cnt + 1.U
   }.elsewhen(io.storeDataEnable && !io.portEnable && cnt =/= 0.U) {
     cnt := cnt - 1.U

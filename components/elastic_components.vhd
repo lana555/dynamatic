@@ -606,6 +606,49 @@ begin
 
 end arch;
 
+-------------------------------------------------------------------  fork
+------------------------------------------------------------------------
+library ieee;
+use ieee.std_logic_1164.all;
+use work.customTypes.all;
+
+entity lazyfork is generic( INPUTS: integer; SIZE : integer; DATA_SIZE_IN : Integer; DATA_SIZE_OUT : Integer);
+port(   clk, rst    : in std_logic; -- the eager implementation uses registers
+        dataInArray : in data_array (0 downto 0)(DATA_SIZE_IN-1 downto 0);
+        pValidArray : in std_logic_vector(0 downto 0);
+        readyArray : out std_logic_vector(0 downto 0);
+        dataOutArray : out data_array (SIZE-1 downto 0)(DATA_SIZE_OUT-1 downto 0); 
+        nReadyArray : in std_logic_vector(SIZE-1 downto 0);
+        validArray  : out std_logic_vector(SIZE-1 downto 0)
+        );
+        
+end lazyfork;
+
+architecture arch of lazyfork is
+    signal allnReady : std_logic;
+begin
+
+genericAnd : entity work.andn generic map (SIZE)
+    port map(nReadyArray, allnReady);
+ 
+valids : process(pValidArray, nReadyArray, allnReady)
+    begin
+    for i in 0 to SIZE-1 loop
+        validArray(i) <= pValidArray(0) and allnReady;
+    end loop;
+    end process;
+ 
+readyArray(0) <= allnReady;
+
+process(dataInArray)
+    begin
+        for I in 0 to SIZE - 1 loop
+            dataOutArray(I) <= dataInArray(0);
+        end loop;  
+    end process;    
+
+end arch;
+
 --------------------------------------------------------------  merge
 ---------------------------------------------------------------------
 library ieee;

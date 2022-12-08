@@ -11,20 +11,20 @@ class GroupAllocator(config: LsqConfigs) extends Module {
 
   val io = IO(new Bundle {
     // to load queue
-    val bbLoadOffsets = Output(Vec(config.fifoDepth, UInt(log2Ceil(config.fifoDepth).W)))
-    val bbLoadPorts = Output(Vec(config.fifoDepth, UInt(max(1, log2Ceil(config.numLoadPorts)).W)))
-    val bbNumLoads = Output(UInt(max(1, log2Ceil(min(config.numLoadPorts, config.fifoDepth) + 1)).W))
+    val bbLoadOffsets = Output(Vec(config.fifoDepth_L, UInt(log2Ceil(config.fifoDepth_S).W)))
+    val bbLoadPorts = Output(Vec(config.fifoDepth_L, UInt(max(1, log2Ceil(config.numLoadPorts)).W)))
+    val bbNumLoads = Output(UInt(max(1, log2Ceil(min(config.numLoadPorts, config.fifoDepth_L) + 1)).W))
     // from load queue
-    val loadTail = Input(UInt(log2Ceil(config.fifoDepth).W))
-    val loadHead = Input(UInt(log2Ceil(config.fifoDepth).W))
+    val loadTail = Input(UInt(log2Ceil(config.fifoDepth_L).W))
+    val loadHead = Input(UInt(log2Ceil(config.fifoDepth_L).W))
     val loadEmpty = Input(Bool())
     // to store queue
-    val bbStoreOffsets = Output(Vec(config.fifoDepth, UInt(log2Ceil(config.fifoDepth).W)))
-    val bbStorePorts = Output(Vec(config.fifoDepth, UInt(max(1, log2Ceil(config.numStorePorts)).W)))
-    val bbNumStores = Output(UInt(max(1, log2Ceil(min(config.numStorePorts, config.fifoDepth) + 1)).W))
+    val bbStoreOffsets = Output(Vec(config.fifoDepth_S, UInt(log2Ceil(config.fifoDepth_L).W)))
+    val bbStorePorts = Output(Vec(config.fifoDepth_S, UInt(max(1, log2Ceil(config.numStorePorts)).W)))
+    val bbNumStores = Output(UInt(max(1, log2Ceil(min(config.numStorePorts, config.fifoDepth_S) + 1)).W))
     // from store queue
-    val storeTail = Input(UInt(log2Ceil(config.fifoDepth).W))
-    val storeHead = Input(UInt(log2Ceil(config.fifoDepth).W))
+    val storeTail = Input(UInt(log2Ceil(config.fifoDepth_S).W))
+    val storeHead = Input(UInt(log2Ceil(config.fifoDepth_S).W))
     val storeEmpty = Input(Bool())
     // to load queue and store queue
     val bbStart = Output(Bool())
@@ -35,20 +35,31 @@ class GroupAllocator(config: LsqConfigs) extends Module {
     val loadPortsEnable = Output(Vec(config.numLoadPorts, Bool()))
     val storePortsEnable = Output(Vec(config.numStorePorts, Bool()))
   })
-  require(config.fifoDepth > 1)
+  require(config.fifoDepth_L > 1)
+  require(config.fifoDepth_S > 1)
 
-  def calculateEmptySlots(head: UInt, tail: UInt, empty: Bool): UInt = {
-    val result = Wire(UInt(log2Ceil(config.fifoDepth + 1).W))
+  def calculateLoadEmptySlots(head: UInt, tail: UInt, empty: Bool): UInt = {
+    val result = Wire(UInt(log2Ceil(config.fifoDepth_L + 1).W))
     when(empty || (head < tail)) {
-      result := config.fifoDepth.U - tail + head
+      result := config.fifoDepth_L.U - tail + head
     }.otherwise {
       result := head - tail
     }
     result
   }
 
-  val emptyLoadSlots: UInt = calculateEmptySlots(io.loadHead, io.loadTail, io.loadEmpty)
-  val emptyStoreSlots: UInt = calculateEmptySlots(io.storeHead, io.storeTail, io.storeEmpty)
+  def calculateStoreEmptySlots(head: UInt, tail: UInt, empty: Bool): UInt = {
+    val result = Wire(UInt(log2Ceil(config.fifoDepth_S + 1).W))
+    when(empty || (head < tail)) {
+      result := config.fifoDepth_S.U - tail + head
+    }.otherwise {
+      result := head - tail
+    }
+    result
+  }
+
+  val emptyLoadSlots: UInt = calculateLoadEmptySlots(io.loadHead, io.loadTail, io.loadEmpty)
+  val emptyStoreSlots: UInt = calculateStoreEmptySlots(io.storeHead, io.storeTail, io.storeEmpty)
   // Ready to previous
   io.readyToPrevious := VecInit((config.numStores zip config.numLoads) map
     (x => (x._1.U <= emptyStoreSlots) && (x._2.U <= emptyLoadSlots)))
@@ -82,36 +93,36 @@ class GroupAllocator(config: LsqConfigs) extends Module {
   }
   // set number of loads, number of stores, load ports and store ports
 
-  io.bbNumLoads := 0.U((max(1, log2Ceil(min(config.numLoadPorts, config.fifoDepth) + 1)).W))
-  io.bbNumStores := 0.U((max(1, log2Ceil(min(config.numStorePorts, config.fifoDepth) + 1)).W))
-  io.bbLoadPorts := VecInit(Seq.fill(config.fifoDepth)(0.U(config.loadPortIdWidth)))
-  io.bbStorePorts := VecInit(Seq.fill(config.fifoDepth)(0.U(config.storePortIdWidth)))
-  io.bbLoadOffsets := VecInit(Seq.fill(config.fifoDepth)(0.U(config.fifoIdxWidth)))
-  io.bbStoreOffsets := VecInit(Seq.fill(config.fifoDepth)(0.U(config.fifoIdxWidth)))
+  io.bbNumLoads := 0.U((max(1, log2Ceil(min(config.numLoadPorts, config.fifoDepth_L) + 1)).W))
+  io.bbNumStores := 0.U((max(1, log2Ceil(min(config.numStorePorts, config.fifoDepth_S) + 1)).W))
+  io.bbLoadPorts := VecInit(Seq.fill(config.fifoDepth_L)(0.U(config.loadPortIdWidth)))
+  io.bbStorePorts := VecInit(Seq.fill(config.fifoDepth_S)(0.U(config.storePortIdWidth)))
+  io.bbLoadOffsets := VecInit(Seq.fill(config.fifoDepth_L)(0.U(config.fifoIdxWidth_S)))
+  io.bbStoreOffsets := VecInit(Seq.fill(config.fifoDepth_S)(0.U(config.fifoIdxWidth_L)))
 
   when(io.bbStart) {
     io.bbNumLoads := MuxLookup(allocatedBBIdx, 0.U, config.numLoads.zipWithIndex map (x => x._2.U -> x._1.U))
     io.bbNumStores := MuxLookup(allocatedBBIdx, 0.U, config.numStores.zipWithIndex map (x => x._2.U -> x._1.U))
     io.bbLoadPorts := MuxLookup(
       allocatedBBIdx,
-      VecInit(Seq.fill(config.fifoDepth)(0.U(config.loadPortIdWidth))),
+      VecInit(Seq.fill(config.fifoDepth_L)(0.U(config.loadPortIdWidth))),
       config.loadPorts.zipWithIndex map (x => x._2.U -> VecInit(x._1 map (y => y.U(config.loadPortIdWidth))))
     )
     io.bbStorePorts := MuxLookup(
       allocatedBBIdx,
-      VecInit(Seq.fill(config.fifoDepth)(0.U(config.storePortIdWidth))),
+      VecInit(Seq.fill(config.fifoDepth_S)(0.U(config.storePortIdWidth))),
       config.storePorts.zipWithIndex map (x => x._2.U -> VecInit(x._1 map (y => y.U(config.storePortIdWidth))))
     )
     // set corresponding BB offsets
     io.bbLoadOffsets := MuxLookup(
       allocatedBBIdx,
-      VecInit(Seq.fill(config.fifoDepth)(0.U(config.fifoIdxWidth))),
+      VecInit(Seq.fill(config.fifoDepth_L)(0.U(config.fifoIdxWidth_S))),
       config.loadOffsets.zipWithIndex map (x => x._2.U -> VecInit(x._1 map (y =>
-        addMod(y.U, io.storeTail + config.fifoDepth.U - 1.U, config.fifoDepth.U).asTypeOf(UInt(config.fifoIdxWidth))))))
+        addMod(y.U((log2Ceil(config.fifoDepth_S) + 1).W), io.storeTail + config.fifoDepth_S.U((log2Ceil(config.fifoDepth_S) + 1).W) - 1.U((log2Ceil(config.fifoDepth_S) + 1).W), config.fifoDepth_S.U).asTypeOf(UInt(config.fifoIdxWidth_S))))))
     io.bbStoreOffsets := MuxLookup(
       allocatedBBIdx,
-      VecInit(Seq.fill(config.fifoDepth)(0.U(config.fifoIdxWidth))),
+      VecInit(Seq.fill(config.fifoDepth_S)(0.U(config.fifoIdxWidth_L))),
       config.storeOffsets.zipWithIndex map (x => x._2.U -> VecInit(x._1 map (y =>
-        addMod(y.U, io.loadTail + config.fifoDepth.U - 1.U, config.fifoDepth.U).asTypeOf(UInt(config.fifoIdxWidth))))))
+        addMod(y.U((log2Ceil(config.fifoDepth_L) + 1).W), io.loadTail + config.fifoDepth_L.U((log2Ceil(config.fifoDepth_L) + 1).W) - 1.U((((log2Ceil(config.fifoDepth_S) + 1).W))), config.fifoDepth_L.U).asTypeOf(UInt(config.fifoIdxWidth_L))))))
   }
 }

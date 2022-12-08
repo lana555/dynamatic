@@ -26,7 +26,7 @@ using namespace std;
 
 typedef struct input
 {
-    int bit_size;
+    int bit_size = 32;
     int prev_nodes_id = COMPONENT_NOT_FOUND;
     string type;
     int port;
@@ -35,13 +35,13 @@ typedef struct input
 
 typedef struct in
 {
-    int size;
+    int size = 0;
     INPUT_T input[MAX_OUTPUTS];
 } IN_T;
 
 typedef struct output
 {
-    int bit_size;
+    int bit_size = 32;
     int next_nodes_id = COMPONENT_NOT_FOUND;
     int next_nodes_port;
     string type;
@@ -52,7 +52,7 @@ typedef struct output
 
 typedef struct out
 {
-    int size;
+    int size = 0;
     OUTPUT_T output[MAX_OUTPUTS];
 } OUT_T;
 
@@ -91,7 +91,10 @@ typedef struct node
     string  storeOffsets;
     string  loadPorts;
     string  storePorts;
-    int  fifodepth;
+    // Jiantao, 14/06/2022
+    int fifodepth_L;
+    int fifodepth_S;
+    int fifodepth;
     int constants;
 } NODE_T;
 

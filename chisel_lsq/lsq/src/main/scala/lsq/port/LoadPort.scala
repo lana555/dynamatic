@@ -20,10 +20,10 @@ class LoadPort(config: LsqConfigs) extends Module {
     val dataFromLoadQueue = Flipped(Decoupled(UInt(config.dataWidth.W)))
   })
 
-  val cnt = RegInit(0.U(log2Ceil(config.fifoDepth + 1).W))
+  val cnt = RegInit(0.U(log2Ceil(config.fifoDepth_L + 1).W))
 
   // updating counter
-  when(io.portEnable && !io.loadAddrEnable && cnt =/= config.fifoDepth.U) {
+  when(io.portEnable && !io.loadAddrEnable && cnt =/= config.fifoDepth_L.U) {
     cnt := cnt + 1.U
   }.elsewhen(io.loadAddrEnable && !io.portEnable && cnt =/= 0.U) {
     cnt := cnt - 1.U

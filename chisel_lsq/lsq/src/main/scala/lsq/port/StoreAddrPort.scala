@@ -18,10 +18,10 @@ class StoreAddrPort(config: LsqConfigs) extends Module {
     val addrToStoreQueue = Output(UInt(config.dataWidth.W))
   })
 
-  val cnt = RegInit(0.U(log2Ceil(config.fifoDepth + 1).W))
+  val cnt = RegInit(0.U(log2Ceil(config.fifoDepth_S + 1).W))
 
   // updating counter
-  when(io.portEnable && !io.storeAddrEnable && cnt =/= config.fifoDepth.U) {
+  when(io.portEnable && !io.storeAddrEnable && cnt =/= config.fifoDepth_S.U) {
     cnt := cnt + 1.U
   }.elsewhen(io.storeAddrEnable && !io.portEnable && cnt =/= 0.U) {
     cnt := cnt - 1.U

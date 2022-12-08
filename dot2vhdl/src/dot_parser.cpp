@@ -419,6 +419,7 @@ OUT_T get_component_outputs ( string parameters )
 
     OUT_T outputs;
     
+    outputs.size = 0;
 
     string_split( parameters, '=', par ); 
     
@@ -812,6 +813,17 @@ void parse_components ( string v_0, string v_1 )
             if ( parameter.find("fifoDepth") != std::string::npos )
             {
                 nodes[components_in_netlist].fifodepth = get_component_bbcount ( parameters[indx] );
+            }
+
+            // Jiantao, 14/06/2022, Separate the depth for Load and Store Queue
+            if ( parameter.find("fifoDepth_L") != std::string::npos)
+            {
+                nodes[components_in_netlist].fifodepth_L = get_component_bbcount( parameters[indx] );
+            }
+
+            if ( parameter.find("fifoDepth_S") != std::string::npos)
+            {
+                nodes[components_in_netlist].fifodepth_S = get_component_bbcount( parameters[indx] );
             }
 
             if ( parameter.find("numLoads") != std::string::npos )

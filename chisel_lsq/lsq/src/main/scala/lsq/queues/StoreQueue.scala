@@ -13,25 +13,25 @@ class StoreQueue(config: LsqConfigs) extends Module {
   val io = IO(new Bundle {
     // From group allocator
     val bbStart = Input(Bool())
-    val bbStoreOffsets = Input(Vec(config.fifoDepth, UInt(config.fifoIdxWidth)))
-    val bbStorePorts = Input(Vec(config.fifoDepth, UInt(config.storePortIdWidth)))
-    val bbNumStores = Input(UInt(max(1, log2Ceil(min(config.numLoadPorts, config.fifoDepth) + 1)).W))
+    val bbStoreOffsets = Input(Vec(config.fifoDepth_S, UInt(config.fifoIdxWidth_L)))
+    val bbStorePorts = Input(Vec(config.fifoDepth_S, UInt(config.storePortIdWidth)))
+    val bbNumStores = Input(UInt(max(1, log2Ceil(min(config.numStorePorts, config.fifoDepth_S) + 1)).W))
     // To group allocator
-    val storeTail = Output(UInt(config.fifoIdxWidth))
-    val storeHead = Output(UInt(config.fifoIdxWidth))
+    val storeTail = Output(UInt(config.fifoIdxWidth_S))
+    val storeHead = Output(UInt(config.fifoIdxWidth_S))
     val storeEmpty = Output(Bool())
     //  From load queue
-    val loadTail = Input(UInt(config.fifoIdxWidth))
-    val loadHead = Input(UInt(config.fifoIdxWidth))
+    val loadTail = Input(UInt(config.fifoIdxWidth_L))
+    val loadHead = Input(UInt(config.fifoIdxWidth_L))
     val loadEmpty = Input(Bool())
-    val loadAddressDone = Input(Vec(config.fifoDepth, Bool()))
-    val loadDataDone = Input(Vec(config.fifoDepth, Bool()))
-    val loadAddressQueue = Input(Vec(config.fifoDepth, UInt(config.addrWidth.W)))
+    val loadAddressDone = Input(Vec(config.fifoDepth_L, Bool()))
+    val loadDataDone = Input(Vec(config.fifoDepth_L, Bool()))
+    val loadAddressQueue = Input(Vec(config.fifoDepth_L, UInt(config.addrWidth.W)))
     // To load queue
-    val storeAddrDone = Output(Vec(config.fifoDepth, Bool()))
-    val storeDataDone = Output(Vec(config.fifoDepth, Bool()))
-    val storeAddrQueue = Output(Vec(config.fifoDepth, UInt(config.addrWidth.W)))
-    val storeDataQueue = Output(Vec(config.fifoDepth, UInt(config.dataWidth.W)))
+    val storeAddrDone = Output(Vec(config.fifoDepth_S, Bool()))
+    val storeDataDone = Output(Vec(config.fifoDepth_S, Bool()))
+    val storeAddrQueue = Output(Vec(config.fifoDepth_S, UInt(config.addrWidth.W)))
+    val storeDataQueue = Output(Vec(config.fifoDepth_S, UInt(config.dataWidth.W)))
     // From store data ports
     val storeDataEnable = Input(Vec(config.numStorePorts, Bool()))
     val dataFromStorePorts = Input(Vec(config.numStorePorts, UInt(config.dataWidth.W)))
@@ -45,20 +45,20 @@ class StoreQueue(config: LsqConfigs) extends Module {
     val memIsReadyForStores = Input(Bool())
   })
 
-  require(config.fifoDepth > 1)
+  require(config.fifoDepth_S > 1)
 
-  val head = RegInit(0.U(config.fifoIdxWidth))
-  val tail = RegInit(0.U(config.fifoIdxWidth))
+  val head = RegInit(0.U(config.fifoIdxWidth_S))
+  val tail = RegInit(0.U(config.fifoIdxWidth_S))
 
-  val offsetQ = RegInit(VecInit(Seq.fill(config.fifoDepth)(0.U(config.fifoIdxWidth))))
-  val portQ = RegInit(VecInit(Seq.fill(config.fifoDepth)(0.U(config.storePortIdWidth))))
-  val addrQ = RegInit(VecInit(Seq.fill(config.fifoDepth)(0.U(config.addrWidth.W))))
-  val dataQ = RegInit(VecInit(Seq.fill(config.fifoDepth)(0.U(config.dataWidth.W))))
-  val addrKnown = RegInit(VecInit(Seq.fill(config.fifoDepth)(false.B)))
-  val dataKnown = RegInit(VecInit(Seq.fill(config.fifoDepth)(false.B)))
-  val allocatedEntries = RegInit(VecInit(Seq.fill(config.fifoDepth)(false.B)))
-  val storeCompleted = RegInit(VecInit(Seq.fill(config.fifoDepth)(false.B)))
-  val checkBits = RegInit(VecInit(Seq.fill(config.fifoDepth)(false.B)))
+  val offsetQ = RegInit(VecInit(Seq.fill(config.fifoDepth_S)(0.U(config.fifoIdxWidth_L))))
+  val portQ = RegInit(VecInit(Seq.fill(config.fifoDepth_S)(0.U(config.storePortIdWidth))))
+  val addrQ = RegInit(VecInit(Seq.fill(config.fifoDepth_S)(0.U(config.addrWidth.W))))
+  val dataQ = RegInit(VecInit(Seq.fill(config.fifoDepth_S)(0.U(config.dataWidth.W))))
+  val addrKnown = RegInit(VecInit(Seq.fill(config.fifoDepth_S)(false.B)))
+  val dataKnown = RegInit(VecInit(Seq.fill(config.fifoDepth_S)(false.B)))
+  val allocatedEntries = RegInit(VecInit(Seq.fill(config.fifoDepth_S)(false.B)))
+  val storeCompleted = RegInit(VecInit(Seq.fill(config.fifoDepth_S)(false.B)))
+  val checkBits = RegInit(VecInit(Seq.fill(config.fifoDepth_S)(false.B)))
 
   /**
     * -----------------------------------------------------------------------------------------------------------------
@@ -66,15 +66,15 @@ class StoreQueue(config: LsqConfigs) extends Module {
     * -----------------------------------------------------------------------------------------------------------------
     */
 
-  val initBits = VecInit(Range(0, config.fifoDepth) map (idx =>
-    (subMod(idx.U, tail, config.fifoDepth.U) < io.bbNumStores) && io.bbStart))
+  val initBits = VecInit(Range(0, config.fifoDepth_S) map (idx =>
+    (subMod(idx.U, tail, config.fifoDepth_S.U) < io.bbNumStores) && io.bbStart))
 
   allocatedEntries := VecInit((allocatedEntries zip initBits) map (x => x._1 || x._2))
 
-  for (idx <- 0 until config.fifoDepth) {
+  for (idx <- 0 until config.fifoDepth_S) {
     when(initBits(idx)) {
-      offsetQ(idx) := io.bbStoreOffsets(subMod(idx.U, tail, config.fifoDepth.U))
-      portQ(idx) := io.bbStorePorts(subMod(idx.U, tail, config.fifoDepth.U))
+      offsetQ(idx) := io.bbStoreOffsets(subMod(idx.U, tail, config.fifoDepth_S.U))
+      portQ(idx) := io.bbStorePorts(subMod(idx.U, tail, config.fifoDepth_S.U))
     }
   }
 
@@ -90,10 +90,10 @@ class StoreQueue(config: LsqConfigs) extends Module {
     * I.e., load head has gone past the last preceding load
     */
   val previousLoadHead = RegNext(io.loadHead)
-  for (storeEntryIdx <- 0 until config.fifoDepth) {
+  for (storeEntryIdx <- 0 until config.fifoDepth_S) {
     when(initBits(storeEntryIdx)) {
       checkBits(storeEntryIdx) := !(io.loadEmpty && addMod(io.bbStoreOffsets(subMod(storeEntryIdx.U, tail,
-        config.fifoDepth.U)), 1.U, config.fifoDepth.U) === io.loadTail)
+        config.fifoDepth_S.U)), 1.U, config.fifoDepth_L.U) === io.loadTail)
     }.otherwise {
       when(io.loadEmpty) {
         checkBits(storeEntryIdx) := false.B
@@ -116,14 +116,14 @@ class StoreQueue(config: LsqConfigs) extends Module {
   /**
     * Entries in the load queue are valid if they are between the load head and the load tail
     */
-  val validEntriesInLoadQ: Vec[Bool] = VecInit(Range(0, config.fifoDepth) map (idx => Mux(io.loadHead < io.loadTail,
+  val validEntriesInLoadQ: Vec[Bool] = VecInit(Range(0, config.fifoDepth_L) map (idx => Mux(io.loadHead < io.loadTail,
     io.loadHead <= idx.U && idx.U < io.loadTail, !io.loadEmpty && !(io.loadTail <= idx.U && idx.U < io.loadHead))))
 
   /**
     * Load entries should be checked only if they are between the load head and the last preceding load
     * (i.e., offsetQ(head))
     */
-  val loadsToCheck: Vec[Bool] = VecInit(Range(0, config.fifoDepth) map (idx => Mux(io.loadHead <= offsetQ(head),
+  val loadsToCheck: Vec[Bool] = VecInit(Range(0, config.fifoDepth_L) map (idx => Mux(io.loadHead <= offsetQ(head),
       io.loadHead <= idx.U && idx.U <= offsetQ(head), !(offsetQ(head) < idx.U && idx.U < io.loadHead))))
 
   /**
@@ -135,8 +135,8 @@ class StoreQueue(config: LsqConfigs) extends Module {
   /**
     * No-conflict flags for each load entry
     */
-  val noConflicts: Vec[Bool] = Wire(Vec(config.fifoDepth, Bool()))
-  for (loadEntryIdx <- 0 until config.fifoDepth) {
+  val noConflicts: Vec[Bool] = Wire(Vec(config.fifoDepth_L, Bool()))
+  for (loadEntryIdx <- 0 until config.fifoDepth_L) {
     noConflicts(loadEntryIdx) := !entriesToCheck(loadEntryIdx) || loadDataKnown(loadEntryIdx) ||
       (loadAddrKnown(loadEntryIdx) && addrQ(head) =/= loadAddrQ(loadEntryIdx))
   }
@@ -158,7 +158,7 @@ class StoreQueue(config: LsqConfigs) extends Module {
     * The store completed flags are cleared for an entry when it is first allocated
     * They are set when a store request is generated for it.
     */
-    for (storeEntryIdx <- 0 until config.fifoDepth) {
+    for (storeEntryIdx <- 0 until config.fifoDepth_S) {
       when(initBits(storeEntryIdx)) {
         storeCompleted(storeEntryIdx) := false.B
       }.elsewhen(head === storeEntryIdx.U && storeRequest && io.memIsReadyForStores) {
@@ -174,9 +174,9 @@ class StoreQueue(config: LsqConfigs) extends Module {
   /**
     * For each store port, set flags denoting its associated store queue entries
     */
-  val entriesPorts: Vec[Vec[Bool]] = Wire(Vec(config.numStorePorts, Vec(config.fifoDepth, Bool())))
+  val entriesPorts: Vec[Vec[Bool]] = Wire(Vec(config.numStorePorts, Vec(config.fifoDepth_S, Bool())))
   for (storePortId <- 0 until config.numStorePorts) {
-    for (storeEntryIdx <- 0 until config.fifoDepth) {
+    for (storeEntryIdx <- 0 until config.fifoDepth_S) {
       entriesPorts(storePortId)(storeEntryIdx) := portQ(storeEntryIdx) === storePortId.U
     }
   }
@@ -186,8 +186,8 @@ class StoreQueue(config: LsqConfigs) extends Module {
     * I.e., when an address (or data) port has multiple corresponding stores, the priority is given to the first entry
     * from the head for which the address (or data) is not known
     */
-  val inputAddrPriorityPorts: Vec[Vec[Bool]] = Wire(Vec(config.numStorePorts, Vec(config.fifoDepth, Bool())))
-  val inputDataPriorityPorts: Vec[Vec[Bool]] = Wire(Vec(config.numStorePorts, Vec(config.fifoDepth, Bool())))
+  val inputAddrPriorityPorts: Vec[Vec[Bool]] = Wire(Vec(config.numStorePorts, Vec(config.fifoDepth_S, Bool())))
+  val inputDataPriorityPorts: Vec[Vec[Bool]] = Wire(Vec(config.numStorePorts, Vec(config.fifoDepth_S, Bool())))
   for (storePortId <- 0 until config.numStorePorts) {
     val condVecAddr = VecInit((entriesPorts(storePortId) zip addrKnown) map (x => x._1 && !x._2))
     val condVecData = VecInit((entriesPorts(storePortId) zip dataKnown) map (x => x._1 && !x._2))
@@ -200,7 +200,7 @@ class StoreQueue(config: LsqConfigs) extends Module {
     * They are cleared when first allocated
     * Then, when the corresponding addresses and data arrive, they are set
     */
-  for (storeEntryIdx <- 0 until config.fifoDepth) {
+  for (storeEntryIdx <- 0 until config.fifoDepth_S) {
     when(initBits(storeEntryIdx)) {
       addrKnown(storeEntryIdx) := false.B
       dataKnown(storeEntryIdx) := false.B
@@ -227,11 +227,11 @@ class StoreQueue(config: LsqConfigs) extends Module {
     */
 
     when(storeRequest && io.memIsReadyForStores) {
-      head := addMod(head, 1.U, config.fifoDepth.U)
+      head := addMod(head, 1.U, config.fifoDepth_S.U)
     }
 
   when(io.bbStart) {
-    tail := addMod(tail, io.bbNumStores, config.fifoDepth.U)
+    tail := addMod(tail, io.bbNumStores, config.fifoDepth_S.U)
   }
 
   io.storeEmpty := VecInit((storeCompleted zip allocatedEntries) map (x => x._1 || !x._2)).forall(x => x)

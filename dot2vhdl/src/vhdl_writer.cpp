@@ -42,6 +42,7 @@ string entity_name[] = {
     ENTITY_NFIFO,
     ENTITY_TFIFO,
     ENTITY_FORK,
+    ENTITY_LFORK,
     ENTITY_ICMP,
     ENTITY_CONSTANT,
     ENTITY_BRANCH,
@@ -74,6 +75,7 @@ string component_types[] = {
     COMPONENT_NFIFO,
     COMPONENT_TFIFO,
     COMPONENT_FORK,
+    COMPONENT_LFORK,
     COMPONENT_ICMP,
     COMPONENT_CONSTANT_,
     COMPONENT_BRANCH,
@@ -1243,6 +1245,17 @@ string get_generic ( int node_id )
     }    
 
     if ( nodes[node_id].type.find("Fork") != std::string::npos )
+    {
+        generic = to_string(nodes[node_id].inputs.size);
+        generic += COMMA;
+        generic += to_string(nodes[node_id].outputs.size);
+        generic += COMMA;
+        generic += to_string(nodes[node_id].inputs.input[0].bit_size);
+        generic += COMMA;
+        generic += to_string(nodes[node_id].outputs.output[0].bit_size);
+    }    
+
+    if ( nodes[node_id].type.find("LazyFork") != std::string::npos )
     {
         generic = to_string(nodes[node_id].inputs.size);
         generic += COMMA;

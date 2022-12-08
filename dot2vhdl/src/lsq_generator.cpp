@@ -159,6 +159,60 @@ int get_lsq_fifo_depth ( int lsq_indx )
     //return LSQ_FIFODEPTH_DEFAULT; //default???
 }
 
+// Jiantao, 14/06/2022
+int get_lsq_fifo_L_depth ( int lsq_indx )
+{
+    int fifodepth_L;
+
+    for (int i = 0; i < components_in_netlist; i++)
+    {
+
+        if ( nodes[i].type.find("LSQ") != std::string::npos)
+        {
+            if ( lsq_indx == nodes[i].lsq_indx )
+            {
+                // Jiantao, 05/09/2022
+                // Check whether the depths is given or not.
+                if (nodes[i].fifodepth_L != 0) {
+                    fifodepth_L = nodes[i].fifodepth_L;
+                } else {
+                    fifodepth_L = nodes[i].fifodepth;
+                }
+
+                break;
+            }
+        }
+    }
+
+    return fifodepth_L;
+}
+
+int get_lsq_fifo_S_depth ( int lsq_indx )
+{
+    int fifodepth_S;
+
+    for (int i = 0; i < components_in_netlist; i++)
+    {
+
+        if ( nodes[i].type.find("LSQ") != std::string::npos)
+        {
+            if ( lsq_indx == nodes[i].lsq_indx )
+            {
+                // Jiantao, 05/09/2022
+                // Check whether the depths is given or not.
+                if (nodes[i].fifodepth_S != 0) {
+                    fifodepth_S = nodes[i].fifodepth_S;
+                } else {
+                    fifodepth_S = nodes[i].fifodepth;
+                }
+                break;
+            }
+        }
+    }
+
+    return fifodepth_S;
+}
+
 int get_lsq_loadPorts ( int lsq_indx )
 {
     int load_ports = 0;
@@ -600,6 +654,8 @@ void lsq_set_configuration ( int lsq_indx )
     lsq_conf[lsq_indx].dataWidth = get_lsq_datawidth ();//     "dataWidth": 32,
     lsq_conf[lsq_indx].addressWidth = get_lsq_addresswidth ( lsq_indx );//     "addressWidth": 10,
     lsq_conf[lsq_indx].fifoDepth = get_lsq_fifo_depth ( lsq_indx );    //     "fifoDepth": 4,
+    lsq_conf[lsq_indx].fifoDepth_L = get_lsq_fifo_L_depth( lsq_indx ); //     "fifoDepth_L": 4,
+    lsq_conf[lsq_indx].fifoDepth_S = get_lsq_fifo_S_depth( lsq_indx ); //     "fifoDepth_S": 4,
     lsq_conf[lsq_indx].loadPorts = get_lsq_loadPorts( lsq_indx ); //     "loadPorts": 1,
     lsq_conf[lsq_indx].storePorts = get_lsq_storePorts( lsq_indx ); //     "storePorts": 1,
 
@@ -647,6 +703,13 @@ void lsq_write_configuration_file ( string top_level_filename, int lsq_indx )
     lsq_configuration_file << "\"speculation\": \"false\" "<< ", "<< endl;
     lsq_configuration_file << "\"addrWidth\":"          << lsq_conf[lsq_indx].addressWidth      << ", "<< endl;
     lsq_configuration_file << "\"fifoDepth\":"          << lsq_conf[lsq_indx].fifoDepth         << ", "<< endl;
+    lsq_configuration_file << "\"fifoDepth_L\":"        << lsq_conf[lsq_indx].fifoDepth_L       << ", "<< endl;
+    lsq_configuration_file << "\"fifoDepth_S\":"        << lsq_conf[lsq_indx].fifoDepth_S       << ", "<< endl;
+
+    // Testing
+    // lsq_configuration_file << "\"fifoDepth_L\":"        << 4       << ", "<< endl;
+    // lsq_configuration_file << "\"fifoDepth_S\":"        << 8       << ", "<< endl;
+
     lsq_configuration_file << "\"numLoadPorts\":"       << lsq_conf[lsq_indx].loadPorts         << ", "<< endl;
     lsq_configuration_file << "\"numStorePorts\":"      << lsq_conf[lsq_indx].storePorts        << ", "<< endl;
     //lsq_configuration_file << "\"bbParams\":"        <<  "{"                       << endl;
@@ -698,7 +761,7 @@ void lsq_write_configuration_file ( string top_level_filename, int lsq_indx )
         }
 
         lsq_configuration_file << "[";
-        for (int indx3 = 0; indx3 < lsq_conf[lsq_indx].fifoDepth; indx3++ )
+        for (int indx3 = 0; indx3 < lsq_conf[lsq_indx].fifoDepth_L; indx3++ )
         {
             if ( indx3 != 0 )
             {
@@ -723,7 +786,7 @@ void lsq_write_configuration_file ( string top_level_filename, int lsq_indx )
         }
 
         lsq_configuration_file << "[";
-        for (int indx3 = 0; indx3 < lsq_conf[lsq_indx].fifoDepth; indx3++ )
+        for (int indx3 = 0; indx3 < lsq_conf[lsq_indx].fifoDepth_S; indx3++ )
         {
             if ( indx3 != 0 )
             {
@@ -747,7 +810,7 @@ void lsq_write_configuration_file ( string top_level_filename, int lsq_indx )
         }
 
         lsq_configuration_file << "[";
-        for (int indx3 = 0; indx3 < lsq_conf[lsq_indx].fifoDepth; indx3++ )
+        for (int indx3 = 0; indx3 < lsq_conf[lsq_indx].fifoDepth_L; indx3++ )
         {
             if ( indx3 != 0 )
             {
@@ -773,7 +836,7 @@ void lsq_write_configuration_file ( string top_level_filename, int lsq_indx )
         }
 
         lsq_configuration_file << "[";
-        for (int indx3 = 0; indx3 < lsq_conf[lsq_indx].fifoDepth; indx3++ )
+        for (int indx3 = 0; indx3 < lsq_conf[lsq_indx].fifoDepth_S; indx3++ )
         {
             if ( indx3 != 0 )
             {

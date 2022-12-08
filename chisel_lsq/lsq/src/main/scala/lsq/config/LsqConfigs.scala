@@ -10,6 +10,8 @@ case class LsqConfigs(
                        dataWidth: Int,
                        addrWidth: Int,
                        fifoDepth: Int,
+                       fifoDepth_L: Int,
+                       fifoDepth_S: Int,
                        numLoadPorts: Int,
                        numStorePorts: Int,
                        numBBs: Int,
@@ -24,8 +26,18 @@ case class LsqConfigs(
                        name : String
 ){
 
+  def fifoDepth_M: Int = max(fifoDepth_S, fifoDepth_L)
   def loadPortIdWidth: Width = max(1, log2Ceil(numLoadPorts)).W
   def storePortIdWidth: Width = max(1, log2Ceil(numStorePorts)).W
   def fifoIdxWidth: Width = log2Ceil(fifoDepth).W
+  def fifoIdxWidth_L: Width = log2Ceil(fifoDepth_L).W
+  def fifoIdxWidth_S: Width = log2Ceil(fifoDepth_S).W
+  def fifoIdxWidth_MAX: Width = {
+    if(fifoDepth_L >= fifoDepth_S ) {
+      log2Ceil(fifoDepth_L).W
+    } else {
+      log2Ceil(fifoDepth_S).W
+    }
+  }
   def bufferIdxWidth: Width = max(1, log2Ceil(bufferDepth)).W
 }

@@ -81,6 +81,8 @@ object Main extends App {
     I(dataWidth) = test("dataWidth")
     I(addrWidth) = test("addrWidth")
     I(fifoDepth) = test("fifoDepth")
+    I(fifoDepth_L) = test("fifoDepth_L")
+    I(fifoDepth_S) = test("fifoDepth_S")
     I(numLoadPorts) = test("numLoadPorts")
     I(numStorePorts) = test("numStorePorts")
     I(numBBs) = test("numBBs")
@@ -96,6 +98,8 @@ object Main extends App {
       dataWidth = dataWidth,
       addrWidth = addrWidth,
       fifoDepth = fifoDepth,
+      fifoDepth_L = fifoDepth_L,
+      fifoDepth_S = fifoDepth_S,
       numLoadPorts = numLoadPorts,
       numStorePorts = numStorePorts,
       numBBs = numBBs,
