@@ -540,6 +540,10 @@ int optimize ( string input_cmp )
     std::cout << "Optimize" << endl;
     bool area_opt = 0;
     bool fast_token_opt = 0;
+    bool lsq_size_opt = 1;
+    
+    set_filename = 1;
+
     
     if ( input_cmp.find("-area") != std::string::npos )
     {
@@ -551,6 +555,11 @@ int optimize ( string input_cmp )
     {
         eraseAllSubStr(input_cmp, "-fast-token");
         fast_token_opt = 1;
+    }
+    if ( input_cmp.find("-no_lsq") != std::string::npos )
+    {
+        eraseAllSubStr(input_cmp, "-no_lsq");
+        lsq_size_opt = 0;
     }
     
     string command;
