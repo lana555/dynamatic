@@ -24,7 +24,7 @@ mkdir -p sim/VHDL_OUT
 mkdir -p sim/VHDL_SRC
 
 cp src/* sim/C_SRC/
-cp hdl/* sim/VHDL_SRC/
+cp hdl/VHDL/* sim/VHDL_SRC/
 
 cd sim/HLS_VERIFY/
 

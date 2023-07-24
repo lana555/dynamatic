@@ -19,8 +19,11 @@ do
     	rm -r $line/reports
     	rm -r $line/sim
     else
+	if [ "$line" != "" ]; then
     	echo "Testing" $line
     	scripts/regression_test.sh $line $report $report_file
     fi
+    fi
  
 done < "$file"
+echo "Done" $line

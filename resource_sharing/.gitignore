@@ -1,0 +1,8 @@
+_build/
+build/
+debug/
+.vscode/
+/build/
+output/
+bin/
+src/*.o

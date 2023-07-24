@@ -1,4 +1,4 @@
-
+Author: Andrea Guerrieri andrea.guerrieri@epfl.ch
 
 echo $1
 sed 's/:0/:32/g' $1.dot > .tmp1

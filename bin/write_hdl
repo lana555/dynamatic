@@ -5,23 +5,32 @@
 
 
 HDL_DIR=hdl
+VHDL_HDL_DIR=$HDL_DIR/VHDL
+VERILOG_HDL_DIR=$HDL_DIR/Verilog
 SCRIPTS_DIR=scripts
 
 
 
-dot2vhdl $2
+dot2hdl $2
 
 #conv_dc $1
 
 mkdir -p $1/$HDL_DIR
+mkdir -p $1/$VHDL_HDL_DIR
+mkdir -p $1/$VERILOG_HDL_DIR
 
 
-mv $1/reports/*.vhd $1/$HDL_DIR
+mv $1/reports/*.vhd $1/$VHDL_HDL_DIR
+mv $1/reports/*.v $1/$VERILOG_HDL_DIR
 
-cp $DHLS_INSTALL_DIR/etc/dynamatic/components/*.vhd $1/$HDL_DIR
+cp $DHLS_INSTALL_DIR/etc/dynamatic/components/VHDL/*.vhd $1/$VHDL_HDL_DIR
+cp $DHLS_INSTALL_DIR/etc/dynamatic/components/Verilog/*.v $1/$VERILOG_HDL_DIR
 
 
-mv -f *.v $1/$HDL_DIR > /dev/null 2>&1
+cp *.v $1/$VHDL_HDL_DIR > /dev/null 2>&1
+mv -f *.v $1/$VERILOG_HDL_DIR > /dev/null 2>&1
+#floating point tcl files always end with "_floating_point_units"
+mv -f *_floating_point_units.tcl $1/$VERILOG_HDL_DIR > /dev/null 2>&1
 
 rm -f *.fir > /dev/null 2>&1
 

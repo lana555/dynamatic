@@ -2,3 +2,5 @@ bin/
 src/*.o
 ./build/*.*
 *.swp
+src/src/*
+src/src
