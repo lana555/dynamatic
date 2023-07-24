@@ -1,3 +1,8 @@
+Version 2.1 - 24/7/23
+- Added Resource sharing
+- Added LSQ sizing
+- Added support for Verilog HDL
+
 Version 2.0 - 20/3/21
 - Support for Intel FPGAs (components, elastic pass, dot2vhdl)
 - Resource optimizations (front-end, components, buffers, resource sharing, elastic pass)
