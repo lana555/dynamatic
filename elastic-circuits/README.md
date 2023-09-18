@@ -5,6 +5,7 @@
 ### Build and install LLVM 
 
 ```bash
+cd /usr/local
 git clone http://github.com/llvm-mirror/llvm --branch release_60 --depth 1
 cd llvm/tools
 git clone http://github.com/llvm-mirror/clang --branch release_60 --depth 1
