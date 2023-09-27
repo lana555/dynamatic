@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <iostream>
 #include <regex>
+#include <cstdint>
 #include "DFnetlist.h"
 
 using namespace Dataflow;

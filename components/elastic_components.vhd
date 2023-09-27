@@ -1626,62 +1626,66 @@ end arch;
 library ieee;
 use ieee.std_logic_1164.all;
 USE work.customTypes.all;
+use ieee.numeric_std.all;
+
 entity cntrlMerge is generic(
 INPUTS : integer ; OUTPUTS : integer; DATA_SIZE_IN: integer; DATA_SIZE_OUT: integer; COND_SIZE:integer
 );
 port(
       clk, rst : in std_logic;    
-        pValidArray : in std_logic_vector(1 downto 0);
+        pValidArray : in std_logic_vector(INPUTS - 1 downto 0);
         nReadyArray : in std_logic_vector(1 downto 0);
         validArray : out std_logic_vector(1 downto 0);
-        readyArray : out std_logic_vector(1 downto 0);
+        readyArray : out std_logic_vector(INPUTS - 1 downto 0);
         dataInArray   : in  data_array(INPUTS - 1 downto 0)(DATA_SIZE_IN - 1 downto 0);
         dataOutArray  : out data_array(0 downto 0)(DATA_SIZE_OUT - 1 downto 0);
-        condition: out data_array(0 downto 0)(0 downto 0));
+        condition: out data_array(0 downto 0)(COND_SIZE - 1 downto 0));
 end cntrlMerge;
 architecture arch of cntrlMerge is
 
-signal phi_C1_readyArray : STD_LOGIC_VECTOR (1 downto 0);
+signal phi_C1_readyArray : STD_LOGIC_VECTOR (INPUTS - 1 downto 0);
 signal phi_C1_validArray : STD_LOGIC_VECTOR (0 downto 0);
-signal phi_C1_dataOutArray : data_array(0 downto 0)(0 downto 0);
+signal phi_C1_dataOutArray : data_array(0 downto 0)(COND_SIZE - 1 downto 0);
 
 signal fork_C1_readyArray : STD_LOGIC_VECTOR (0 downto 0);
 signal fork_C1_dataOutArray : data_array(1 downto 0)(0 downto 0);
 signal fork_C1_validArray : STD_LOGIC_VECTOR (1 downto 0);
 
-signal oehb1_valid, oehb1_ready, index : STD_LOGIC;
-signal oehb1_dataOut : std_logic_vector(DATA_SIZE_IN-1 downto 0);
+signal all_ones : STD_LOGIC_VECTOR (COND_SIZE - 1 downto 0) := (others => '1') ;
+signal index, oehb1_dataOut : STD_LOGIC_VECTOR (COND_SIZE - 1 downto 0);
+signal oehb1_valid, oehb1_ready: STD_LOGIC;
 
 begin
 
 
 readyArray <= phi_C1_readyArray;
 
-phi_C1: entity work.merge_notehb(arch) generic map (2, 1, 1, 1)
+phi_C1: entity work.merge_notehb(arch) generic map (INPUTS, 1, COND_SIZE, COND_SIZE)
 port map (
 --inputs
     clk => clk,  --clk
     rst => rst,  --rst
     pValidArray => pValidArray,    --pValidArray
-    dataInArray (0) => "1",
-    dataInArray (1) => "1",
+    dataInArray => (INPUTS - 1 downto 0 => all_ones),
     nReadyArray(0) => oehb1_ready,--outputs
     dataOutArray => phi_C1_dataOutArray,
     readyArray => phi_C1_readyArray,    --readyArray
     validArray => phi_C1_validArray --validArray
 );
 
-
 process(pValidArray)
 begin
-        if (pValidArray(0) = '1') then
-            index <= '0';
-        else
-            index <= '1';
+    index <= (COND_SIZE - 1 downto 0 => '0');
+    for i in 0 to (INPUTS - 1) loop
+        if (pValidArray(i) = '1') then
+            index <= std_logic_vector(to_unsigned(i,COND_SIZE));
+            exit;
         end if;
+    end loop;
 end process;
 
-oehb1: entity work.TEHB(arch) generic map (1, 1, 1, 1)
+
+oehb1: entity work.TEHB(arch) generic map (1, 1, COND_SIZE, COND_SIZE)
         port map (
         --inputspValidArray
             clk => clk, 
@@ -1691,7 +1695,7 @@ oehb1: entity work.TEHB(arch) generic map (1, 1, 1, 1)
             validArray(0) => oehb1_valid, 
         --outputs
             readyArray(0) => oehb1_ready,   
-            dataInArray(0)(0) => index,
+            dataInArray(0) => index,
             dataOutArray(0) => oehb1_dataOut
         );
 

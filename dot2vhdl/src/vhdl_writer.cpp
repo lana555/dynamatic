@@ -10,7 +10,7 @@
 *
 */
 
-
+#include <cmath>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -1503,7 +1503,7 @@ string get_generic ( int node_id )
         generic += COMMA;
         generic += to_string(nodes[node_id].outputs.output[0].bit_size);
         generic += COMMA;
-        generic += to_string(nodes[node_id].outputs.output[1].bit_size); // condition size
+        generic += to_string(int(ceil(log2(nodes[node_id].inputs.size)))); // condition size
     }    
 
     if ( nodes[node_id].type.find("MC") != std::string::npos )
