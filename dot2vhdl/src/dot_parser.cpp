@@ -884,7 +884,7 @@ void parse_components ( string v_0, string v_1 )
             }
             else
             {
-                //nodes[components_in_netlist].type = "OEHB";
+                nodes[components_in_netlist].type = "OEHB";
             }
             nodes[components_in_netlist].component_operator = nodes[components_in_netlist].type;
         }
