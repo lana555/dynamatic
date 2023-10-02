@@ -4,6 +4,8 @@
 
 #include "CInjector.h"
 #include <iostream>
+#include <sstream>
+
 using namespace std;
 
 namespace hls_verify {

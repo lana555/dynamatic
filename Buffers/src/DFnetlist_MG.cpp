@@ -1,4 +1,5 @@
 #include <cassert>
+#include <cstdint>
 #include "DFnetlist.h"
 
 using namespace Dataflow;

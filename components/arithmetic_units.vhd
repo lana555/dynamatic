@@ -3290,39 +3290,12 @@ entity trunc_op is
 end entity;
     
 architecture arch of trunc_op is
+begin
+    
+    dataOutArray(0)<= dataInArray(0)(DATA_SIZE_OUT - 1 downto 0);
+    validArray <= pValidArray;
+    readyArray(0) <= not pValidArray(0) or (pValidArray(0) and nReadyArray(0));
 
-    component my_trunc is
-        port (
-            ap_clk : IN STD_LOGIC;
-            ap_rst : IN STD_LOGIC;
-            ap_start : IN STD_LOGIC;
-            ap_done : OUT STD_LOGIC;
-            ap_idle : OUT STD_LOGIC;
-            ap_ready : OUT STD_LOGIC;
-            din : IN STD_LOGIC_VECTOR (31 downto 0);
-            ap_return : OUT STD_LOGIC_VECTOR (31 downto 0) 
-        );
-    end component;
-
-    signal idle : std_logic;
-    signal component_ready : std_logic;
-
-begin 
-
-    my_trunc_U1 : component my_trunc
-    port map(
-        ap_clk => clk,
-        ap_rst => rst,
-        ap_start => pValidArray(0),
-        ap_done => validArray(0),
-        ap_idle => idle,
-        ap_ready => component_ready,
-        din => dataInArray(0),
-        ap_return => dataOutArray(0) 
-    );
-
-    readyArray(0) <= idle and nReadyArray(0);
-        
 end architecture;
 
 -------------------

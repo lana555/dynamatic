@@ -82,6 +82,7 @@ namespace hls_verify {
         sim << "project calculateorder" << endl;
         sim << "project compileall" << endl;
         sim << "eval vsim " << ctx.get_vhdl_duv_entity_name() << "_tb" << endl;
+        sim << "log -r *" << endl;
         sim << "run -all" << endl;
         sim << "exit" << endl;
         sim.close();
