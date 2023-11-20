@@ -279,7 +279,7 @@ begin
 
     dataOutArray(0)<= std_logic_vector(IEEE.numeric_std.resize(signed(dataInArray(0)),DATA_SIZE_OUT));
     validArray <= pValidArray;
-    readyArray(0) <= not pValidArray(0) or (pValidArray(0) and nReadyArray(0));
+    readyArray(0) <= nReadyArray(0);
 
 end architecture;
 
@@ -314,7 +314,7 @@ begin
 
     dataOutArray(0)<= std_logic_vector(IEEE.numeric_std.resize(signed(dataInArray(0)),DATA_SIZE_OUT));
     validArray <= pValidArray;
-    readyArray(0) <= not pValidArray(0) or (pValidArray(0) and nReadyArray(0));
+    readyArray(0) <= nReadyArray(0);
 
 end architecture;
 -----------------------------------------------------------------------
@@ -3294,7 +3294,7 @@ begin
     
     dataOutArray(0)<= dataInArray(0)(DATA_SIZE_OUT - 1 downto 0);
     validArray <= pValidArray;
-    readyArray(0) <= not pValidArray(0) or (pValidArray(0) and nReadyArray(0));
+    readyArray(0) <= nReadyArray(0);
 
 end architecture;
 
