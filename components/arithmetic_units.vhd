@@ -312,7 +312,7 @@ architecture arch of zext_op is
 
 begin 
 
-    dataOutArray(0)<= std_logic_vector(IEEE.numeric_std.resize(signed(dataInArray(0)),DATA_SIZE_OUT));
+    dataOutArray(0)<= std_logic_vector(IEEE.numeric_std.resize(unsigned(dataInArray(0)),DATA_SIZE_OUT));
     validArray <= pValidArray;
     readyArray(0) <= nReadyArray(0);
 
