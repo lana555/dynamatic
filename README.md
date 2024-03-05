@@ -1,4 +1,6 @@
-# Dynamatic
+# Dynamatic (Legacy)
+
+NOTE: this repository is obsolete. For the up-to-date Dynamatic, please check out https://github.com/EPFL-LAP/dynamatic
 
 ## Dynamically Scheduled High-Level Synthesis
 
